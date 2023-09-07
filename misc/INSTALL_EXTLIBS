@@ -1,0 +1,46 @@
+#####################################
+# Install of external libraries
+# Note: This script is just a sample.
+# The URLs and commands contained
+# in this script may be old, and thus
+# the installation may fail.
+# Plese check the latest information
+# of each library.
+#####################################
+
+# set path to install
+INSTALL_DIR=/home/mukunoki/local
+
+mkdir extlibs
+cd extlibs
+
+#####################################
+# BeBOP Sparse Matrix Converter
+# http://bebop.cs.berkeley.edu/smc/
+#####################################
+
+wget http://bebop.cs.berkeley.edu/smc/tarballs/bebop_make.tar.gz
+tar xvzf bebop_make.tar.gz
+rm bebop_make.tar.gz
+
+wget http://bebop.cs.berkeley.edu/smc/tarballs/bebop_util.tar.gz
+tar xvzf bebop_util.tar.gz
+rm bebop_util.tar.gz
+cd bebop_util; make -j4;
+cp -r include/bebop $INSTALL_DIR/include 
+cp -r libbebop_util* $INSTALL_DIR/lib
+cd ..
+
+wget http://bebop.cs.berkeley.edu/smc/tarballs/sparse_matrix_converter.tar.gz
+tar xvzf sparse_matrix_converter.tar.gz
+rm sparse_matrix_converter.tar.gz
+cd sparse_matrix_converter; make -j4;
+cp -r include/bebop $INSTALL_DIR/include
+cp -r libsparse_matrix_converter* $INSTALL_DIR/lib
+cd ..
+
+#####################################
+# MPLAPACK
+# https://github.com/nakatamaho/mplapack
+#####################################
+
