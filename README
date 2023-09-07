@@ -1,5 +1,5 @@
-OzBLAS 1.4 alpha 
-May 12, 2021
+OzBLAS 1.5 alpha 
+September 7, 2023
 Daichi Mukunoki, Takeshi Ogita, Katsuhisa Ozaki, Toshiyuki Imamura
 Contact: Daichi Mukunoki (daichi.mukunoki@riken.jp)
 
@@ -12,17 +12,6 @@ of our implementation may depend on the compiler
 (options) and the version of the libraries used
 internally. If you want to use it in real applications,
 please contact us.
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-ATTENTION:
-Currently, binary128 routines do not work correctly on
-ARM processors. 
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-Note:
-GPU version is temporarily excluded.
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 (1) Overview
@@ -44,8 +33,7 @@ libcuozblas.a:
 - CUDA and cuBLAS
 testing:
 - MPLAPACK (http://mplapack.sourceforge.net)
--> With MPFR and binary128
--> v0.9.3 or later is needed
+-> For testing with MPFR and binary128
 - The GNU MPFR Library (https://www.mpfr.org)
 -> MPFR is included in MPLAPACK
 -> MPFR must be built with "--enable-float128" option for binary128
@@ -70,6 +58,12 @@ See examples in 'testing' directory.
 [4] D. Mukunoki, K. Ozaki, T. Ogita, R. Iakymchuk: Conjugate Gradient Solvers with High Accuracy and Bit-wise Reproducibility between CPU and GPU using Ozaki scheme, Proc. The International Conference on High Performance Computing in Asia-Pacific Region (HPCAsia 2021), pp. 100-109, 2021.
 
 (7) History:
+v1.5a
+Fast OzDOT using Dot2 (experimental).
+GPU version is included.
+Bug fix (for GEMV with mixed-precision and for m=n=k=1 on GEMM).
+Some minor updates.
+
 v1.4a
 Binary128 support.
 Mixed-precision support.
