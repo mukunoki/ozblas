@@ -831,7 +831,7 @@ void blasRcsrmv (const char trans, const int32_t m, const int32_t n, const int32
 }
 
 void blasRcsrmvX (const char trans, const int32_t m, const int32_t n, const int32_t nnz, const float alpha, const char *descrA, const float *A, const int32_t *devAcolind, const int32_t *devArowptr, const float *X, const float beta, float *Y) {
-	fprintf (OUTPUT, "blasRcsrmvX not available.\n");
+	fprintf (OUTPUT, "blasRcsrmvX is not available.\n");
 	exit(1);
 }
 
@@ -848,6 +848,11 @@ void blasRcsrmvX (const char trans, const int32_t m, const int32_t n, const int3
 #if defined (FLOAT128)
 void blasRcsrmv (const char trans, const int32_t m, const int32_t n, const int32_t nnz, const __float128 alpha, const char *descrA, const __float128 *A, const int32_t *devAcolind, const int32_t *devArowptr, const __float128 *X, const __float128 beta, __float128 *Y) {
 	csrmv (m, n, alpha, A, devAcolind, devArowptr, X, beta, Y);
+}
+
+void blasRcsrmvX (const char trans, const int32_t m, const int32_t n, const int32_t nnz, const __float128 alpha, const char *descrA, const __float128 *A, const int32_t *devAcolind, const int32_t *devArowptr, const __float128 *X, const __float128 beta, __float128 *Y) {
+	fprintf (OUTPUT, "blasRcsrmvX is not available.\n");
+	exit(1);
 }
 #endif
 
@@ -945,12 +950,17 @@ double blasRnrm2 (const int32_t n, const double* x, const int32_t incx) {
 }
 
 float blasRnrm2X (const int32_t n, const float* x, const int32_t incx) {
-	fprintf (OUTPUT, "blasRnrm2X not available.\n");
+	fprintf (OUTPUT, "blasRnrm2X is not available.\n");
 	exit(1);
 }
 
 double blasRnrm2X (const int32_t n, const double* x, const int32_t incx) {
 	return sqrt (blasRdotX (n, x, 1, x, 1));
+}
+
+__float128 blasRnrm2X (const int32_t n, const __float128* x, const int32_t incx) {
+	fprintf (OUTPUT, "blasRnrm2X is not available.\n");
+	exit(1);
 }
 
 #if defined (FLOAT128)

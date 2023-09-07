@@ -252,7 +252,7 @@ main (int32_t argc, char **argv)
 			mublasCopyMat (m, ll, dev_C, ldc, hst_C_t, ldc);
 			#endif
 			mpfrCsrmm (th, m, ll, n, nnz, alpha_r, hst_A_r, hst_Colind, hst_Rowptr, hst_B_r, ldb, beta_r, hst_C_r, ldc);
-			mublasCheckMatrix (m, ll, hst_C_t, ldc, hst_C_r, ldc);
+			mublasCheckMatrix (&th, m, ll, hst_C_t, ldc, hst_C_r, ldc);
 			printf ("\n");
 			dim_dev_increment (&th);
 			if (th.dim_m_const && th.dim_n_const && th.dim_k_const) break;

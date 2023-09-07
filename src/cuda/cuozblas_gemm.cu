@@ -19,9 +19,8 @@ int32_t cuozblasRgemm (
 	cucounterInit (oh);
 	double t1, t0 = cutimer();
 
-	// for DOT and GEMV performed as GEMM
-	// 1. DOT does not use batchedGEMM and fastmode as it is computed by a GEMM,
-	//    Therefore, batchedGEMM and fastmode are disabled here.
+	// DOT does not use batchedGEMM and fastmode as it is computed by a GEMM,
+	// Therefore, batchedGEMM and fastmode are disabled here.
 	int32_t _useBatchedGemmFlag = oh->useBatchedGemmFlag;
 	int32_t _fastModeFlag = oh->fastModeFlag;
 	if (m == 1 && n == 1) { // DOT
@@ -142,8 +141,7 @@ int32_t cuozblasRgemm (
 			int32_t nSplitC = ic;
 			int32_t numB;
 			ic = 0;
-			// Dot2 (only on DOT)
-			if (n == 1 && m == 1 && oh->splitEpsModeFlag == 2 && oh->fastModeFlag == 0 && oh->sumModeFlag < 2) {
+			if (n == 1 && m == 1 && oh->splitEpsModeFlag == 2 && oh->fastModeFlag == 0 && oh->sumModeFlag < 2) { // Dot2 (only on DOT)
 				TYPE2 *ptrA, *ptrB, *ptrC;
 				ptrA = devASplit;
 				ptrB = devBSplit;
@@ -243,17 +241,17 @@ int32_t cuozblasRgemm (
 			if (oh->useBatchedGemmFlag || oh->sumModeFlag < 2) {
 				t1 = cutimer();
 				int32_t sumorder = 1;
-				if (m == 1 && n == 1 && !oh->useBatchedGemmFlag) { // DOT
+				if (m == 1 && n == 1) { // DOT
 					sumorder = (oh->fastModeFlag == 0) ? 2 : 1; // DOT w/o fastmode -> 2
 					if (oh->splitEpsModeFlag == 2) maxlevel = (nSplitA-1) + (nSplitB*2-1);
 					if (cuozblasGlobalSum (oh, 1, 1, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB*((oh->splitEpsModeFlag==2)?2:1),
-						devCSplit, 1, 1, &devC[ldc*(in*nbk)+im*mbk], ldc, alpha, beta, maxlevel, sumorder)) {
+										devCSplit, 1, 1, &devC[ldc*(in*nbk)+im*mbk], ldc, alpha, beta, maxlevel, sumorder)) {
 						fprintf (OUTPUT, "OzBLAS error: sum is failed\n");
 						exit (1);
 					}
 				} else {
 					if (cuozblasGlobalSum (oh, mbk_, nbk_, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB,
-						devCSplit, ldcs*nbk, ldcs, &devC[ldc*(in*nbk)+im*mbk], ldc, alpha, beta, maxlevel, sumorder)) {
+										devCSplit, ldcs*nbk, ldcs, &devC[ldc*(in*nbk)+im*mbk], ldc, alpha, beta, maxlevel, sumorder)) {
 						fprintf (OUTPUT, "OzBLAS error: sum is failed\n");
 						exit (1);
 					}

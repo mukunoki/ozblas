@@ -9,14 +9,17 @@ CPU_ARCH = SKYLAKE
 LINKAGE = static
 
 #--- PATH ------------------------------------
-CUDA_PATH	= /usr/local/cuda-12.0
-LIB_PATH	= $(HOME)/local_a100/lib
-INC_PATH	= $(HOME)/local_a100/include
+CUDA_PATH	= /work/opt/local/x86_64/cores/cuda/12.1/
+#CUDA_PATH	= /usr/local/cuda-12.0
+LIB_PATH	= $(HOME)/local/lib
+INC_PATH	= $(HOME)/local/include
 # -> installation path of external libraries
 
 #--- Compiler --------------------------------
-#CXX: g++, icpc, FCC (compute-node on Fugaku)
+#CXX: g++
 CXX = g++
+# -> Intel Compiler (icpc) should work (but not tested)
+# -> Intel LLVM Compiler (icpx) is not supported for quadruple-precision
 
 #--- CPU (OzBLAS) / CUDA (cuOzBLAS) ----------
 CPU  = yes
@@ -53,7 +56,7 @@ CC86 = no
 
 #--- Precision -------------------------------
 # PREC_X_Y: X is I/O-precision, Y is compute-precision
-# Q: FP128, D: FP64, S: FP32, H: FP16, B: BF16
+# Q: FP128, D: FP64, S: FP32
 PREC_Q_D = yes
 PREC_Q_S = yes
 PREC_D_D = yes

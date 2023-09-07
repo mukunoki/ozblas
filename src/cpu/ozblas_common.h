@@ -13,7 +13,6 @@
 #include <iostream>
 #include <typeinfo>
 
-//#define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #include <sys/time.h>
 #include <float.h>
@@ -29,6 +28,9 @@
 #include <omp.h>
 
 #if defined (FLOAT128)
+#if defined (__INTEL_LLVM_COMPILER)
+Intel LLVM Compiler is not supported...
+#endif
 #if defined (ARM)
 #define __float128 long double
 #define FLT128_MAX LDBL_MAX

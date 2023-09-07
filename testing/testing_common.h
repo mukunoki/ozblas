@@ -390,7 +390,8 @@ extern "C" {
 #define rnrm2			cblas_snrm2
 #define rgemv			cblas_sgemv
 #define rgemm			cblas_sgemm
-//#define rcsrmv		cblas_scsrmv
+#define rcsrmv			blasRcsrmv
+#define rcsrmm			blasRcsrmm
 #endif
 
 // ================================================

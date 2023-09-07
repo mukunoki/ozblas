@@ -79,6 +79,8 @@ template <typename TYPE1, typename TYPE2> int32_t ozblasRcg (ozblasHandle_t *oh,
 // ================================
 // BLAS wrapper 
 // ================================
+void blasRcsrmv (const char trans, const int32_t m, const int32_t n, const int32_t nnz, const float alpha, const char *descrA, const float *A, const int32_t *devAcolind, const int32_t *devArowptr, const float *X, const float beta, float *Y);
+
 void blasRcsrmv (const char trans, const int32_t m, const int32_t n, const int32_t nnz, const double alpha, const char *descrA, const double *A, const int32_t *devAcolind, const int32_t *devArowptr, const double *X, const double beta, double *Y);
 void blasRcsrmm (const char trans, const int32_t m, const int32_t n, const int32_t k, const int32_t nnz, const double alpha, const char *descrA, const double *A, const int32_t *devAcolind, const int32_t *devArowptr, const double *B, const int32_t ldb, const double beta, double *C, const int32_t ldc);
 void blasRcsrmm_x2 (const char trans, const int32_t m, const int32_t n, const int32_t k, const int32_t nnz, const double alpha, const char *descrA, const double *A, const int32_t *devAcolind, const int32_t *devArowptr, const double *B, const int32_t ldb, const double beta, double *C, const int32_t ldc);

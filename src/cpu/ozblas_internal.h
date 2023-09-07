@@ -114,6 +114,7 @@ void blasRcsrmvX (const char trans, const int32_t m, const int32_t n, const int3
 void blasRcsrmvX (const char trans, const int32_t m, const int32_t n, const int32_t nnz, const double alpha, const char *descrA, const double *A, const int32_t *devAcolind, const int32_t *devArowptr, const double *X, const double beta, double *Y);
 #if defined (FLOAT128)
 void blasRcsrmv (const char trans, const int32_t m, const int32_t n, const int32_t nnz, const __float128 alpha, const char *descrA, const __float128 *A, const int32_t *devAcolind, const int32_t *devArowptr, const __float128 *X, const __float128 beta, __float128 *Y);
+void blasRcsrmvX (const char trans, const int32_t m, const int32_t n, const int32_t nnz, const __float128 alpha, const char *descrA, const __float128 *A, const int32_t *devAcolind, const int32_t *devArowptr, const __float128 *X, const __float128 beta, __float128 *Y);
 #endif
 // CSRMM
 void blasRcsrmm (const char trans, const int32_t m, const int32_t n, const int32_t k, const int32_t nnz, const float alpha, const char *descrA, const float *A, const int32_t *devAcolind, const int32_t *devArowptr, const float *B, const int32_t ldb, const float beta, float *C, const int32_t ldc);
