@@ -20,16 +20,12 @@ int32_t ozblasRaxpy (
 	}
 
 	#pragma omp parallel for 
-	for (int i = 0; i < n; i++) {
-		devY[i] = alpha * devX[i] + devY[i];
-//		devY[i] = fma (alpha, devX[i], devY[i]);
-	}
+	for (int i = 0; i < n; i++) 
+		devY[i] = fma1 (alpha, devX[i], devY[i]);
 
 	return 0;
 }
-#if defined (FLOAT128)
 template int32_t ozblasRaxpy (ozblasHandle_t *oh, const int32_t n, const __float128 alpha, const __float128 *devX, const int32_t incx, __float128 *devY, const int32_t incy);
-#endif
 template int32_t ozblasRaxpy (ozblasHandle_t *oh, const int32_t n, const double alpha, const double *devX, const int32_t incx, double *devY, const int32_t incy);
 template int32_t ozblasRaxpy (ozblasHandle_t *oh, const int32_t n, const float alpha, const float *devX, const int32_t incx, float *devY, const int32_t incy);
 

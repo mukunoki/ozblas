@@ -91,13 +91,13 @@ main (int32_t argc, char **argv)
 	FP_TYPE *hst_Y = new FP_TYPE[vly_hst * th.incy];
 	FP_TYPE *hst_Y_t = new FP_TYPE[vly_hst * th.incy];
 	// initialize (0:const, 1:drand48, 2:phi, 3:erange)
-	mublasInitMat (&th, 1, 1, 1, &alpha, 1., 0, 0);
-	mublasInitMat (&th, 1, 1, 1, &beta, 0., 0, 0);
+	mublasInitMat (&th, 1, 1, 1, &alpha, 1., 0, 0, 0);
+	mublasInitMat (&th, 1, 1, 1, &beta, 0., 0, 0, 0);
 	if (th.trunc != 0)  // for reduced-precision performance evaluation
 		printf ("### !!! Truncated inputs !!!\n");
-	mublasInitMat (&th, rda_hst, cda_hst, lda_hst, hst_A, th.phi, 3, th.trunc);
-	mublasInitMat (&th, vlx_hst * th.incx, 1, 0, hst_X, th.phi, 3, th.trunc);
-	mublasInitMat (&th, vly_hst * th.incy, 1, 0, hst_Y, 0., 0, 0);
+	mublasInitMat (&th, rda_hst, cda_hst, lda_hst, hst_A, th.phi, 3, th.trunc, 1);
+	mublasInitMat (&th, vlx_hst * th.incx, 1, 0, hst_X, th.phi, 3, th.trunc, 2);
+	mublasInitMat (&th, vly_hst * th.incy, 1, 0, hst_Y, 0., 0, 0, 0);
 
 // --------------------------------------------
 

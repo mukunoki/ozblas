@@ -27,10 +27,8 @@ int32_t ozblasRgemv (
 
 	return 0;
 }
-#if defined (FLOAT128)
 template int32_t ozblasRgemv <__float128, double> (ozblasHandle_t *oh, const char transA, const int32_t m, const int32_t n, const __float128 alpha, const __float128 *devA, const int32_t lda, const __float128 *devB, const int32_t incx, const __float128 beta, __float128 *devC, const int32_t incy);
 template int32_t ozblasRgemv <__float128, float> (ozblasHandle_t *oh, const char transA, const int32_t m, const int32_t n, const __float128 alpha, const __float128 *devA, const int32_t lda, const __float128 *devB, const int32_t incx, const __float128 beta, __float128 *devC, const int32_t incy);
-#endif
 template int32_t ozblasRgemv <double, double> (ozblasHandle_t *oh, const char transA, const int32_t m, const int32_t n, const double alpha, const double *devA, const int32_t lda, const double *devB, const int32_t incx, const double beta, double *devC, const int32_t incy);
 template int32_t ozblasRgemv <double, float> (ozblasHandle_t *oh, const char transA, const int32_t m, const int32_t n, const double alpha, const double *devA, const int32_t lda, const double *devB, const int32_t incx, const double beta, double *devC, const int32_t incy);
 template int32_t ozblasRgemv <float, float> (ozblasHandle_t *oh, const char transA, const int32_t m, const int32_t n, const float alpha, const float *devA, const int32_t lda, const float *devB, const int32_t incx, const float beta, float *devC, const int32_t incy);

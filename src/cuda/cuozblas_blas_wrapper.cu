@@ -2,7 +2,7 @@
 #include "cueft.h"
 #define NTX 512
 #define DOT_NBX 512
-#define CUSPARSE_CSR 
+//#define CUSPARSE_CSR // CSRMV is available only in old cuSparse 
 
 // =========================================
 // BLAS Wrappers
@@ -158,7 +158,6 @@ void blasRgemmBatch (cublasHandle_t ch, const char transA, const char transB, co
 	cublasDgemmBatched (ch, ToCublasOp(transA), ToCublasOp(transB), m, n, k, &alpha, A, lda, B, ldb, &beta, C, ldc, cnt);
 }
 // CSRMV
-// Note: This is a substitute for CSRMV, since cuSparse has deprecated it. Perhaps, we should use the BSRMV.
 __device__ __forceinline__ double shuffleGet (double &val, const int n) {
 	return __hiloint2double(
 		__shfl_xor_sync(0xFFFFFFFF, __double2hiint(val), n, 32),
@@ -199,7 +198,7 @@ void csrmv_n_kernel (
 		for (int32_t i = csrRowPtrA[rowid] + lane; i < csrRowPtrA[rowid+1]; i += 32) {
 			Ar1 = csrValA[i];
 			Xr1 = x[csrColIndA[i]];
-			Tr1 = FMA (Ar1, Xr1, Tr1);
+			Tr1 = fma (Ar1, Xr1, Tr1);
 		}
 		#pragma unroll
 		for (int32_t i = 16; i > 0; i >>= 1) 
@@ -208,7 +207,7 @@ void csrmv_n_kernel (
 			if (beta == 0.)
 				y[rowid] = alpha * Tr1;
 			else
-				y[rowid] = FMA (alpha, Tr1, MUL (beta, y[rowid]));
+				y[rowid] = fma (alpha, Tr1, (beta * y[rowid]));
 		}
 	}
 }
@@ -308,33 +307,6 @@ void blasRcsrmv (cusparseHandle_t ch, const char trans, const int32_t m, const i
 	#else
 	csrmv_n (m, alpha, A, devArowptr, devAcolind, X, beta, Y);
 	#endif
-/*
-	printf ("bsrmv\n");
-	int32_t *bsrRowPtrC, *bsrColIndC;
-	float *vecX, *vecY, *bsrValC;
-	int32_t blockDim = 32;
-	int32_t nnzb;
-	cusparseDirection_t dirA = CUSPARSE_DIRECTION_COLUMN;
-	int32_t mb = (m + blockDim-1) / blockDim;
-	int32_t nb = (n + blockDim-1) / blockDim;
-	cusparseMatDescr_t descrC = descrA;
-	cudaMalloc ((void**)&bsrRowPtrC, sizeof(int32_t) * (mb+1));
-	cusparseXcsr2bsrNnz (ch, dirA, m, n, descrA, devArowptr, devAcolind, blockDim, descrC, bsrRowPtrC, &nnzb);
-	cudaMalloc ((void**)&bsrColIndC, sizeof(int32_t) * nnzb);
-	cudaMalloc ((void**)&bsrValC, sizeof(float) * (blockDim*blockDim) * nnzb);
-	cusparseScsr2bsr (ch, dirA, m, n, descrA, A, devArowptr, devAcolind, blockDim, descrC, bsrValC, bsrRowPtrC, bsrColIndC);
-	cudaMalloc ((void**)&vecX, sizeof(float) * (nb*blockDim));
-	cudaMalloc ((void**)&vecY, sizeof(float) * (mb*blockDim));
-	cudaMemcpy (vecX, X, sizeof(float) * n, cudaMemcpyDeviceToDevice);
-	cudaMemcpy (vecY, Y, sizeof(float) * m, cudaMemcpyDeviceToDevice);
-	cusparseSbsrmv (ch, dirA, ToCusparseOp(trans), mb, nb, nnzb, &alpha, descrC, bsrValC, bsrRowPtrC, bsrColIndC, blockDim, vecX, &beta, vecY);
-	cudaMemcpy (Y, vecY, sizeof(float) * m, cudaMemcpyDeviceToDevice);
-	cudaFree (bsrRowPtrC);
-	cudaFree (bsrColIndC);
-	cudaFree (bsrValC);
-	cudaFree (vecX);
-	cudaFree (vecY);
-*/
 }
 void blasRcsrmv (cusparseHandle_t ch, const char trans, const int32_t m, const int32_t n, const int32_t nnz, const double alpha, const cusparseMatDescr_t descrA, const double *A, const int32_t *devAcolind, const int32_t *devArowptr, const double *X, const double beta, double *Y) {
 	#if defined CUSPARSE_CSR
@@ -841,7 +813,7 @@ void csrmm_n_kernel (
 			Ar1 = csrValA[i];
 			for (int32_t j = 0; j < n; j++) {
 				Br1 = B[j * ldb + csrColIndA[i]];
-				Tr1[j] = FMA (Ar1, Br1, Tr1[j]);
+				Tr1[j] = fma (Ar1, Br1, Tr1[j]);
 			}
 		}
 		for (int32_t j = 0; j < n; j++) {
@@ -937,3 +909,23 @@ void blasRcsrmm_x (cusparseHandle_t ch, const char transA, const int32_t m, cons
 void blasRcsrmm_x2 (cusparseHandle_t ch, const char transA, const int32_t m, const int32_t n, const int32_t k, const int32_t nnz, const double alpha, const cusparseMatDescr_t descrA, const double *A, const int32_t *devAcolind, const int32_t *devArowptr, const double *B, const int32_t ldb, const double beta, double *C, const int32_t ldc) {
 	csrmm_n_x2 (transA, m, n, k, alpha, A, devArowptr, devAcolind, B, ldb, beta, C, ldc);
 }
+
+// --------------------------------------------------------------
+// OMATCOPY
+// --------------------------------------------------------------
+void blasRomatcopy (cublasHandle_t ch, const char trans, const int32_t m, const int32_t n, const float* A, const int32_t lda, float* B, const int32_t ldb) {
+	float alpha = 1.;
+	float beta = 0.;
+	float* np = nullptr;
+	// note: m and n are exchanged from omatcopy
+	cublasSgeam (ch, ToCublasOp(trans), ToCublasOp('n'), n, m, &alpha, A, lda, &beta, np, n, B, ldb);
+}
+
+void blasRomatcopy (cublasHandle_t ch, const char trans, const int32_t m, const int32_t n, const double* A, const int32_t lda, double* B, const int32_t ldb) {
+	double alpha = 1.;
+	double beta = 0.;
+	double* np = nullptr;
+	// note: m and n are exchanged from omatcopy
+	cublasDgeam (ch, ToCublasOp(trans), ToCublasOp('n'), n, m, &alpha, A, lda, &beta, np, n, B, ldb);
+}
+

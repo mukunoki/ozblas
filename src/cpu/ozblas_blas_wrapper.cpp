@@ -24,7 +24,6 @@ int32_t blasRiamax (const int32_t n, const double* x, const int32_t incx) {
 	return cblas_idamax (n, x, incx);
 }
 
-#if defined (FLOAT128)
 int32_t blasRiamax (const int32_t n, const __float128* x, const int32_t incx) {
 	#if defined (MPLAPACK)
 	return iRamax (n, (__float128*)x, incx) - 1; // MPLAPACK uses 1-based index
@@ -33,7 +32,6 @@ int32_t blasRiamax (const int32_t n, const __float128* x, const int32_t incx) {
 	exit(1);
 	#endif
 }
-#endif
 
 // ASUM
 float blasRasum (const int32_t n, const float* x, const int32_t incx) {
@@ -44,7 +42,6 @@ double blasRasum (const int32_t n, const double* x, const int32_t incx) {
 	return cblas_dasum (n, x, incx);
 }
 
-#if defined (FLOAT128)
 __float128 blasRasum (const int32_t n, const __float128* x, const int32_t incx) {
 	#if defined (MPLAPACK)
 	return Rasum (n, (__float128*)x, incx);
@@ -53,7 +50,6 @@ __float128 blasRasum (const int32_t n, const __float128* x, const int32_t incx) 
 	exit(1);
 	#endif
 }
-#endif
 
 // SCAL
 void blasRscal (const int32_t n, const float alpha, float* x, const int32_t incx) {
@@ -64,7 +60,6 @@ void blasRscal (const int32_t n, const double alpha, double* x, const int32_t in
 	cblas_dscal (n, alpha, x, incx);
 }
 
-#if defined (FLOAT128)
 void blasRscal (const int32_t n, const __float128 alpha, __float128* x, const int32_t incx) {
 	#if defined (MPLAPACK)
 	Rscal (n, alpha, (__float128*)x, incx);
@@ -73,7 +68,6 @@ void blasRscal (const int32_t n, const __float128 alpha, __float128* x, const in
 	exit(1);
 	#endif
 }
-#endif
 
 // AXPY
 void blasRaxpy (const int32_t n, const float alpha, const float* x, const int32_t incx, float* y, const int32_t incy) {
@@ -84,7 +78,6 @@ void blasRaxpy (const int32_t n, const double alpha, const double* x, const int3
 	cblas_daxpy (n, alpha, x, incx, y, incy);
 }
 
-#if defined (FLOAT128)
 void blasRaxpy (const int32_t n, const __float128 alpha, const __float128* x, const int32_t incx, __float128* y, const int32_t incy) {
 	#if defined (MPLAPACK)
 	Raxpy (n, alpha, (__float128*)x, incx, (__float128*)y, incy);
@@ -93,7 +86,6 @@ void blasRaxpy (const int32_t n, const __float128 alpha, const __float128* x, co
 	exit(1);
 	#endif
 }
-#endif
 
 // GEMV
 void blasRgemv (const char trans, const int32_t m, const int32_t n, const float alpha, const float* A, const int32_t lda, const float* x, const int32_t incx, const float beta, float* y, const int32_t incy) {
@@ -104,7 +96,6 @@ void blasRgemv (const char trans, const int32_t m, const int32_t n, const double
 	cblas_dgemv (CblasColMajor, ToCblasOp(trans), m, n, alpha, A, lda, x, incx, beta, y, incy);
 }
 
-#if defined (FLOAT128)
 void blasRgemv (const char trans, const int32_t m, const int32_t n, const __float128 alpha, const __float128* A, const int32_t lda, const __float128* x, const int32_t incx, const __float128 beta, __float128* y, const int32_t incy) {
 	#if defined (MPLAPACK)
 	Rgemv (&trans, m, n, alpha, (__float128*)A, lda, (__float128*)x, incx, beta, y, incy);
@@ -113,7 +104,6 @@ void blasRgemv (const char trans, const int32_t m, const int32_t n, const __floa
 	exit(1);
 	#endif
 }
-#endif
 
 // GEMM
 void dgemm_tn_skinny_x2 (
@@ -177,7 +167,6 @@ void blasRgemm (const char transA, const char transB, const int32_t m, const int
 	}
 }
 
-#if defined (FLOAT128)
 void blasRgemm (const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const __float128 alpha, const __float128* A, const int32_t lda, const __float128* B, const int32_t ldb, const __float128 beta, __float128* C, const int32_t ldc) {
 	#if defined (MPLAPACK)
 	Rgemm (&transA, &transB, m, n, k, alpha, (__float128*)A, lda, (__float128*)B, ldb, beta, C, ldc);
@@ -186,7 +175,6 @@ void blasRgemm (const char transA, const char transB, const int32_t m, const int
 	exit(1);
 	#endif
 }
-#endif
 
 void blasRgemm_x2 (const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const float alpha, const float* A, const int32_t lda, const float* B, const int32_t ldb, const float beta, float* C, const int32_t ldc) {
 	fprintf (OUTPUT, "sgemm_x2 under construction.\n");
@@ -239,33 +227,34 @@ void blasRgemmBatch (const char transA, const char transB, const int32_t m, cons
 // ==========================================
 // General ==================================
 // ==========================================
+template <typename TYPE>
 void csrmm_n (
 	const int32_t m,
 	const int32_t n,
 	const int32_t k,
-	const double alpha,
-	const double* csrValA,
+	const TYPE alpha,
+	const TYPE* csrValA,
 	const int32_t* csrColIndA,
 	const int32_t* csrRowPtrA,
-	const double* B,
+	const TYPE* B,
 	const int32_t ldb,
-	const double beta,
-	double* C,
+	const TYPE beta,
+	TYPE* C,
 	const int32_t ldc
 ) {
 	#pragma omp parallel for schedule (static) 
 	for(int32_t rowid = 0; rowid < m; rowid++) {
 		for (int32_t j = 0; j < n; j++) {
-			double Tr = 0.;
+			TYPE Tr = 0.;
 			for(int32_t i = csrRowPtrA[rowid]; i < csrRowPtrA[rowid+1]; i++) {
-				double Ar = csrValA[i];
-				double Br = B[j * ldb + csrColIndA[i]];
-				Tr = fma (Ar, Br, Tr);
+				TYPE Ar = csrValA[i];
+				TYPE Br = B[j * ldb + csrColIndA[i]];
+				Tr = fma1 (Ar, Br, Tr);
 			}
 			if (beta == 0.)
 				C[j * ldc + rowid] = alpha * Tr;
 			else
-				C[j * ldc + rowid] = fma (alpha, Tr, (beta * C[j * ldc + rowid]));
+				C[j * ldc + rowid] = fma1 (alpha, Tr, (beta * C[j * ldc + rowid]));
 		}
 	}
 }
@@ -332,7 +321,7 @@ void csrmm_n_l2 (
 			//#pragma unroll 
 			for (int32_t j = 0; j < LL; j++) {
 				double Br = B[j * ldb + csrColIndA[i]];
-				Tr[j] = fma (Ar, Br, Tr[j]);
+				Tr[j] = fma1 (Ar, Br, Tr[j]);
 			}
 		}
 		if (beta == 0.) {
@@ -342,7 +331,7 @@ void csrmm_n_l2 (
 		} else {
 			//#pragma unroll 
 			for (int32_t j = 0; j < LL; j++) 
-				C[j * ldc + rowid] = fma (alpha, Tr[j], (beta * C[j * ldc + rowid]));
+				C[j * ldc + rowid] = fma1 (alpha, Tr[j], (beta * C[j * ldc + rowid]));
 		}
 	}
 }
@@ -419,12 +408,12 @@ void csrmm_n_l3 (
 			//#pragma unroll 
 			for (int32_t j = 0; j < LL; j++) {
 				double Br = B[j * ldb + csrColIndA[i]];
-				Tr[j] = fma (Ar, Br, Tr[j]);
+				Tr[j] = fma1 (Ar, Br, Tr[j]);
 			}
 		}
 		//#pragma unroll 
 		for (int32_t j = 0; j < 3; j++) {
-			C[j * ldc + rowid] = fma (alpha, Tr[j], (beta * C[j * ldc + rowid]));
+			C[j * ldc + rowid] = fma1 (alpha, Tr[j], (beta * C[j * ldc + rowid]));
 		}
 	}
 }
@@ -501,7 +490,7 @@ void csrmm_n_l4 (
 			//#pragma unroll 
 			for (int32_t j = 0; j < LL; j++) {
 				double Br = B[j * ldb + csrColIndA[i]];
-				Tr[j] = fma (Ar, Br, Tr[j]);
+				Tr[j] = fma1 (Ar, Br, Tr[j]);
 			}
 		}
 		if (beta == 0.) {
@@ -511,7 +500,7 @@ void csrmm_n_l4 (
 		} else {
 			//#pragma unroll 
 			for (int32_t j = 0; j < LL; j++) 
-				C[j * ldc + rowid] = fma (alpha, Tr[j], (beta * C[j * ldc + rowid]));
+				C[j * ldc + rowid] = fma1 (alpha, Tr[j], (beta * C[j * ldc + rowid]));
 		}
 	}
 }
@@ -588,7 +577,7 @@ void csrmm_n_l5 (
 			//#pragma unroll 
 			for (int32_t j = 0; j < LL; j++) {
 				double Br = B[j * ldb + csrColIndA[i]];
-				Tr[j] = fma (Ar, Br, Tr[j]);
+				Tr[j] = fma1 (Ar, Br, Tr[j]);
 			}
 		}
 		if (beta == 0.) {
@@ -598,7 +587,7 @@ void csrmm_n_l5 (
 		} else {
 			//#pragma unroll 
 			for (int32_t j = 0; j < LL; j++) 
-				C[j * ldc + rowid] = fma (alpha, Tr[j], (beta * C[j * ldc + rowid]));
+				C[j * ldc + rowid] = fma1 (alpha, Tr[j], (beta * C[j * ldc + rowid]));
 		}
 	}
 }
@@ -649,7 +638,8 @@ void csrmm_n_x2_l5 (
 #undef LL
 
 void blasRcsrmm (const char trans, const int32_t m, const int32_t n, const int32_t k, const int32_t nnz, const float alpha, const char *descrA, const float *A, const int32_t *devAcolind, const int32_t *devArowptr, const float *B, const int32_t ldb, const float beta, float *C, const int32_t ldc) {
-	fprintf (OUTPUT, "OzBLAS warning: CSRMM not implemented.\n");
+	csrmm_n (m, n, k, alpha, A, devAcolind, devArowptr, B, ldb, beta, C, ldc);
+	//fprintf (OUTPUT, "OzBLAS warning: CSRMM not implemented.\n");
 }
 
 void blasRcsrmm (const char trans, const int32_t m, const int32_t n, const int32_t k, const int32_t nnz, const double alpha, const char *descrA, const double *A, const int32_t *devAcolind, const int32_t *devArowptr, const double *B, const int32_t ldb, const double beta, double *C, const int32_t ldc) {
@@ -779,19 +769,15 @@ void csrmv (
 		for(int32_t i = csrRowPtrA[rowid]; i < csrRowPtrA[rowid+1]; i++) {
 			TYPE Ar = csrValA[i];
 			TYPE Br = x[csrColIndA[i]];
-			Tr = Ar * Br + Tr;
-			//Tr = fma (Ar, Br, Tr);
+			Tr = fma1 (Ar, Br, Tr);
 		}
 		if (beta == 0.)
 			y[rowid] = alpha * Tr;
 		else
-			y[rowid] = alpha * Tr + (beta * y[rowid]);
-			//y[rowid] = fma (alpha, Tr, (beta * y[rowid]));
+			y[rowid] = fma1 (alpha, Tr, (beta * y[rowid]));
 	}
 }
-#if defined (FLOAT128)
 template void csrmv (const int32_t m, const int32_t n, const __float128 alpha, const __float128* matA, const int32_t* matAind, const int32_t* matAptr, const __float128* x, const __float128 beta, __float128* y);
-#endif
 template void csrmv (const int32_t m, const int32_t n, const double alpha, const double* matA, const int32_t* matAind, const int32_t* matAptr, const double* x, const double beta, double* y);
 template void csrmv (const int32_t m, const int32_t n, const float alpha, const float* matA, const int32_t* matAind, const int32_t* matAptr, const float* x, const float beta, float* y);
 
@@ -845,7 +831,6 @@ void blasRcsrmvX (const char trans, const int32_t m, const int32_t n, const int3
 	#endif
 }
 
-#if defined (FLOAT128)
 void blasRcsrmv (const char trans, const int32_t m, const int32_t n, const int32_t nnz, const __float128 alpha, const char *descrA, const __float128 *A, const int32_t *devAcolind, const int32_t *devArowptr, const __float128 *X, const __float128 beta, __float128 *Y) {
 	csrmv (m, n, alpha, A, devAcolind, devArowptr, X, beta, Y);
 }
@@ -854,7 +839,6 @@ void blasRcsrmvX (const char trans, const int32_t m, const int32_t n, const int3
 	fprintf (OUTPUT, "blasRcsrmvX is not available.\n");
 	exit(1);
 }
-#endif
 
 
 // --------------------------------------------------------------
@@ -882,7 +866,6 @@ void blasRomatcopy (const char trans, const int32_t m, const int32_t n, const do
 	#endif
 }
 
-#if defined (FLOAT128)
 #include <complex>
 void blasRomatcopy (const char trans, const int32_t m, const int32_t n, const __float128* A, const int32_t lda, __float128* B, const int32_t ldb) {
 	#if defined (MKL)
@@ -898,7 +881,6 @@ void blasRomatcopy (const char trans, const int32_t m, const int32_t n, const __
 	cblas_zomatcopy (CblasColMajor, ToCblasOp(trans), m, n, &done, (const double*)A, lda, (double*)B, ldb);
 	#endif
 }
-#endif
 
 // DOT
 float blasRdot (const int32_t n, const float* x, const int32_t incx, const float* y, const int32_t incy) {
@@ -929,7 +911,6 @@ double blasRdotX (const int32_t n, const double* x, const int32_t incx, const do
 	return ret;
 }
 
-#if defined (FLOAT128)
 __float128 blasRdot (const int32_t n, const __float128* x, const int32_t incx, const __float128* y, const int32_t incy) {
 	#if defined (MPLAPACK)
 	return Rdot (n, (__float128*)x, incx, (__float128*)y, incy);
@@ -938,7 +919,6 @@ __float128 blasRdot (const int32_t n, const __float128* x, const int32_t incx, c
 	exit(1);
 	#endif
 }
-#endif
 
 // NRM2
 float blasRnrm2 (const int32_t n, const float* x, const int32_t incx) {
@@ -963,7 +943,6 @@ __float128 blasRnrm2X (const int32_t n, const __float128* x, const int32_t incx)
 	exit(1);
 }
 
-#if defined (FLOAT128)
 __float128 blasRnrm2 (const int32_t n, const __float128* x, const int32_t incx) {
 	#if defined (MPLAPACK)
 	return Rnrm2 (n, (__float128*)x, incx);
@@ -972,6 +951,5 @@ __float128 blasRnrm2 (const int32_t n, const __float128* x, const int32_t incx) 
 	exit(1);
 	#endif
 }
-#endif
 
 

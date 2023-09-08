@@ -104,13 +104,13 @@ main (int32_t argc, char **argv)
 	FP_TYPE *hst_C = new FP_TYPE[ldc_hst * cdc_hst];
 	FP_TYPE *hst_C_t = new FP_TYPE[ldc_hst * cdc_hst];
 	// initialize (0:const, 1:drand48, 2:phi, 3:erange)
-	mublasInitMat (&th, 1, 1, 0, &alpha, 1., 0, 0);
-	mublasInitMat (&th, 1, 1, 0, &beta, 0., 0, 0);
+	mublasInitMat (&th, 1, 1, 0, &alpha, 1., 0, 0, 0);
+	mublasInitMat (&th, 1, 1, 0, &beta, 0., 0, 0, 0);
 	if (th.trunc != 0)  // for reduced-precision performance evaluation
 		printf ("### !!! Truncated inputs !!!\n");
-	mublasInitMat (&th, rda_hst, cda_hst, lda_hst, hst_A, th.phi, 3, th.trunc);
-	mublasInitMat (&th, rdb_hst, cdb_hst, ldb_hst, hst_B, th.phi, 3, th.trunc);
-	mublasInitMat (&th, rdc_hst, cdc_hst, ldc_hst, hst_C, 0., 0, 0);
+	mublasInitMat (&th, rda_hst, cda_hst, lda_hst, hst_A, th.phi, 3, th.trunc, 1);
+	mublasInitMat (&th, rdb_hst, cdb_hst, ldb_hst, hst_B, th.phi, 3, th.trunc, 2);
+	mublasInitMat (&th, rdc_hst, cdc_hst, ldc_hst, hst_C, 0., 0, 0, 0);
 // --------------------------------------------
 	
 	if (!th.nodisp && th.fastModeFlag && th.dim_start) 

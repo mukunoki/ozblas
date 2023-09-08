@@ -64,8 +64,6 @@ int32_t ozblasRcg (
 	ozblasCopyVec (dimN, vecB, vecR);  // r = b
 	ozblasRcsrmv <TYPE1, TYPE2> (oh, tranA, dimN, dimN, dimNNZ, -1., descrA, (TYPE1*)matASplit, matAcolind, matArowptr, vecX, 1., vecR); // r = r-Ax (b-Ax)
 	dold = ozblasRdot <TYPE1, TYPE2> (oh, dimN, vecR, 1, vecR, 1); // dold = <r,r>
-//printf ("%f\n", oh->nSplitA);
-//printf ("%f\n", oh->nSplitB);
 	resi = sqrt (dold); // resi = |r|
 	if (oh->verbose > 0) {
 		t2 = timer();
@@ -83,8 +81,6 @@ int32_t ozblasRcg (
 
 		ozblasRcsrmv <TYPE1, TYPE2> (oh, tranA, dimN, dimN, dimNNZ, 1., descrA, (TYPE1*)matASplit, matAcolind, matArowptr, vecP, 0., vecQ); // q = Ap
 		tmp = ozblasRdot <TYPE1, TYPE2> (oh, dimN, vecP, 1, vecQ, 1); // tmp = <p,q>
-//printf ("%f\n", oh->nSplitA);
-//printf ("%f\n", oh->nSplitB);
         alpha = dold / tmp;
 
 		t0 = timer();
@@ -93,8 +89,6 @@ int32_t ozblasRcg (
 		oh->t_AXPY_SCAL_total += timer() - t0;
 
 		dnew = ozblasRdot <TYPE1, TYPE2> (oh, dimN, vecR, 1, vecR, 1); // dnew = <r,r>
-//printf ("%f\n", oh->nSplitA);
-//printf ("%f\n", oh->nSplitB);
 		resi = sqrt (dnew);
         beta = dnew / dold; // beta = dnew/dold
 		dold = dnew;
@@ -132,10 +126,8 @@ int32_t ozblasRcg (
 
 	return 0;
 }  
-#if defined (FLOAT128)
 template int32_t ozblasRcg <__float128, double> ( ozblasHandle_t *oh, const char tranA, const int32_t dimN, const int32_t dimNNZ, const char *descrA, const __float128 *matA, const int32_t *matAcolind, const int32_t *matArowptr, const __float128 *vecB, __float128 *vecX, int32_t maxiter, __float128 tol);
 template int32_t ozblasRcg <__float128, float> ( ozblasHandle_t *oh, const char tranA, const int32_t dimN, const int32_t dimNNZ, const char *descrA, const __float128 *matA, const int32_t *matAcolind, const int32_t *matArowptr, const __float128 *vecB, __float128 *vecX, int32_t maxiter, __float128 tol);
-#endif
 template int32_t ozblasRcg <double, double> ( ozblasHandle_t *oh, const char tranA, const int32_t dimN, const int32_t dimNNZ, const char *descrA, const double *matA, const int32_t *matAcolind, const int32_t *matArowptr, const double *vecB, double *vecX, int32_t maxiter, double tol);
 template int32_t ozblasRcg <double, float> ( ozblasHandle_t *oh, const char tranA, const int32_t dimN, const int32_t dimNNZ, const char *descrA, const double *matA, const int32_t *matAcolind, const int32_t *matArowptr, const double *vecB, double *vecX, int32_t maxiter, double tol);
 template int32_t ozblasRcg <float, float> ( ozblasHandle_t *oh, const char tranA, const int32_t dimN, const int32_t dimNNZ, const char *descrA, const float *matA, const int32_t *matAcolind, const int32_t *matArowptr, const float *vecB, float *vecX, int32_t maxiter, float tol);

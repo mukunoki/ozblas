@@ -6,7 +6,7 @@ LIB		:= ../../lib/libozblas.a
 ifneq ($(CXX),FCC)
 FLAGS	:= -Wall -Wno-maybe-uninitialized
 endif
-FLAGS   += -MD -O3 -fPIC -I$(INC_PATH) 
+FLAGS   += -MD -O0 -fPIC -I$(INC_PATH) 
 
 #--------------------
 # ARCH and COMPILER
@@ -69,14 +69,10 @@ ifeq ($(PREC_Q_S),yes)
 	PREC_Q=yes
 endif
 ifeq ($(PREC_Q),yes)
-	FLAGS += -DFLOAT128
 ifeq ($(CPU_ARCH),ARM)
 else
 	FLAGS += -lquadmath 
 endif
-endif
-ifeq ($(PREC_H_S),yes)
-	FLAGS += -DFLOAT16
 endif
 
 all: blas

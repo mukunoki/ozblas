@@ -73,14 +73,13 @@ template <typename TYPE1, typename TYPE2> TYPE1 ozblasRdot (ozblasHandle_t *oh, 
 template <typename TYPE1, typename TYPE2> int32_t ozblasRgemv (ozblasHandle_t *oh, const char tranA, const int32_t m, const int32_t n, const TYPE1 alpha, const TYPE1 *devA, const int32_t lda, const TYPE1 *devB, const int32_t incx, const TYPE1 beta, TYPE1 *devC, const int32_t incy);
 template <typename TYPE1, typename TYPE2> int32_t ozblasRgemm (ozblasHandle_t *oh,	const char tranA, const char tranB, const int32_t m, const int32_t n, const int32_t k, const TYPE1 alpha, const TYPE1 *devA, const int32_t lda, const TYPE1 *devB, const int32_t ldb, const TYPE1 beta, TYPE1 *devC, const int32_t ldc);
 template <typename TYPE1, typename TYPE2> int32_t ozblasRcsrmv (ozblasHandle_t *oh, const char tranA, const int32_t m, const int32_t n, const int32_t nnz, const TYPE1 alpha, const char *descrA, const TYPE1 *devA, const int32_t *devAcolind, const int32_t *devArowptr, const TYPE1 *devB, const TYPE1 beta, TYPE1 *devC);
-template <typename TYPE1, typename TYPE2> TYPE2 * ozblasRcsrmvSplitA (ozblasHandle_t *oh, const char tranA, const int32_t m, const int32_t n, const int32_t nnz, const char *descrA, const TYPE1 *devA, const int32_t *devArowptr);//, TYPE2 *devASplit);
+template <typename TYPE1, typename TYPE2> TYPE2 * ozblasRcsrmvSplitA (ozblasHandle_t *oh, const char tranA, const int32_t m, const int32_t n, const int32_t nnz, const char *descrA, const TYPE1 *devA, const int32_t *devArowptr);
 template <typename TYPE1, typename TYPE2> int32_t ozblasRcg (ozblasHandle_t *oh, const char tranA, const int32_t dimN, const int32_t dimNNZ, const char *descrA, const TYPE1 *matA, const int32_t *matAcolind, const int32_t *matArowptr, const TYPE1 *vecB, TYPE1 *vecX, int32_t maxiter, TYPE1 tol);
 
 // ================================
-// BLAS wrapper 
+// BLAS wrapper (for testing)
 // ================================
 void blasRcsrmv (const char trans, const int32_t m, const int32_t n, const int32_t nnz, const float alpha, const char *descrA, const float *A, const int32_t *devAcolind, const int32_t *devArowptr, const float *X, const float beta, float *Y);
-
 void blasRcsrmv (const char trans, const int32_t m, const int32_t n, const int32_t nnz, const double alpha, const char *descrA, const double *A, const int32_t *devAcolind, const int32_t *devArowptr, const double *X, const double beta, double *Y);
 void blasRcsrmm (const char trans, const int32_t m, const int32_t n, const int32_t k, const int32_t nnz, const double alpha, const char *descrA, const double *A, const int32_t *devAcolind, const int32_t *devArowptr, const double *B, const int32_t ldb, const double beta, double *C, const int32_t ldc);
 void blasRcsrmm_x2 (const char trans, const int32_t m, const int32_t n, const int32_t k, const int32_t nnz, const double alpha, const char *descrA, const double *A, const int32_t *devAcolind, const int32_t *devArowptr, const double *B, const int32_t ldb, const double beta, double *C, const int32_t ldc);

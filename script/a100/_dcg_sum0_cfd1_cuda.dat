@@ -1,0 +1,10 @@
+## /home/users/daichi.mukunoki/matrix/cfd1.mtx	70656	70656	1828364
+## splitShift = 1 (0-bit), nSplitA = 3 -> 3
+## total time =	4.125e+00
+## total iter =	3278
+## time per iter =	1.258e-03
+## GFlops/s =	3.580e+00
+## GB/s =	2.530e+01
+## ||b-Ax||/||b|| =	1.485e-10
+9.613e-01	1.857e-01	9.743e-02	2.247e-01	2.435e+00	1.097e-02	2.101e-01	#(SpMV/MM, DOT/NRM, AXPY/SCAL, Sum, SpltVec, SpltMat, Other)
+3278	1.485e-10	(0x1.4681b263562a5p-33)	4.125e+00	3.580e+00	2.530e+01	#(iter, trueres, sec, gflops, gbs)

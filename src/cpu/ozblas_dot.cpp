@@ -37,10 +37,8 @@ TYPE1 ozblasRdot (
 
 	return ret;
 }
-#if defined (FLOAT128)
 template __float128 ozblasRdot <__float128, double> (ozblasHandle_t *oh, const int32_t n, const __float128 *devA, const int32_t incx, const __float128 *devB, const int32_t incy);
 template __float128 ozblasRdot <__float128, float> (ozblasHandle_t *oh, const int32_t n, const __float128 *devA, const int32_t incx, const __float128 *devB, const int32_t incy);
-#endif
 template double ozblasRdot <double, double> (ozblasHandle_t *oh, const int32_t n, const double *devA, const int32_t incx, const double *devB, const int32_t incy);
 template double ozblasRdot <double, float> (ozblasHandle_t *oh, const int32_t n, const double *devA, const int32_t incx, const double *devB, const int32_t incy);
 template float ozblasRdot <float, float> (ozblasHandle_t *oh, const int32_t n, const float *devA, const int32_t incx, const float *devB, const int32_t incy);

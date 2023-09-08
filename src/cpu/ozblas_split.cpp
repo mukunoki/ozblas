@@ -20,9 +20,6 @@ int32_t getRho (const int32_t dim, const int32_t splitEpsModeFlag) {
 	constexpr int32_t epse_type2 = getEpse <TYPE2> ();
 	constexpr int32_t epse_type22 = getEpse2 <TYPE2> ();
 	switch (splitEpsModeFlag) {
-		case 1: // 
-			return ceil((epse_type1-(epse_type2-log2(1.*dim))/2)); // standard-ver
-			break;
 		case 2: // Dot2
 			return ceil((epse_type1-(epse_type22-log2(1.*dim))/2)); // standard-ver with Dot2
 			break;
@@ -51,24 +48,6 @@ QuickTwoSum (
 	e = b - t;
 }
 // =========================================
-
-template <typename TYPE>
-void ozblasFindMaxRKernel (
-	const int32_t m,
-	const int32_t n,
-	const TYPE *devInput,
-	const int32_t ldi,
-	TYPE *devMax
-) {
-	for (int32_t addrx = 0; addrx < m; addrx++) {
-		TYPE max_ = 0.;
-		int32_t addry;
-		#pragma omp parallel for reduction(max:max_)
-		for (addry = 0; addry < n; addry++) 
-			max_ = MAX(max_, fabs1(devInput[addry * ldi + addrx]));
-		devMax[addrx] = max_;
-	}
-}
 
 template <typename TYPE>
 void ozblasFindMaxCKernel (
@@ -102,7 +81,7 @@ void ozblasFindMaxDevice (
 		devMax[0] = fabs1(devInput[ptrMax]);
 	} else {
 		if (major == 'r') {
-			ozblasFindMaxRKernel (m, n, devInput, ldi, devMax);
+			fprintf (OUTPUT, "OzBLAS error: ozblasFindMaxRKernel is not available.\n");
 		} else {
 			ozblasFindMaxCKernel (m, n, devInput, ldi, devMax);
 		}
@@ -159,42 +138,6 @@ void ozblasSplitVecKernel (
 	}
 	devMax[0] = max_;
 }
-
-// max for n
-/*
-template <typename TYPE1, typename TYPE2>
-void ozblasSplitRKernel (
-	const int32_t m,
-	const int32_t n,
-	const int32_t rho,
-	const TYPE1 *devInput,
-	const int32_t ldi,
-	TYPE1 *devOutput,
-	const int32_t ldo,
-	TYPE2 *devSplit,
-	const int32_t lds,
-	short *devSpExp,
-	TYPE1 *devMax,
-	const int32_t splitShift
-) {
-	for (int32_t addrx = 0; addrx < m; addrx++) {
-		const short tau = devSpExp[addrx] = ceil(log2(devMax[addrx]));
-		const TYPE1 sigma = CONST * scalbn1 (1., rho + tau) * splitShift;
-		int32_t addry = 0;
-		TYPE1 max_ = 0.;
-		#pragma omp parallel for reduction(max:max_)
-		for (addry = 0; addry < n; addry++) {
-			TYPE1 input = devInput[addry * ldi + addrx];
-			const TYPE1 split = (input + sigma) - sigma;
-			input = input - split;
-			devSplit[addry * lds + addrx] = scalbn1(split, -tau);
-			devOutput[addry * ldo + addrx] = input;
-			max_ = MAX(max_, fabs1(input));
-		}
-		devMax[addrx] = max_;
-	}
-}
-*/
 
 // max for m
 template <typename TYPE>
@@ -283,7 +226,6 @@ void ozblasSplitDevice (
 
 	if (major == 'r') {
 		fprintf (OUTPUT, "OzBLAS error: ozblasSplitRKernel is not available.\n");
-//		ozblasSplitRKernel (m, n, rho, devInput, ldi, devOutput, ldo, devSplit, lds, devSpExp, devMax, splitShift);
 	} else {
 		if (n == 1) 
 			ozblasSplitVecKernel (m, rho, devInput, devOutput, devSplit, devSpExp, devMax, splitShift);
@@ -324,10 +266,8 @@ int32_t ozblasSplit (
 		fprintf (OUTPUT, "OzBLAS error: infSplit is failed.\n");
 	return s;
 }
-#if defined (FLOAT128)
 template int32_t ozblasSplit <__float128, double> (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const __float128 *devInput, const int32_t ldi, __float128 *devOutput, const int32_t ldo, double *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, __float128 *devMax);
 template int32_t ozblasSplit <__float128, float> (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const __float128 *devInput, const int32_t ldi, __float128 *devOutput, const int32_t ldo, float *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, __float128 *devMax);
-#endif
 template int32_t ozblasSplit <double, double> (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const double *devInput, const int32_t ldi, double *devOutput, const int32_t ldo, double *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax);
 template int32_t ozblasSplit <double, float> (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const double *devInput, const int32_t ldi, double *devOutput, const int32_t ldo, float *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax);
 template int32_t ozblasSplit <float, float> (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const float *devInput, const int32_t ldi, float *devOutput, const int32_t ldo, float *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, float *devMax);
@@ -511,10 +451,8 @@ int32_t ozblasSplit3 (
 	return s;
 }
 
-#if defined (FLOAT128)
 template int32_t ozblasSplit3 (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const __float128 *devInput, const int32_t ldi, double *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax, double *devTmpD1, const int32_t ldt1, double *devTmpD2, const int32_t ldt2, double *devTmpD3, const int32_t ldt3, double *devTmp, const int32_t ldt);
 template int32_t ozblasSplit3 (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const __float128 *devInput, const int32_t ldi, float *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, float *devMax, float *devTmpD1, const int32_t ldt1, float *devTmpD2, const int32_t ldt2, float *devTmpD3, const int32_t ldt3, float *devTmp, const int32_t ldt);
-#endif
 template int32_t ozblasSplit3 (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const double *devInput, const int32_t ldi, double *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax, double *devTmpD1, const int32_t ldt1, double *devTmpD2, const int32_t ldt2, double *devTmpD3, const int32_t ldt3, double *devTmp, const int32_t ldt);
 template int32_t ozblasSplit3 (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const float *devInput, const int32_t ldi, double *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax, double *devTmpD1, const int32_t ldt1, double *devTmpD2, const int32_t ldt2, double *devTmpD3, const int32_t ldt3, double *devTmp, const int32_t ldt);
 template int32_t ozblasSplit3 (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const double *devInput, const int32_t ldi, float *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, float *devMax, float *devTmpD1, const int32_t ldt1, float *devTmpD2, const int32_t ldt2, float *devTmpD3, const int32_t ldt3, float *devTmp, const int32_t ldt);
@@ -809,10 +747,8 @@ int32_t ozblasSplitA (
 		fprintf (OUTPUT, "OzBLAS error: infSplit is failed.\n");
 	return s;
 }
-#if defined (FLOAT128)
 template int32_t ozblasSplitA (ozblasHandle_t *oh, const char major, const int32_t ma, const int32_t ka, const __float128 *devAInput, const int32_t ldai, const int32_t kb, const int32_t nb, const __float128 *devBInput, const int32_t ldbi, __float128 *devAOutput, const int32_t ldao, double *devASplit, const int32_t ldas, short *devASpExp, const int32_t ldase, __float128 *devAMax, __float128 *devAtmp, const int32_t ldat, __float128 *devBtmp, const int32_t ldbt, __float128 *devE, __float128 *devBe, __float128 *devB1, __float128 *devB2);
 template int32_t ozblasSplitA (ozblasHandle_t *oh, const char major, const int32_t ma, const int32_t ka, const __float128 *devAInput, const int32_t ldai, const int32_t kb, const int32_t nb, const __float128 *devBInput, const int32_t ldbi, __float128 *devAOutput, const int32_t ldao, float *devASplit, const int32_t ldas, short *devASpExp, const int32_t ldase, __float128 *devAMax, __float128 *devAtmp, const int32_t ldat, __float128 *devBtmp, const int32_t ldbt, __float128 *devE, __float128 *devBe, __float128 *devB1, __float128 *devB2);
-#endif
 template int32_t ozblasSplitA (ozblasHandle_t *oh, const char major, const int32_t ma, const int32_t ka, const double *devAInput, const int32_t ldai, const int32_t kb, const int32_t nb, const double *devBInput, const int32_t ldbi, double *devAOutput, const int32_t ldao, double *devASplit, const int32_t ldas, short *devASpExp, const int32_t ldase, double *devAMax, double *devAtmp, const int32_t ldat, double *devBtmp, const int32_t ldbt, double *devE, double *devBe, double *devB1, double *devB2);
 template int32_t ozblasSplitA (ozblasHandle_t *oh, const char major, const int32_t ma, const int32_t ka, const double *devAInput, const int32_t ldai, const int32_t kb, const int32_t nb, const double *devBInput, const int32_t ldbi, double *devAOutput, const int32_t ldao, float *devASplit, const int32_t ldas, short *devASpExp, const int32_t ldase, double *devAMax, double *devAtmp, const int32_t ldat, double *devBtmp, const int32_t ldbt, double *devE, double *devBe, double *devB1, double *devB2);
 template int32_t ozblasSplitA (ozblasHandle_t *oh, const char major, const int32_t ma, const int32_t ka, const float *devAInput, const int32_t ldai, const int32_t kb, const int32_t nb, const float *devBInput, const int32_t ldbi, float *devAOutput, const int32_t ldao, float *devASplit, const int32_t ldas, short *devASpExp, const int32_t ldase, float *devAMax, float *devAtmp, const int32_t ldat, float *devBtmp, const int32_t ldbt, float *devE, float *devBe, float *devB1, float *devB2);
@@ -968,10 +904,8 @@ int32_t ozblasSplitSparse (
 		fprintf (OUTPUT, "OzBLAS error: infSplit is failed.\n");
 	return s;
 }
-#if defined (FLOAT128)
 template int32_t ozblasSplitSparse <__float128, double> (ozblasHandle_t *oh, const char major, const int32_t m, const __float128 *devInput, const int32_t *devRowptr, __float128 *devOutput, double *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, __float128 *devMax);
 template int32_t ozblasSplitSparse <__float128, float> (ozblasHandle_t *oh, const char major, const int32_t m, const __float128 *devInput, const int32_t *devRowptr, __float128 *devOutput, float *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, __float128 *devMax);
-#endif
 template int32_t ozblasSplitSparse <double, double> (ozblasHandle_t *oh, const char major, const int32_t m, const double *devInput, const int32_t *devRowptr, double *devOutput, double *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax);
 template int32_t ozblasSplitSparse <double, float> (ozblasHandle_t *oh, const char major, const int32_t m, const double *devInput, const int32_t *devRowptr, double *devOutput, float *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax);
 template int32_t ozblasSplitSparse <float, float> (ozblasHandle_t *oh, const char major, const int32_t m, const float *devInput, const int32_t *devRowptr, float *devOutput, float *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, float *devMax);

@@ -34,13 +34,10 @@ int32_t ozblasRgemm (
 	TYPE2 *devASplit, *devBSplit, *devCSplit;
 	TYPE2 fone = 1., fzero = 0.;
 	short *devASpExp, *devBSpExp;
-	#if defined (FLOAT128) // this is for QSGEMM
+	// for QSGEMM, double is used, not TYPE2
 	double *devCTmp1, *devCTmp2, *devCTmp3;
 	int32_t	sizeTypeT = sizeof(double);
-	#else
-	TYPE2 *devCTmp1, *devCTmp2, *devCTmp3;
-	int32_t sizeTypeT = sizeof (TYPE2);
-	#endif
+	// --
 	int32_t ldas, ldbs, ldcs, ldase, ldbse, ldat, ldbt, ldct;
 	int32_t ldct1, ldct2, ldct3;
 	int32_t mbk = m;
@@ -241,7 +238,7 @@ int32_t ozblasRgemm (
 							ozblasAxpby (mbk_, nbk_, devCTmp, ldct, &devC[ldc*(in*nbk)+im*mbk], ldc, alpha, beta);
 							t_sum_local += timer() - t000;
 						}
-					} // EndFor (ik)
+					} 
 				} // EndIf (useBatchedGemmFlag)
 			} // EndIf (Dot2)
 			oh->t_comp += timer() - t1;
@@ -286,10 +283,8 @@ int32_t ozblasRgemm (
 
 	return 0;
 }
-#if defined (FLOAT128)
 template int32_t ozblasRgemm <__float128, double> (ozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const __float128 alpha, const __float128 *devA, const int32_t lda, const __float128 *devB, const int32_t ldb, const __float128 beta, __float128 *devC, const int32_t ldc);
 template int32_t ozblasRgemm <__float128, float> (ozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const __float128 alpha, const __float128 *devA, const int32_t lda, const __float128 *devB, const int32_t ldb, const __float128 beta, __float128 *devC, const int32_t ldc);
-#endif
 template int32_t ozblasRgemm <double, double> (ozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const double alpha, const double *devA, const int32_t lda, const double *devB, const int32_t ldb, const double beta, double *devC, const int32_t ldc);
 template int32_t ozblasRgemm <double, float> (ozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const double alpha, const double *devA, const int32_t lda, const double *devB, const int32_t ldb, const double beta, double *devC, const int32_t ldc);
 template int32_t ozblasRgemm <float, float> (ozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const float alpha, const float *devA, const int32_t lda, const float *devB, const int32_t ldb, const float beta, float *devC, const int32_t ldc); 

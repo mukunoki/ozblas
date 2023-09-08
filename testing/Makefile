@@ -122,10 +122,9 @@ LIBS	+= -Wl,-Bstatic,-lmpblas__Float128_opt
 else
 LIBS	+= -lmpblas__Float128_opt
 endif
-FLAGS	+= -DFLOAT128	
 ifeq ($(CPU_ARCH),ARM)
 else
-LIBS	+= -Wl,-Bdynamic,-lquadmath #-DMPFR_WANT_FLOAT128
+LIBS	+= -Wl,-Bdynamic,-lquadmath 
 endif
 endif
 

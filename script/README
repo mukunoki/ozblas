@@ -1,0 +1,1 @@
+Mixed-precision implementations may have large error with fastmode (causing NG with tol=1e-12).

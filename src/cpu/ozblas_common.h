@@ -27,10 +27,10 @@
 
 #include <omp.h>
 
-#if defined (FLOAT128)
 #if defined (__INTEL_LLVM_COMPILER)
 Intel LLVM Compiler is not supported...
 #endif
+
 #if defined (ARM)
 #define __float128 long double
 #define FLT128_MAX LDBL_MAX
@@ -38,6 +38,8 @@ Intel LLVM Compiler is not supported...
 #else
 #include <quadmath.h>
 #endif
+
+#if defined (MPLAPACK)
 #include <mplapack/mpblas__Float128.h>
 #endif
 
@@ -71,12 +73,10 @@ template <>
 constexpr int32_t getEmin <double> () {
 	return -1022;
 }
-#if defined (FLOAT128)
 template <>
 constexpr int32_t getEmin <__float128> () {
 	return -16382;
 }
-#endif
 
 // -------------------------------------
 // getEpse
@@ -95,12 +95,10 @@ template <>
 constexpr int32_t getEpse <double> () {
 	return 53;
 }
-#if defined (FLOAT128)
 template <>
 constexpr int32_t getEpse <__float128> () {
 	return 113;
 }
-#endif
 template <typename TYPE>
 constexpr int32_t getEpse2 () {
 	fprintf (OUTPUT, "OzBLAS error: TYPE is not specified in getEpse2.\n");
@@ -133,12 +131,10 @@ template <>
 constexpr double getTypeMax <double> () {
 	return DBL_MAX;
 }
-#if defined (FLOAT128)
 template <>
 constexpr __float128 getTypeMax <__float128> () {
 	return FLT128_MAX;
 }
-#endif
 
 // -------------------------------------
 // getTypeMin
@@ -157,10 +153,8 @@ template <>
 constexpr double getTypeMin <double> () {
 	return DBL_MIN;
 }
-#if defined (FLOAT128)
 template <>
 constexpr __float128 getTypeMin <__float128> () {
 	return FLT128_MIN;
 }
-#endif
 

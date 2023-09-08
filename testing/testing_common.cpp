@@ -678,12 +678,13 @@ void mublasInitMat (
 	FP_TYPE *mat,
 	const double phi,
 	const int32_t mode,
-	const int32_t trunc
+	const int32_t trunc,
+	const int32_t seed
 ) {
 	int32_t j;
 	if (ld < m) ld = m;
 
-	srand48(123);
+	srand48(seed);
 	switch (mode) {
 		case 0:	// init with constant
 			#pragma omp parallel for 
@@ -851,6 +852,7 @@ void mublasCheckMatrix (
 	const int32_t ldr
 ) {
 	size_t i, j, errcnt = 0, nicnt = 0;
+	// comparison on mpreal
 	#if defined (MPLAPACK) && defined (MPFR_CHECK)
 	mpreal trg, ref, tmp_r0, tmp_r1, dif, rerr, rerrmax = 0.;
     for (j = 0; j < n; j++) {
@@ -874,6 +876,7 @@ void mublasCheckMatrix (
 		}
     }
 	#else
+	// comparison on FP_TYPE
 	FP_TYPE trgf, ref, dif, rerr, rerrmax = 0.;
     for (j = 0; j < n; j++) {
     	for (i = 0; i < m; i++) {
@@ -881,7 +884,7 @@ void mublasCheckMatrix (
 			trgf = target[j*ldt+i];
 			dif = trgf - ref;
 			rerr = (ref == 0.) ? 0. : FABS (dif / ref);
-//			printf("[%ld,%ld] trg=%1.3e ref=%1.3e diff=%1.3e (%1.3e)\n", j, i, (double)trgf, (double)ref, (double)dif, (double)rerr);
+//			printf("[%ld,%ld] trg=%1.16e ref=%1.16e diff=%1.3e (%1.3e)\n", j, i, (double)trgf, (double)ref, (double)dif, (double)rerr);
 			if (rerrmax < rerr) rerrmax = rerr;
 			#if defined (PREC_DD)
 			if (isinf1(trgf.x[0]) || isnan1(trgf.x[0])) {
@@ -905,17 +908,17 @@ void mublasCheckMatrix (
 	} else {
 		printf ("%d\t%d\t%d", th->dim_m_dev, th->dim_n_dev, th->dim_k_dev);
 		if (th->sumModeFlag == 1) {
-			if (errcnt == 0 && nicnt == 0) printf ("\tOK\n");
-			else {
-				printf ("\tNG (!= 0.0)\n");
-				printf ("\t%1.4e\t%zd\n", toDouble (rerrmax), errcnt);
-			}
-		} else {
-			if (fabs(toDouble (rerrmax)) < 1e-14 && nicnt == 0) printf ("\tOK (tol=1e-14)\n");
-			else {
+			if (errcnt == 0 && nicnt == 0)
+				printf ("\tOK");
+			else 
 				printf ("\tNG");
-				printf ("\t%1.4e\t%zd\n", toDouble (rerrmax), errcnt);
-			}
+			printf ("\t%1.4e\t%zd\n", toDouble (rerrmax), errcnt);
+		} else {
+			if (fabs(toDouble (rerrmax)) < 1e-12 && nicnt == 0)
+				printf ("\tOK");
+			else 
+				printf ("\tNG");
+			printf ("\t%1.4e\t%zd\n", toDouble (rerrmax), errcnt);
 		}
 	}
 	//if (th->nodisp) printf ("\n");

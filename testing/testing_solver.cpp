@@ -55,8 +55,8 @@ main (int32_t argc, char **argv)
 	ha.verbose = th.verbose;
 
 	// initialize
-	mublasInitMat (&th, n, 1, 0, hst_X, 1., 0, 0);
-	mublasInitMat (&th, n, 1, 0, hst_B, 1., 0, 0);
+	mublasInitMat (&th, n, 1, 0, hst_X, 1., 0, 0, 0);
+	mublasInitMat (&th, n, 1, 0, hst_B, 1., 0, 0, 0);
 
 	// for verbose
 	if (ha.verbose > 0) {
@@ -151,7 +151,6 @@ main (int32_t argc, char **argv)
 			}
 		}
 	}
-	printf ("\n");
 	// below, O(n) and O(nnz) alone are considered
 	// in while-loop, 1SpMV, 2DOT, 3AXPY, 1SCAL
 	double gflops = 1.e-9 * (2. * nnz + 12. * n) * ha.cg_numiter / t1;

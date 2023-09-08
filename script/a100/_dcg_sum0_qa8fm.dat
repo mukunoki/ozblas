@@ -1,0 +1,10 @@
+## /home/users/daichi.mukunoki/matrix/qa8fm.mtx	66127	66127	1660579
+## splitShift = 32 (5-bit), nSplitA = 3 -> 2
+## total time =	2.180e+00
+## total iter =	141
+## time per iter =	1.546e-02
+## GFlops/s =	2.661e-01
+## GB/s =	1.887e+00
+## ||b-Ax||/||b|| =	3.295e-16
+6.152e-01	5.326e-02	5.052e-02	7.555e-01	5.207e-01	2.258e-01	-4.074e-02	#(SpMV/MM, DOT/NRM, AXPY/SCAL, Sum, SpltVec, SpltMat, Other)
+141	3.295e-16	(0x1.7bdab4f16e0ecp-52)	2.180e+00	2.661e-01	1.887e+00	#(iter, trueres, sec, gflops, gbs)

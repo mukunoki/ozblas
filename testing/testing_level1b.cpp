@@ -78,8 +78,8 @@ main (int32_t argc, char **argv)
 	// initialize (1:val, 2:phi, 3:erange)
 	if (th.trunc != 0)  // for reduced-precision performance evaluation
 		printf ("### !!! Truncated inputs !!!\n");
-	mublasInitMat (&th, th.dim_n_hst*th.incx, 1, 0, hst_X, th.phi, 3, th.trunc);
-	mublasInitMat (&th, th.dim_n_hst*th.incy, 1, 0, hst_Y, th.phi, 3, th.trunc); 
+	mublasInitMat (&th, th.dim_n_hst*th.incx, 1, 0, hst_X, th.phi, 3, th.trunc, 1);
+	mublasInitMat (&th, th.dim_n_hst*th.incy, 1, 0, hst_Y, th.phi, 3, th.trunc, 2); 
 // --------------------------------------------
 
 	if (!th.nodisp && th.fastModeFlag) printf ("### Warning: fastmode is ignored on DOT because DOT is computed by a GEMM.\n");

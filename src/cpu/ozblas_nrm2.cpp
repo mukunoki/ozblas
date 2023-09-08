@@ -29,10 +29,8 @@ TYPE1 ozblasRnrm2 (
 
 	return ret;
 }
-#if defined (FLOAT128)
 template __float128 ozblasRnrm2 <__float128, double> (ozblasHandle_t *oh, const int n, const __float128* devX, const int incx);
 template __float128 ozblasRnrm2 <__float128, float> (ozblasHandle_t *oh, const int n, const __float128* devX, const int incx);
-#endif
 template double ozblasRnrm2 <double, double> (ozblasHandle_t *oh, const int n, const double* devX, const int incx);
 template double ozblasRnrm2 <double, float> (ozblasHandle_t *oh, const int n, const double* devX, const int incx);
 template float ozblasRnrm2 <float, float> (ozblasHandle_t *oh, const int n, const float* devX, const int incx);

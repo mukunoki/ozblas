@@ -36,15 +36,10 @@ int32_t ozblasRcsrmv (
 	TYPE2 *devASplit, *devBSplit, *devCSplit;
 	TYPE1 *devATmp, *devBTmp, *devCTmp;
 	TYPE1 *devAmax_, *devBmax_;
-//	TYPE2 *devAmax, *devATmpD1, *devATmpD2, *devATmpD3;
 	TYPE2 *devBmax, *devBTmpD1, *devBTmpD2, *devBTmpD3;
-	#if defined (FLOAT128) 
+	// for quadruple, use double
 	double *devCTmp1, *devCTmp2, *devCTmp3;
 	int32_t sizeTypeT = sizeof (double);
-	#else
-	TYPE2 *devCTmp1, *devCTmp2, *devCTmp3;
-	int32_t sizeTypeT = sizeof (TYPE2);
-	#endif
 	int32_t ldas, ldbs, ldcs, ldase;
 	int32_t sizeType1 = sizeof (TYPE1);
 	int32_t sizeType2 = sizeof (TYPE2);
@@ -57,13 +52,10 @@ int32_t ozblasRcsrmv (
 	ozblasVecAddrAlloc (oh, nnz, sizeType1, (void**)&devATmp);
 	ozblasVecAddrAlloc (oh, m,   sizeType1, (void**)&devAmax_);
 	ozblasMatAddrAlloc (oh, m, nSplitMaxLoc, sizeTypeS, (void**)&devASpExp, ldase);
-	//if (oh->splitModeFlag == 3) 
-	//		ozblasVecAddrAlloc (oh, m, sizeType2, (void**)&devAmax);
 	// --- here is preserved ---
 	if (oh->memMaskSplitA != 0) oh->memMaskSplitA = oh->memAddr;
 
 	ozblasMatAddrAlloc (oh, n, nSplitMaxLoc, sizeType2, (void**)&devBSplit, ldbs);
-//	ozblasMatAddrAlloc (oh, m, nSplitMaxLoc * nSplitMaxLoc, sizeType2, (void**)&devCSplit, ldcs);
 	ozblasMatAddrAlloc (oh, m, nSplitMaxLoc * nSplitMaxLoc * ((oh->splitEpsModeFlag == 2)?2:1), sizeType2, (void**)&devCSplit, ldcs);
 	ozblasVecAddrAlloc (oh, n, sizeType1, (void**)&devBTmp);
 	ozblasVecAddrAlloc (oh, m, sizeType1, (void**)&devCTmp);
@@ -79,9 +71,6 @@ int32_t ozblasRcsrmv (
 	// above must be allocated even if splitModeFlag is 3 as they may be used if Split3 is not used
 	if (oh->splitModeFlag == 3) {
 		// Currently, split3 is only for B
-		//ozblasVecAddrAlloc (oh, nnz, sizeType2, (void**)&devATmpD1); 
-		//ozblasVecAddrAlloc (oh, nnz, sizeType2, (void**)&devATmpD2); 
-		//ozblasVecAddrAlloc (oh, nnz, sizeType2, (void**)&devATmpD3); 
 		ozblasVecAddrAlloc (oh, 1, sizeType2, (void**)&devBmax);
 		ozblasVecAddrAlloc (oh, n, sizeType2, (void**)&devBTmpD1);
 		ozblasVecAddrAlloc (oh, n, sizeType2, (void**)&devBTmpD2);
@@ -167,7 +156,7 @@ int32_t ozblasRcsrmv (
 	} else { // sumMode < 3
 		if (oh->splitEpsModeFlag == 2) maxlevel = (nSplitA-1) + (nSplitB*2-1);
 		if (ozblasGlobalSum (oh, m, 1, devASpExp, ldase, nSplitA,
-							devBSpExp, 1, nSplitB*((oh->splitEpsModeFlag == 2)?2:1), devCSplit, ldcs, ldcs, devC, 1, alpha, beta, maxlevel, 1)) {
+							devBSpExp, 1, nSplitB*((oh->splitEpsModeFlag == 2)?2:1), devCSplit, ldcs, ldcs, devC, 1, alpha, beta, maxlevel, 3)) {
 			fprintf (OUTPUT, "OzBLAS error: sum is failed\n");
 			exit (1);
 		}
@@ -187,10 +176,8 @@ int32_t ozblasRcsrmv (
 
 	return 0;
 }
-#if defined (FLOAT128)
 template int32_t ozblasRcsrmv <__float128, double> (ozblasHandle_t *oh, const char tranA, const int32_t m, const int32_t n, const int32_t nnz, const __float128 alpha, const char *descrA, const __float128 *devA, const int32_t *devAcolind, const int32_t *devArowptr, const __float128 *devB, const __float128 beta, __float128 *devC);
 template int32_t ozblasRcsrmv <__float128, float> (ozblasHandle_t *oh, const char tranA, const int32_t m, const int32_t n, const int32_t nnz, const __float128 alpha, const char *descrA, const __float128 *devA, const int32_t *devAcolind, const int32_t *devArowptr, const __float128 *devB, const __float128 beta, __float128 *devC);
-#endif
 template int32_t ozblasRcsrmv <double, double> (ozblasHandle_t *oh, const char tranA, const int32_t m, const int32_t n, const int32_t nnz, const double alpha, const char *descrA, const double *devA, const int32_t *devAcolind, const int32_t *devArowptr, const double *devB, const double beta, double *devC);
 template int32_t ozblasRcsrmv <double, float> (ozblasHandle_t *oh, const char tranA, const int32_t m, const int32_t n, const int32_t nnz, const double alpha, const char *descrA, const double *devA, const int32_t *devAcolind, const int32_t *devArowptr, const double *devB, const double beta, double *devC);
 template int32_t ozblasRcsrmv <float, float> (ozblasHandle_t *oh, const char tranA, const int32_t m, const int32_t n, const int32_t nnz, const float alpha, const char *descrA, const float *devA, const int32_t *devAcolind, const int32_t *devArowptr, const float *devB, const float beta, float *devC);
@@ -243,23 +230,23 @@ TYPE2 *ozblasRcsrmvSplitA (
 		exit (1);
 	}
 	int32_t nSplitAlocal = ozblasSplitSparse (oh, 'r', m, devA, devArowptr, devATmp, devASplit, ldas, devASpExp, ldase, devAmax);
+	int32_t nSplitAlocalOld = nSplitAlocal;
 	// shiftSize-tuning
 	// ------------------------------------------------------------------------
 	if (oh->nSplitMax == 0) { // tuning is possible only when full-splitting (d=0)
-	//if (oh->nSplitMax == 0 && oh->splitEpsModeFlag != 2) { // tuning is possible only when full-splitting (d=0)
-		printf ("## CSRMV: << shift-size tuning >> num.split = %d\n", nSplitAlocal);
+		//printf ("## CSRMV: << shift-size tuning >> num.split = %d\n", nSplitAlocal);
 		int32_t nSplitAOld;
 		oh->splitShift = 1; 
 		do {
 			nSplitAOld = nSplitAlocal;
 			oh->splitShift *= 2;
 			nSplitAlocal = ozblasSplitSparse (oh, 'r', m, devA, devArowptr, devATmp, devASplit, ldas, devASpExp, ldase, devAmax);
-			printf ("... try splitShift = %d -> nSplitA = %d\n", oh->splitShift, nSplitAlocal);
+			//printf ("... try splitShift = %d -> nSplitA = %d\n", oh->splitShift, nSplitAlocal);
 		} while (nSplitAOld == nSplitAlocal && oh->splitShift < 512); // 512 (9bit) is max
 		if (nSplitAOld == nSplitAlocal) oh->splitShift = 1;
 		// do again with the optimal shift-size
 		nSplitAlocal = ozblasSplitSparse (oh, 'r', m, devA, devArowptr, devATmp, devASplit, ldas, devASpExp, ldase, devAmax);
-		printf ("splitShift = %d (%d-bit) with nSplitA = %d\n", oh->splitShift, (int)log2((double)oh->splitShift), nSplitAlocal);
+		printf ("\n## splitShift = %d (%d-bit), nSplitA = %d -> %d\n", oh->splitShift, (int)log2((double)oh->splitShift), nSplitAlocalOld, nSplitAlocal);
 	}
 	// ------------------------------------------------------------------------
 	oh->nSplitA_ = oh->nSplitA = nSplitAlocal;
@@ -277,10 +264,8 @@ TYPE2 *ozblasRcsrmvSplitA (
 
 	return devASplit;
 }
-#if defined (FLOAT128)
 template double *ozblasRcsrmvSplitA <__float128, double> (ozblasHandle_t *oh, const char tranA, const int32_t m, const int32_t n, const int32_t nnz, const char *descrA, const __float128 *devA, const int32_t *devArowptr);
 template float *ozblasRcsrmvSplitA <__float128, float> (ozblasHandle_t *oh, const char tranA, const int32_t m, const int32_t n, const int32_t nnz, const char *descrA, const __float128 *devA, const int32_t *devArowptr);
-#endif
 template double *ozblasRcsrmvSplitA <double, double> (ozblasHandle_t *oh, const char tranA, const int32_t m, const int32_t n, const int32_t nnz, const char *descrA, const double *devA, const int32_t *devArowptr);
 template float *ozblasRcsrmvSplitA <double, float> (ozblasHandle_t *oh, const char tranA, const int32_t m, const int32_t n, const int32_t nnz, const char *descrA, const double *devA, const int32_t *devArowptr);
 template float *ozblasRcsrmvSplitA <float, float> (ozblasHandle_t *oh, const char tranA, const int32_t m, const int32_t n, const int32_t nnz, const char *descrA, const float *devA, const int32_t *devArowptr);

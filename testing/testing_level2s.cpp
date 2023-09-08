@@ -117,10 +117,10 @@ main (int32_t argc, char **argv)
 	for (int32_t i = 0; i < nnz; i++) 
 		hst_A[i] = (FP_TYPE) hst_Aptr[i];
 	// initialize (0:const, 1:drand48, 2:phi, 3:erange)
-	mublasInitMat (&th, 1, 1, 0, &alpha, 1., 0, 0);
-	mublasInitMat (&th, 1, 1, 0, &beta, 0., 0, 0);
-	mublasInitMat (&th, n, 1, 0, hst_X, th.phi, 1, 0);
-	mublasInitMat (&th, m, 1, 0, hst_Y, 0., 0, 0);
+	mublasInitMat (&th, 1, 1, 0, &alpha, 1., 0, 0, 0);
+	mublasInitMat (&th, 1, 1, 0, &beta, 0., 0, 0, 0);
+	mublasInitMat (&th, n, 1, 0, hst_X, th.phi, 1, 0, 1);
+	mublasInitMat (&th, m, 1, 0, hst_Y, 0., 0, 0, 0);
 // --------------------------------------------
 
 	print_info2 (&th);
@@ -200,8 +200,6 @@ main (int32_t argc, char **argv)
 		#endif
 	}
 	if (th.mode == 'c') {
-		//FP_TYPE *devASplit = trgRcsrmvSplitA (ha, th.tranA, m, n, nnz, descrA, dev_A, dev_Rowptr);
-		//trgRcsrmv (ha, th.tranA, m, n, nnz, alpha, descrA, devASplit, dev_Colind, dev_Rowptr, dev_X, beta, dev_Y);
 		trgRcsrmv (ha, th.tranA, m, n, nnz, alpha, descrA, dev_A, dev_Colind, dev_Rowptr, dev_X, beta, dev_Y);
 		#if defined (CUDA)
 		cublasGetVector (m, sizeType, dev_Y, 1, hst_Y_t, 1);

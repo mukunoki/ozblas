@@ -12,7 +12,7 @@ AxpyKernel (
 ) {
 	const int32_t rowid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (rowid < n) 
-		devY[rowid] = FMA (alpha, devX[rowid], devY[rowid]);
+		devY[rowid] = fma (alpha, devX[rowid], devY[rowid]);
 }
 
 template <typename TYPE>

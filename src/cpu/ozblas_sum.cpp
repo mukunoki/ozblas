@@ -264,8 +264,7 @@ void ozblasGlobalNearsumKernel (
 				}
 			}
 			t = ozblasNearsum (ic, &devCsplit[addry * ldsc + addrx], llsc);
-			devC[addry * ldc + addrx] = alpha * t + (beta * devC[addry * ldc + addrx]);
-			//devC[addry * ldc + addrx] = fma (alpha, t, (beta * devC[addry * ldc + addrx]));
+			devC[addry * ldc + addrx] = fma1 (alpha, t, (beta * devC[addry * ldc + addrx]));
 		}
 	}
 }
@@ -313,8 +312,7 @@ void ozblasGlobalNearsumKernel (
 				}
 			}
 			t = ozblasNearsum (ic, &devCsplit[addry * ldsc + addrx], llsc);
-			devC[addry * ldc + addrx] = alpha * t + (beta * devC[addry * ldc + addrx]);
-			//devC[addry * ldc + addrx] = fma (alpha, t, (beta * devC[addry * ldc + addrx]));
+			devC[addry * ldc + addrx] = fma1 (alpha, t, (beta * devC[addry * ldc + addrx]));
 		}
 	}
 }
@@ -355,18 +353,21 @@ void ozblasGlobalFsumKernel (
 				for (int32_t ia = 0; ia < nSplitA; ia++) {
 					for (int32_t ib = 0; ib < nSplitB; ib++) {
 						if (ik == ia + ib) {
-							// order should be cared
-							int32_t it = (sumOrder == 1) ? ic : (nSplitA * ib + ia);
+							// order must be cared
+							int32_t it;
+							switch (sumOrder) {
+								case 2: it = nSplitA * ib + ia; break;
+								case 3: it = nSplitB * ia + ib; break;
+								default: it = ic; break;
+							}
 							TYPE c = devCsplit[llsc * it + addry * ldsc + addrx];
-//							printf ("fsum [%d] %1.3e (%p) (ia=%d ib=%d)\n", ic, c, &devCsplit[llsc * it + addry * ldsc + addrx], ia, ib);
 							t += c;
 							ic++;
 						}
 					}
 				}
 			}
-			devC[addry * ldc + addrx] = alpha * t + (beta * devC[addry * ldc + addrx]);
-			//devC[addry * ldc + addrx] = fma (alpha, t, (beta * devC[addry * ldc + addrx]));
+			devC[addry * ldc + addrx] = fma1 (alpha, t, (beta * devC[addry * ldc + addrx]));
 		}
 	}
 }
@@ -403,7 +404,12 @@ void ozblasGlobalFsumKernel (
 					short seA = devASpExp[ldase*ia+addrx];
 					for (int32_t ib = 0; ib < nSplitB; ib++) {
 						if (ik == ia + ib) {
-							int32_t it = (sumOrder == 1) ? ic : (nSplitA * ib + ia);
+							int32_t it;
+							switch (sumOrder) {
+								case 2: it = nSplitA * ib + ia; break;
+								case 3: it = nSplitB * ia + ib; break;
+								default: it = ic; break;
+							}
 							TYPE1 c = (TYPE1)devCsplit[llsc * it + addry * ldsc + addrx];
 							short seB = devBSpExp[ldbse*ib+addry];
 							t += scalbn1 (c, seA+seB);
@@ -412,8 +418,7 @@ void ozblasGlobalFsumKernel (
 					}
 				}
 			}
-			devC[addry * ldc + addrx] = alpha * t + (beta * devC[addry * ldc + addrx]);
-			//devC[addry * ldc + addrx] = fma (alpha, t, (beta * devC[addry * ldc + addrx]));
+			devC[addry * ldc + addrx] = fma1 (alpha, t, (beta * devC[addry * ldc + addrx]));
 		}
 	}
 }
@@ -459,10 +464,8 @@ int32_t ozblasGlobalSum (
 	}
 	return check;
 }
-#if defined (FLOAT128)
 template int32_t ozblasGlobalSum <__float128, double> (ozblasHandle_t *oh, const int32_t m, const int32_t n, const short *devASpExp, const int32_t ldase, const int32_t nSplitA, const short *devBSpExp, const int32_t ldbse, const int32_t nSplitB, double *devCsplit, const int32_t llsc, const int32_t ldsc, __float128 *devC, const int32_t ldc, const __float128 alpha, const __float128 beta, const int32_t maxlevel, const int32_t sumOrder);
 template int32_t ozblasGlobalSum <__float128, float> (ozblasHandle_t *oh, const int32_t m, const int32_t n, const short *devASpExp, const int32_t ldase, const int32_t nSplitA, const short *devBSpExp, const int32_t ldbse, const int32_t nSplitB, float *devCsplit, const int32_t llsc, const int32_t ldsc, __float128 *devC, const int32_t ldc, const __float128 alpha, const __float128 beta, const int32_t maxlevel, const int32_t sumOrder);
-#endif
 template int32_t ozblasGlobalSum <double, double> (ozblasHandle_t *oh, const int32_t m, const int32_t n, const short *devASpExp, const int32_t ldase, const int32_t nSplitA, const short *devBSpExp, const int32_t ldbse, const int32_t nSplitB, double *devCsplit, const int32_t llsc, const int32_t ldsc, double *devC, const int32_t ldc, const double alpha, const double beta, const int32_t maxlevel, const int32_t sumOrder);
 template int32_t ozblasGlobalSum <double, float> (ozblasHandle_t *oh, const int32_t m, const int32_t n, const short *devASpExp, const int32_t ldase, const int32_t nSplitA, const short *devBSpExp, const int32_t ldbse, const int32_t nSplitB, float *devCsplit, const int32_t llsc, const int32_t ldsc, double *devC, const int32_t ldc, const double alpha, const double beta, const int32_t maxlevel, const int32_t sumOrder);
 template int32_t ozblasGlobalSum <float, float> (ozblasHandle_t *oh, const int32_t m, const int32_t n, const short *devASpExp, const int32_t ldase, const int32_t nSplitA, const short *devBSpExp, const int32_t ldbse, const int32_t nSplitB, float *devCsplit, const int32_t llsc, const int32_t ldsc, float *devC, const int32_t ldc, const float alpha, const float beta, const int32_t maxlevel, const int32_t sumOrder);
@@ -501,10 +504,8 @@ int32_t ozblasLocalFsum (
 	}
 	return check;
 }
-#if defined (FLOAT128)
 template int32_t ozblasLocalFsum <__float128, double> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const double *devCsplit, const int32_t ldcs, __float128 *devCtmp, const int32_t ldct, const int32_t ic);
 template int32_t ozblasLocalFsum <__float128, float> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const float *devCsplit, const int32_t ldcs, __float128 *devCtmp, const int32_t ldct, const int32_t ic);
-#endif
 template int32_t ozblasLocalFsum <double, double> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const double *devCsplit, const int32_t ldcs, double *devCtmp, const int32_t ldct, const int32_t ic);
 template int32_t ozblasLocalFsum <double, float> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const float *devCsplit, const int32_t ldcs, double *devCtmp, const int32_t ldct, const int32_t ic);
 template int32_t ozblasLocalFsum <float, float> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const float *devCsplit, const int32_t ldcs, float *devCtmp, const int32_t ldct, const int32_t ic);
@@ -534,9 +535,7 @@ int32_t ozblasAxpby (
 	}
 	return checkGlobal;
 }
-#if defined (FLOAT128)
 template int32_t ozblasAxpby (const int32_t m, const int32_t n, const __float128 *devCsplit, const int32_t ldsc, __float128 *devC, const int32_t ldc, const __float128 alpha, const __float128 beta);
-#endif
 template int32_t ozblasAxpby (const int32_t m, const int32_t n, const double *devCsplit, const int32_t ldsc, double *devC, const int32_t ldc, const double alpha, const double beta);
 template int32_t ozblasAxpby (const int32_t m, const int32_t n, const float *devCsplit, const int32_t ldsc, float *devC, const int32_t ldc, const float alpha, const float beta);
 
@@ -608,10 +607,8 @@ int32_t ozblasLocalFsum3 (
 	}
 	return checkGlobal;
 }
-#if defined (FLOAT128)
 template int32_t ozblasLocalFsum3 <__float128, double> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const double *devCsplit, const int32_t ldcs, __float128 *devCtmp, const int32_t ldct, double *devCtmp1, const int32_t ldct1, double *devCtmp2, const int32_t ldct2, double *devCtmp3, const int32_t ldct3, const int32_t ic);
 template int32_t ozblasLocalFsum3 <__float128, float> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const float *devCsplit, const int32_t ldcs, __float128 *devCtmp, const int32_t ldct, float *devCtmp1, const int32_t ldct1, float *devCtmp2, const int32_t ldct2, float *devCtmp3, const int32_t ldct3, const int32_t ic);
-#endif
 template int32_t ozblasLocalFsum3 <double, double> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const double *devCsplit, const int32_t ldcs, double *devCtmp, const int32_t ldct, double *devCtmp1, const int32_t ldct1, double *devCtmp2, const int32_t ldct2, double *devCtmp3, const int32_t ldct3, const int32_t ic);
 template int32_t ozblasLocalFsum3 <double, float> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const float *devCsplit, const int32_t ldcs, double *devCtmp, const int32_t ldct, float *devCtmp1, const int32_t ldct1, float *devCtmp2, const int32_t ldct2, float *devCtmp3, const int32_t ldct3, const int32_t ic);
 template int32_t ozblasLocalFsum3 <float, double> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const double *devCsplit, const int32_t ldcs, float *devCtmp, const int32_t ldct, double *devCtmp1, const int32_t ldct1, double *devCtmp2, const int32_t ldct2, double *devCtmp3, const int32_t ldct3, const int32_t ic);
@@ -681,9 +678,7 @@ int32_t ozblasLocalFsum3 (
 	}
 	return checkGlobal;
 }
-#if defined (FLOAT128)
 template int32_t ozblasLocalFsum3 <__float128, float, double> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const float *devCsplit, const int32_t ldcs, __float128 *devCtmp, const int32_t ldct, double *devCtmp1, const int32_t ldct1, double *devCtmp2, const int32_t ldct2, double *devCtmp3, const int32_t ldct3, const int32_t ic);
-#endif
 template int32_t ozblasLocalFsum3 <double, float, double> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const float *devCsplit, const int32_t ldcs, double *devCtmp, const int32_t ldct, double *devCtmp1, const int32_t ldct1, double *devCtmp2, const int32_t ldct2, double *devCtmp3, const int32_t ldct3, const int32_t ic);
 template int32_t ozblasLocalFsum3 <float, float, double> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const float *devCsplit, const int32_t ldcs, float *devCtmp, const int32_t ldct, double *devCtmp1, const int32_t ldct1, double *devCtmp2, const int32_t ldct2, double *devCtmp3, const int32_t ldct3, const int32_t ic);
 

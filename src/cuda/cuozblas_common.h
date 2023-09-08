@@ -4,12 +4,13 @@
 #define DefaultWorkSize 1e9 // 1GB
 #define NumSplitDefaultMax 20
 
-#define ADD __dadd_rn
-#define SUB __dsub_rn
-#define MUL __dmul_rn
-#define FMA __fma_rn
-
 #define OUTPUT stdout // stderr
+/*
+#define ADD(x,y) __dadd_rn(x,y)
+#define SUB(x,y) __dsub_rn(x,y)
+#define MUL(x,y) __dmul_rn(x,y)
+#define FMA(x,y,z) __fma_rn(x,y,z)
+*/
 
 #include <cmath>
 #include <cstdio>

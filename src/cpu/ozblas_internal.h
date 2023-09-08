@@ -5,22 +5,22 @@
 // ozblas_aux.cpp
 //=============================================
 int32_t checkTrans (const char tran);
-template <typename TYPE> constexpr int32_t getEmin ();
+template <typename TYPE> TYPE fma1 (const TYPE x, const TYPE y, const TYPE z);
 template <typename TYPE> TYPE fabs1 (const TYPE v);
 template <typename TYPE> TYPE scalbn1 (const TYPE v, const int n);
 template <typename TYPE1, typename TYPE2> int32_t rangeCheck (const int32_t m, const int32_t n, const TYPE1 *mat, const int32_t ld);
+template <typename TYPE> void ozblasCopyVec (const int32_t n, const TYPE *devIn, TYPE *devOut);
 double timer ();
 int32_t memCheck (ozblasHandle_t *oh);
 void ozblasMatAddrAlloc (ozblasHandle_t *oh, const int32_t m, const int32_t n, const int32_t size, void **dev, int32_t &lds);
 void ozblasVecAddrAlloc (ozblasHandle_t *oh, const int32_t m, const int32_t size, void **dev);
-template <typename TYPE> void ozblasCopyVec (const int32_t n, const TYPE *devIn, TYPE *devOut);
 void PrintMat (const int32_t m, const int32_t n, const double *devC, const int32_t ldd);
 void PrintMatInt (const int32_t m, const int32_t n, const int32_t *devC, const int32_t ldd);
 CBLAS_TRANSPOSE ToCblasOp (const char tran);
+char FromCublasOp (CBLAS_TRANSPOSE tran);
 #if defined (CUBLAS)
 cublasOperation_t ToCublasOp (const char tran);
 #endif
-char FromCublasOp (CBLAS_TRANSPOSE tran);
 
 //=============================================
 // ozblas_XXX
@@ -46,57 +46,41 @@ template <typename TYPE1, typename TYPE15, typename TYPE2> int32_t ozblasLocalFs
 // IAMAX
 int32_t blasRiamax (const int32_t n, const float* x, const int32_t incx);
 int32_t blasRiamax (const int32_t n, const double* x, const int32_t incx);
-#if defined (FLOAT128)
 int32_t blasRiamax (const int32_t n, const __float128* x, const int32_t incx);
-#endif
 // ASUM
 float blasRasum (const int32_t n, const float* x, const int32_t incx);
 double blasRasum (const int32_t n, const double* x, const int32_t incx);
-#if defined (FLOAT128)
 __float128 blasRasum (const int32_t n, const __float128* x, const int32_t incx);
-#endif
 // SCAL
 void blasRscal (const int32_t n, const float alpha, float* x, const int32_t incx);
 void blasRscal (const int32_t n, const double alpha, double* x, const int32_t incx);
-#if defined (FLOAT128)
 void blasRscal (const int32_t n, const __float128 alpha, __float128* x, const int32_t incx);
-#endif
 // AXPY
 void blasRaxpy (const int32_t n, const float alpha, const float* x, const int32_t incx, float* y, const int32_t incy);
 void blasRaxpy (const int32_t n, const double alpha, const double* x, const int32_t incx, double* y, const int32_t incy);
-#if defined (FLOAT128)
 void blasRaxpy (const int32_t n, const __float128 alpha, const __float128* x, const int32_t incx, __float128* y, const int32_t incy);
-#endif
 // DOT
 float blasRdot (const int32_t n, const float* x, const int32_t incx, const float* y, const int32_t incy);
 double blasRdot (const int32_t n, const double* x, const int32_t incx, const double* y, const int32_t incy);
 float blasRdotX (const int32_t n, const float* x, const int32_t incx, const float* y, const int32_t incy);
 double blasRdotX (const int32_t n, const double* x, const int32_t incx, const double* y, const int32_t incy);
-#if defined (FLOAT128)
 __float128 blasRdot (const int32_t n, const __float128* x, const int32_t incx, const __float128* y, const int32_t incy);
 __float128 blasRdotX (const int32_t n, const __float128* x, const int32_t incx, const __float128* y, const int32_t incy);
-#endif
 // NRM2
 float blasRnrm2 (const int32_t n, const float* x, const int32_t incx);
 double blasRnrm2 (const int32_t n, const double* x, const int32_t incx);
 float blasRnrm2X (const int32_t n, const float* x, const int32_t incx);
 double blasRnrm2X (const int32_t n, const double* x, const int32_t incx);
-#if defined (FLOAT128)
 __float128 blasRnrm2 (const int32_t n, const __float128* x, const int32_t incx);
 __float128 blasRnrm2X (const int32_t n, const __float128* x, const int32_t incx);
-#endif
 // GEMV
 void blasRgemv (const char trans, const int32_t m, const int32_t n, const float alpha, const float* A, const int32_t lda, const float* x, const int32_t incx, const float beta, float* y, const int32_t incy);
 void blasRgemv (const char trans, const int32_t m, const int32_t n, const double alpha, const double* A, const int32_t lda, const double* x, const int32_t incx, const double beta, double* y, const int32_t incy);
-#if defined (FLOAT128)
 void blasRgemv (const char trans, const int32_t m, const int32_t n, const __float128 alpha, const __float128* A, const int32_t lda, const __float128* x, const int32_t incx, const __float128 beta, __float128* y, const int32_t incy);
-#endif
 // GEMM
 void blasRgemm (const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const float alpha, const float* A, const int32_t lda, const float* B, const int32_t ldb, const float beta, float* C, const int32_t ldc);
 void blasRgemm (const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const double alpha, const double* A, const int32_t lda, const double* B, const int32_t ldb, const double beta, double* C, const int32_t ldc);
-#if defined (FLOAT128)
 void blasRgemm (const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const __float128 alpha, const __float128* A, const int32_t lda, const __float128* B, const int32_t ldb, const __float128 beta, __float128* C, const int32_t ldc);
-#endif
 void blasRgemm_x2 (const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const float alpha, const float* A, const int32_t lda, const float* B, const int32_t ldb, const float beta, float* C, const int32_t ldc);
 void blasRgemm_x2 (const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const double alpha, const double* A, const int32_t lda, const double* B, const int32_t ldb, const double beta, double* C, const int32_t ldc);
 // CUDA-GEMM
@@ -112,10 +96,8 @@ void blasRcsrmv (const char trans, const int32_t m, const int32_t n, const int32
 void blasRcsrmv (const char trans, const int32_t m, const int32_t n, const int32_t nnz, const double alpha, const char *descrA, const double *A, const int32_t *devAcolind, const int32_t *devArowptr, const double *X, const double beta, double *Y);
 void blasRcsrmvX (const char trans, const int32_t m, const int32_t n, const int32_t nnz, const float alpha, const char *descrA, const float *A, const int32_t *devAcolind, const int32_t *devArowptr, const float *X, const float beta, float *Y);
 void blasRcsrmvX (const char trans, const int32_t m, const int32_t n, const int32_t nnz, const double alpha, const char *descrA, const double *A, const int32_t *devAcolind, const int32_t *devArowptr, const double *X, const double beta, double *Y);
-#if defined (FLOAT128)
 void blasRcsrmv (const char trans, const int32_t m, const int32_t n, const int32_t nnz, const __float128 alpha, const char *descrA, const __float128 *A, const int32_t *devAcolind, const int32_t *devArowptr, const __float128 *X, const __float128 beta, __float128 *Y);
 void blasRcsrmvX (const char trans, const int32_t m, const int32_t n, const int32_t nnz, const __float128 alpha, const char *descrA, const __float128 *A, const int32_t *devAcolind, const int32_t *devArowptr, const __float128 *X, const __float128 beta, __float128 *Y);
-#endif
 // CSRMM
 void blasRcsrmm (const char trans, const int32_t m, const int32_t n, const int32_t k, const int32_t nnz, const float alpha, const char *descrA, const float *A, const int32_t *devAcolind, const int32_t *devArowptr, const float *B, const int32_t ldb, const float beta, float *C, const int32_t ldc);
 void blasRcsrmm (const char trans, const int32_t m, const int32_t n, const int32_t k, const int32_t nnz, const double alpha, const char *descrA, const double *A, const int32_t *devAcolind, const int32_t *devArowptr, const double *B, const int32_t ldb, const double beta, double *C, const int32_t ldc);
@@ -124,8 +106,6 @@ void blasRcsrmm_x2 (const char trans, const int32_t m, const int32_t n, const in
 // OMATCOPY
 void blasRomatcopy (const char trans, const int32_t m, const int32_t n, const float* A, const int32_t lda, float* B, const int32_t ldb);
 void blasRomatcopy (const char trans, const int32_t m, const int32_t n, const double* A, const int32_t lda, double* B, const int32_t ldb);
-#if defined (FLOAT128)
 void blasRomatcopy (const char trans, const int32_t m, const int32_t n, const __float128* A, const int32_t lda, __float128* B, const int32_t ldb);
-#endif
 
 #endif

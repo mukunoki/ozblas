@@ -42,16 +42,16 @@ void cuozblasTransform (
 		// ExtractVector
 		tau = 0.;
 		for (i = 0; i < n; i++) {
-			tmp = SUB (ADD (sigma, vec[i*ld]), sigma);
+			tmp = (sigma + vec[i*ld]) - sigma;
 			vec[i*ld] -= tmp;  // <- output
 			tau += tmp;
 		}
 		// here, tau1 = t1
-		tau1 = ADD (t, tau);
+		tau1 = t + tau;
 		if ((sigma <= scalbn (1., emin)) || (fabs(tau1) >= scalbn (1., 2*m+1-epse)*sigma)) {
 			//FastTwoSum (t, tau, &tau1, &tau2);
 			//tau1 = t + tau
-			tau2 = SUB (tau, SUB (tau1, t));
+			tau2 = tau - (tau1 - t);
 			return;
 		}
 		sigma = scalbn (1., m-53) * sigma;
@@ -73,8 +73,8 @@ void cuozblasTransformK (
 	cuozblasTransform (n, vec, ld, rho, tau1, tau2);
 	for (int32_t i = 0; i < n; i++)
 		tmp += vec[i*ld];
-	res = ADD (tau1, ADD (tau2, tmp));
-	r = SUB (tau2, SUB (res, tau1));
+	res = tau1 + (tau2 + tmp);
+	r = tau2 - (res - tau1);
 }
 
 template <typename TYPE>
@@ -98,12 +98,12 @@ TYPE cuozblasNearsum (
 	cuozblasTransformK (n, vec, ld, r, delta, r2);
 	if (delta == 0) 
 		return res;
-	res2 = ADD (res, MUL (getSign (delta), MUL (eps, fabs(res))));
+	res2 = res, + (getSign (delta) * (eps * fabs(res)));
 	if (res2 == res) {
-		mu = MUL (getSign (delta), MUL (eps, fabs(res)));
-		res2 = ADD (res, MUL (2., MUL (getSign (delta), MUL (eps, fabs(res)))));
+		mu = getSign (delta) * (eps * fabs(res));
+		res2 = res + 2. * getSign (delta) * eps * fabs(res);
 	} else {
-		mu = SUB (res2, res) / 2.;
+		mu = (res2 - res) / 2.;
 	}
 	if (fabs(delta) < fabs(mu)) 
 		return res;
@@ -190,7 +190,7 @@ void cuozblasGlobalNearsumKernel (
 			}
 		}
 		t = cuozblasNearsum (ic, &devCsplit[addry * ldsc + addrx], llsc);
-		devC[addry * ldc + addrx] = FMA (alpha, t, MUL (beta, devC[addry * ldc + addrx]));
+		devC[addry * ldc + addrx] = fma (alpha, t, (beta * devC[addry * ldc + addrx]));
 	}
 }
 
@@ -236,7 +236,12 @@ void cuozblasGlobalFsumKernel (
 			for (int32_t ia = 0; ia < nSplitA; ia++) {
 				for (int32_t ib = 0; ib < nSplitB; ib++) {
 					if (ik == ia + ib) {
-						int32_t it = (sumOrder == 1) ? ic : (nSplitA * ib + ia);
+						int32_t it;
+						switch (sumOrder) {
+							case 2: it = nSplitA * ib + ia; break;
+							case 3: it = nSplitB * ia + ib; break;
+							default: it = ic; break;
+						}
 						TYPE c = devCsplit[llsc * it + addry * ldsc + addrx];
 						t += c;
 						ic++;
@@ -244,7 +249,7 @@ void cuozblasGlobalFsumKernel (
 				}
 			}
 		}
-		devC[addry * ldc + addrx] = FMA (alpha, t, MUL (beta, devC[addry * ldc + addrx]));
+		devC[addry * ldc + addrx] = fma (alpha, t, (beta * devC[addry * ldc + addrx]));
 	}
 }
 
@@ -287,7 +292,12 @@ void cuozblasGlobalFsumKernel (
 				short seA = devASpExp[ldase*ia+addrx];
 				for (int32_t ib = 0; ib < nSplitB; ib++) {
 					if (ik == ia + ib) {
-						int32_t it = (sumOrder == 1) ? ic : (nSplitA * ib + ia);
+						int32_t it;
+						switch (sumOrder) {
+							case 2: it = nSplitA * ib + ia; break;
+							case 3: it = nSplitB * ia + ib; break;
+							default: it = ic; break;
+						}
 						TYPE1 c = (TYPE1)devCsplit[llsc * it + addry * ldsc + addrx];
 						short seB = devBSpExp[ldbse*ib+addry];
 						t += scalbn (c, seA+seB);
@@ -296,7 +306,7 @@ void cuozblasGlobalFsumKernel (
 				}
 			}
 		}
-		devC[addry * ldc + addrx] = FMA (alpha, t, MUL (beta, devC[addry * ldc + addrx]));
+		devC[addry * ldc + addrx] = fma (alpha, t, (beta * devC[addry * ldc + addrx]));
 	}
 }
 
@@ -443,7 +453,7 @@ void cuozblasAxpbyKernel (
 
 	if (addrx < m && addry < n) {
 		TYPE t = devCsplit[addry * ldsc + addrx];
-		devC[addry * ldc + addrx] = FMA (alpha, t, MUL (beta, devC[addry * ldc + addrx]));
+		devC[addry * ldc + addrx] = fma (alpha, t, (beta * devC[addry * ldc + addrx]));
 	}
 }
 

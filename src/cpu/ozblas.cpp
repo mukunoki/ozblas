@@ -32,7 +32,7 @@ void ozblasCreate (ozblasHandle_t *oh, uint64_t WorkSizeBytes) {
 	oh->nSplitMax = 0;
 	// for CG
 	oh->memMaskSplitA = 0; // disable pre-split of matA 
-	oh->splitShift = 1; // default (no-Splitshift)
+	oh->splitShift = 1; // default 
 
 	// Flag
 	oh->splitModeFlag = 0;

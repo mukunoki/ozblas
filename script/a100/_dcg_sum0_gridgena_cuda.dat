@@ -1,0 +1,10 @@
+## /home/users/daichi.mukunoki/matrix/gridgena.mtx	48962	48962	512084
+## splitShift = 64 (6-bit), nSplitA = 3 -> 2
+## total time =	2.449e+00
+## total iter =	2394
+## time per iter =	1.023e-03
+## GFlops/s =	1.576e+00
+## GB/s =	1.271e+01
+## ||b-Ax||/||b|| =	1.080e-10
+2.136e-01	1.185e-01	6.830e-02	1.320e-01	1.757e+00	7.090e-03	1.522e-01	#(SpMV/MM, DOT/NRM, AXPY/SCAL, Sum, SpltVec, SpltMat, Other)
+2394	1.080e-10	(0x1.dae09056503cfp-34)	2.449e+00	1.576e+00	1.271e+01	#(iter, trueres, sec, gflops, gbs)

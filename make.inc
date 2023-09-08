@@ -2,24 +2,23 @@
 
 #--- System ----------------------------------
 #CPU_ARCH: KNL, ICELAKE, SKYLAKE, ARM
-CPU_ARCH = SKYLAKE
+CPU_ARCH =
 # -> If specified, compile with architecture-specific options
 
 #LINKAGE: static, dynamic
 LINKAGE = static
 
 #--- PATH ------------------------------------
-CUDA_PATH	= /work/opt/local/x86_64/cores/cuda/12.1/
-#CUDA_PATH	= /usr/local/cuda-12.0
-LIB_PATH	= $(HOME)/local/lib
-INC_PATH	= $(HOME)/local/include
+#CUDA_PATH	= /work/opt/local/x86_64/cores/cuda/12.1/
+CUDA_PATH	= /usr/local/cuda-12.0
+LIB_PATH	= $(HOME)/local_a100/lib
+INC_PATH	= $(HOME)/local_a100/include
 # -> installation path of external libraries
 
 #--- Compiler --------------------------------
-#CXX: g++
 CXX = g++
 # -> Intel Compiler (icpc) should work (but not tested)
-# -> Intel LLVM Compiler (icpx) is not supported for quadruple-precision
+# -> Intel LLVM Compiler (icpx) does NOT work (for quadruple-precision)
 
 #--- CPU (OzBLAS) / CUDA (cuOzBLAS) ----------
 CPU  = yes

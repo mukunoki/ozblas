@@ -1,29 +1,38 @@
 #include "ozblas_common.h"
 
+// functions for quadruple treatment
+template <typename TYPE>
+TYPE fma1 (const TYPE x, const TYPE y, const TYPE z) {
+	return fma(x, y, z);
+}
+template float fma1 <float> (const float x, const float y, const float z);
+template double fma1 <double> (const double x, const double y, const double z);
+template <>
+__float128 fma1 (const __float128 x, const __float128 y, const __float128 z) {
+	return fmaq(x, y, z);
+}
+
 template <typename TYPE>
 TYPE fabs1 (const TYPE v) {
 	return fabs(v);
 }
 template float fabs1 <float> (const float v);
 template double fabs1 <double> (const double v);
-#if defined (FLOAT128)
 template <>
 __float128 fabs1 (const __float128 v) {
 	return fabsq(v);
 }
-#endif
+
 template <typename TYPE>
 TYPE scalbn1 (const TYPE v, const int n) {
 	return scalbn(v, n);
 }
 template float scalbn1 <float> (const float v, const int n);
 template double scalbn1 <double> (const double v, const int n);
-#if defined (FLOAT128)
 template <>
 __float128 scalbn1 (const __float128 v, const int n) {
 	return scalbnq(v, n);
 }
-#endif
 
 int32_t checkTrans (const char tran) {
 	if (tran == 'N' || tran == 'n') 
@@ -60,10 +69,8 @@ int32_t rangeCheck (
 	}
 	return checkGlobal; // 0:NG (out of range), 1:OK (within range)
 }
-#if defined (FLOAT128)
 template int32_t rangeCheck <__float128, double> (const int32_t m, const int32_t n, const __float128 *mat, const int32_t ld);
 template int32_t rangeCheck <__float128, float> (const int32_t m, const int32_t n, const __float128 *mat, const int32_t ld);
-#endif
 template int32_t rangeCheck <double, float> (const int32_t m, const int32_t n, const double *mat, const int32_t ld);
 template int32_t rangeCheck <double, double> (const int32_t m, const int32_t n, const double *mat, const int32_t ld);
 template int32_t rangeCheck <float, double> (const int32_t m, const int32_t n, const float *mat, const int32_t ld);
@@ -72,13 +79,12 @@ template int32_t rangeCheck <float, float> (const int32_t m, const int32_t n, co
 // =========================================
 // Print floating-point value with bit representation
 // =========================================
-/*
 typedef union{
-	FP_TYPE3 d;
+	double d;
 	int64_t i;
 } d_and_i;
 
-void printBits (FP_TYPE3 val) {
+void printBits (double val) {
 	d_and_i di;
 	di.d = val;
 	// sign
@@ -138,7 +144,6 @@ void ozblasPrintVec (
 		#endif
 	}
 }
-*/
 
 CBLAS_TRANSPOSE ToCblasOp (const char tran) {
 	if (tran == 'N' || tran == 'n') return CblasNoTrans;
@@ -196,9 +201,7 @@ void ozblasCopyVec (
 		devOut[i] = devIn[i];
 	}
 }
-#if defined (FLOAT128)
 template void ozblasCopyVec <__float128> (const int32_t, const __float128*, __float128*);
-#endif
 template void ozblasCopyVec <double> (const int32_t, const double*, double*);
 template void ozblasCopyVec <float> (const int32_t, const float*, float*);
 
