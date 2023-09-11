@@ -54,7 +54,7 @@ void cuozblasTransform (
 			tau2 = tau - (tau1 - t);
 			return;
 		}
-		sigma = scalbn (1., m-53) * sigma;
+		sigma = scalbn (1., m-epse) * sigma;
 		t = tau1;
 	} 
 }
@@ -98,9 +98,9 @@ TYPE cuozblasNearsum (
 	cuozblasTransformK (n, vec, ld, r, delta, r2);
 	if (delta == 0) 
 		return res;
-	res2 = res, + (getSign (delta) * (eps * fabs(res)));
+	res2 = res + getSign (delta) * eps * fabs(res);
 	if (res2 == res) {
-		mu = getSign (delta) * (eps * fabs(res));
+		mu = getSign (delta) * eps * fabs(res);
 		res2 = res + 2. * getSign (delta) * eps * fabs(res);
 	} else {
 		mu = (res2 - res) / 2.;
@@ -139,7 +139,7 @@ void cuozblasGlobalNearsumKernel (
 	const int32_t sumOrder, 
 	int32_t *check
 ) {
-	// dummy (not called)
+	// dummy
 }
 
 template <typename TYPE>
@@ -179,13 +179,8 @@ void cuozblasGlobalNearsumKernel (
 		for (int32_t ik = 0; ik <= maxlevel; ik++) {
 			for (int32_t ia = 0; ia < nSplitA; ia++) {
 				for (int32_t ib = 0; ib < nSplitB; ib++) {
-					if (ik == ia + ib) {
-// reordering is not needed, just need to know ic
-//						int32_t it = (sumOrder == 1) ? ic : (nSplitA * ib + ia);
-//						TYPE c = devCsplit[llsc * it + addry * ldsc + addrx];
-//						devCsplit[llsc * it + addry * ldsc + addrx] = c;
+					if (ik == ia + ib) 
 						ic++;
-					}
 				}
 			}
 		}

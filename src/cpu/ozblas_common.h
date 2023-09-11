@@ -1,8 +1,8 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-#define DefaultWorkSize 1e9 // 1GB
-#define NumSplitDefaultMax 20
+#define DefaultWorkSize 5e9 // 5GB
+#define NumSplitDefaultMax 30
 
 #define OUTPUT stdout // stderr
 
@@ -56,9 +56,7 @@ Intel LLVM Compiler is not supported...
 // constexpr functions
 // -------------------------------------
 
-// -------------------------------------
 // getEmin
-// -------------------------------------
 template <typename TYPE>
 constexpr int32_t getEmin () {
 	fprintf (OUTPUT, "OzBLAS error: TYPE is not specified in getEmin.\n");
@@ -78,9 +76,7 @@ constexpr int32_t getEmin <__float128> () {
 	return -16382;
 }
 
-// -------------------------------------
 // getEpse
-// -------------------------------------
 template <typename TYPE>
 constexpr int32_t getEpse () {
 	fprintf (OUTPUT, "OzBLAS error: TYPE is not specified in getEpse.\n");
@@ -114,9 +110,7 @@ constexpr int32_t getEpse2 <double> () {
 	return 106;
 }
 
-// -------------------------------------
 // getTypeMax
-// -------------------------------------
 template <typename TYPE>
 constexpr TYPE getTypeMax () {
 	fprintf (OUTPUT, "OzBLAS error: TYPE is not specified in getTypeMax.\n");
@@ -136,9 +130,7 @@ constexpr __float128 getTypeMax <__float128> () {
 	return FLT128_MAX;
 }
 
-// -------------------------------------
 // getTypeMin
-// -------------------------------------
 template <typename TYPE>
 constexpr TYPE getTypeMin () {
 	fprintf (OUTPUT, "OzBLAS error: TYPE is not specified in getTypeMin.\n");

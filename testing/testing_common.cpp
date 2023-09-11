@@ -698,7 +698,8 @@ void mublasInitMat (
 			if (!th->nodisp) printf ("#\tinput: initialized with const-mode\t");
 			break;
 		case 1:	// drand48 +[0,1)
-			#pragma omp parallel for 
+			//to check reproducibility in Fsum, disable thread parallelism
+			//#pragma omp parallel for 
 			for (j = 0; j < n; j++) {
 				for (int32_t i = 0; i < m; i++) {
 					FP_TYPE val = drand48();
@@ -710,7 +711,7 @@ void mublasInitMat (
 			break;
 		case 2:	// phi-mode
 			printf ("!!! WARNING !!! phi-mode only supports double-precision.\n");
-			#pragma omp parallel for
+			//#pragma omp parallel for
 			for (j = 0; j < n; j++) {
 				for (int32_t i = 0; i < m; i++) {
 					double mu = 0.0, sigma = 1.0;
@@ -734,7 +735,7 @@ void mublasInitMat (
 			#else
 			f_pi = F_PI;
 			#endif
-			#pragma omp parallel for 
+			//#pragma omp parallel for 
 			for (j = 0; j < n; j++) {
 				for (int32_t i = 0; i < m; i++) {
 					FP_TYPE valf = (drand48()*9+1) * std::pow(10,rand()%(int32_t)phi);
@@ -884,7 +885,7 @@ void mublasCheckMatrix (
 			trgf = target[j*ldt+i];
 			dif = trgf - ref;
 			rerr = (ref == 0.) ? 0. : FABS (dif / ref);
-//			printf("[%ld,%ld] trg=%1.16e ref=%1.16e diff=%1.3e (%1.3e)\n", j, i, (double)trgf, (double)ref, (double)dif, (double)rerr);
+			//if (rerr != 0.)	printf("[%ld,%ld] trg=%1.16e ref=%1.16e diff=%1.3e (%1.3e)\n", j, i, (double)trgf, (double)ref, (double)dif, (double)rerr);
 			if (rerrmax < rerr) rerrmax = rerr;
 			#if defined (PREC_DD)
 			if (isinf1(trgf.x[0]) || isnan1(trgf.x[0])) {
@@ -912,22 +913,33 @@ void mublasCheckMatrix (
 				printf ("\tOK");
 			else 
 				printf ("\tNG");
-			printf ("\t%1.4e\t%zd\n", toDouble (rerrmax), errcnt);
+			printf ("\t%1.4e (%a)\t%zd\n", toDouble (rerrmax), toDouble (rerrmax), errcnt);
 		} else {
-			if (fabs(toDouble (rerrmax)) < 1e-12 && nicnt == 0)
+			#if defined (PREC_Q)
+			if (fabs(toDouble (rerrmax)) < 1e-30 && nicnt == 0)
+			#elif defined (PREC_D)
+			if (fabs(toDouble (rerrmax)) < 1e-14 && nicnt == 0)
+			#elif defined (PREC_S)
+			if (fabs(toDouble (rerrmax)) < 1e-6 && nicnt == 0)
+			#endif
 				printf ("\tOK");
-			else 
+			else {
 				printf ("\tNG");
-			printf ("\t%1.4e\t%zd\n", toDouble (rerrmax), errcnt);
+			}
+			if (nicnt > 0)  
+				printf("\tNan/Inf\t%zd\n", nicnt);
+			else
+				printf ("\t%1.4e (%a)\t%zd\n", toDouble (rerrmax), toDouble (rerrmax), errcnt);
 		}
 	}
-	//if (th->nodisp) printf ("\n");
 }
 
 // print routine -------------------------------------------------
 void print_routine_name () {
 	#if defined (PREC_S_S)
 	printf ("S");
+	#elif defined (PREC_S_D)
+	printf ("SD");
 	#elif defined (PREC_D_S)
 	printf ("DS");
 	#elif defined (PREC_D_D)

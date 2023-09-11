@@ -1,15 +1,5 @@
 #include "ozblas_common.h"
 
-template <typename TYPE>
-__inline__ void
-TwoSum (TYPE a, TYPE b, TYPE &s, TYPE &e)
-{
-	TYPE v;
-	s = a + b;
-	v = s - a;
-	e = (a - (s - v)) + (b - v);
-}
-
 // =========================================
 // Correctly-rounded summation
 // with NearSum
@@ -66,6 +56,63 @@ void ozblasTransform (
 }
 
 template <typename TYPE>
+void ozblasTransformK (
+	const int32_t n,
+	TYPE *vec,
+	const int32_t ld,
+	TYPE rho,
+	TYPE &res,
+	TYPE &r
+) { 
+	TYPE tmp = 0., tau1, tau2;
+	ozblasTransform (n, vec, ld, rho, tau1, tau2);
+	for (int32_t i = 0; i < n; i++)
+		tmp += vec[i*ld];
+	res = tau1 + (tau2 + tmp);
+	r = tau2 - (res - tau1);
+}
+
+template <typename TYPE>
+__inline__
+TYPE getSign (TYPE v) {
+	return (v < 0) ? -1.:1.;
+}
+
+template <typename TYPE>
+TYPE ozblasNearsum (
+	const int32_t n,
+	TYPE *vec,
+	const int32_t ld
+) {
+	constexpr int32_t epse = getEpse <TYPE> ();
+	TYPE tmp, res, res2, r, r2, mu, delta, delta2;
+	TYPE eps = scalbn1 (1., -epse);
+
+	ozblasTransformK (n, vec, ld, (TYPE)0., res, r);
+	ozblasTransformK (n, vec, ld, r, delta, r2);
+	if (delta == 0) 
+		return res;
+	res2 = res + getSign (delta) * eps * fabs(res);
+	if (res2 == res) {
+		mu = getSign (delta) * eps * fabs(res);
+		res2 = res + 2. * getSign (delta) * eps * fabs(res);
+	} else {
+		mu = (res2 - res) / 2.;
+	}
+	if (fabs(delta) < fabs(mu)) 
+		return res;
+	if (fabs(delta) > fabs(mu)) 
+		return res2;
+	ozblasTransformK (n, vec, ld, r2, delta2, tmp);
+	if (delta2 == 0) 
+		return res + mu;
+	if (getSign (delta2) == getSign (mu))
+		return res2;
+	return res;
+}
+
+/*
+template <typename TYPE>
 void ozblasTransformNpara (
 	const int32_t n,
 	TYPE *vec,
@@ -115,23 +162,6 @@ void ozblasTransformNpara (
 }
 
 template <typename TYPE>
-void ozblasTransformK (
-	const int32_t n,
-	TYPE *vec,
-	const int32_t ld,
-	TYPE rho,
-	TYPE &res,
-	TYPE &r
-) { 
-	TYPE tmp = 0., tau1, tau2;
-	ozblasTransform (n, vec, ld, rho, tau1, tau2);
-	for (int32_t i = 0; i < n; i++)
-		tmp += vec[i*ld];
-	res = tau1 + (tau2 + tmp);
-	r = tau2 - (res - tau1);
-}
-
-template <typename TYPE>
 void ozblasTransformKNpara (
 	const int32_t n,
 	TYPE *vec,
@@ -149,45 +179,6 @@ void ozblasTransformKNpara (
 	}
 	res = tau1 + (tau2 + tmp);
 	r = tau2 - (res - tau1);
-}
-
-template <typename TYPE>
-__inline__
-TYPE getSign (TYPE v) {
-	return (v < 0) ? -1.:1.;
-}
-
-template <typename TYPE>
-TYPE ozblasNearsum (
-	const int32_t n,
-	TYPE *vec,
-	const int32_t ld
-) {
-	constexpr int32_t epse = getEpse <TYPE> ();
-	TYPE tmp, res, res2, r, r2, mu, delta, delta2;
-	TYPE eps = scalbn1 (1., -epse);
-
-	ozblasTransformK (n, vec, ld, (TYPE)0., res, r);
-	ozblasTransformK (n, vec, ld, r, delta, r2);
-	if (delta == 0) 
-		return res;
-	res2 = res + getSign (delta) * eps * fabs(res);
-	if (res2 == res) {
-		mu = getSign (delta) * eps * fabs(res);
-		res2 = res + 2. * getSign (delta) * eps * fabs(res);
-	} else {
-		mu = (res2 - res) / 2.;
-	}
-	if (fabs(delta) < fabs(mu)) 
-		return res;
-	if (fabs(delta) > fabs(mu)) 
-		return res2;
-	ozblasTransformK (n, vec, ld, r2, delta2, tmp);
-	if (delta2 == 0) 
-		return res + mu;
-	if (getSign (delta2) == getSign (mu))
-		return res2;
-	return res;
 }
 
 template <typename TYPE>
@@ -222,6 +213,7 @@ TYPE ozblasNearsumNpara (
 		return res2;
 	return res;
 }
+*/
 
 template <typename TYPE>
 void ozblasGlobalNearsumKernel (
@@ -253,13 +245,8 @@ void ozblasGlobalNearsumKernel (
 			for (int32_t ik = 0; ik <= maxlevel; ik++) {
 				for (int32_t ia = 0; ia < nSplitA; ia++) {
 					for (int32_t ib = 0; ib < nSplitB; ib++) {
-						if (ik == ia + ib) {
-// here just want to know ic
-//							int32_t it = (sumOrder == 1) ? ic : (nSplitA * ib + ia);
-//							TYPE c = devCsplit[llsc * it + addry * ldsc + addrx];
-//							printf ("nearsum [%d] %1.3e (%p) (ia=%d ib=%d)\n", ic, c, &devCsplit[llsc * it + addry * ldsc + addrx], ia, ib);
+						if (ik == ia + ib) 
 							ic++;
-						}
 					}
 				}
 			}
@@ -290,6 +277,10 @@ void ozblasGlobalNearsumKernel (
 	const int32_t sumOrder, 
 	int32_t *check
 ) {
+	fprintf (OUTPUT, "OzBLAS error: ozblasGlobalNearsumKernel is not available when TYPE1 != TYPE2.\n");
+	exit(1);
+	/*
+	printf ("mixedprec\n");
 	int32_t addrx;
 	#pragma omp parallel for
 	for (addrx = 0; addrx < m; addrx++) {
@@ -315,6 +306,7 @@ void ozblasGlobalNearsumKernel (
 			devC[addry * ldc + addrx] = fma1 (alpha, t, (beta * devC[addry * ldc + addrx]));
 		}
 	}
+	*/
 }
 
 // =========================================
@@ -446,20 +438,14 @@ int32_t ozblasGlobalSum (
 ) {
 	int32_t check = 0;
 	if (oh->sumModeFlag == 1) { // Nearsum
-		if (typeid(TYPE1) != typeid(TYPE2)) {
-			fprintf (OUTPUT, "OzBLAS error: Nearsum is not supported when TYPE1 != TYPE2.\n");
-			exit (1);
-		} else {
-// maybe not so effective...
-//			if (m == 1 && n == 1) { // for DOT
-//				devC[0] = alpha * ozblasNearsumNpara (nSplitA*nSplitB, &devCsplit[0], llsc) + beta * devC[0];
-//			} else {
-				ozblasGlobalNearsumKernel <TYPE1, TYPE2> (m, n, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB,
-										  devCsplit, llsc, ldsc, devC, ldc, alpha, beta, maxlevel, sumOrder, &check);
-//			}
-		}
+//		if (m == 1 && n == 1) { // for DOT, not effective for performance...
+//			devC[0] = alpha * ozblasNearsumNpara (nSplitA*nSplitB, &devCsplit[0], llsc) + beta * devC[0];
+//		} else {
+		ozblasGlobalNearsumKernel (m, n, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB,
+								  devCsplit, llsc, ldsc, devC, ldc, alpha, beta, maxlevel, sumOrder, &check);
+//		}
 	} else { // Fsum
-		ozblasGlobalFsumKernel <TYPE1, TYPE2> (m, n, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB,
+		ozblasGlobalFsumKernel (m, n, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB,
 							  devCsplit, llsc, ldsc, devC, ldc, alpha, beta, maxlevel, sumOrder, &check);
 	}
 	return check;
@@ -543,6 +529,17 @@ template int32_t ozblasAxpby (const int32_t m, const int32_t n, const float *dev
 // For Quadruple-precision
 // FastSum with 3 binary64 bins
 // ==============================================
+
+template <typename TYPE>
+__inline__ void
+TwoSum (TYPE a, TYPE b, TYPE &s, TYPE &e)
+{
+	TYPE v;
+	s = a + b;
+	v = s - a;
+	e = (a - (s - v)) + (b - v);
+}
+
 template <typename TYPE1, typename TYPE2>
 int32_t ozblasLocalFsum3 (
 	const int32_t m,

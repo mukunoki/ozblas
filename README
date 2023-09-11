@@ -59,9 +59,9 @@ See examples in 'testing' directory.
 
 (7) History:
 v1.5a
-Fast OzDOT using Dot2 (experimental).
-GPU version is included.
-Bug fix (for GEMV with mixed-precision and for m=n=k=1 on GEMM).
+Demonstration of fast OzDOT using Dot2 (Mukunoki et al. 2022 at PPAM2022).
+GPU version is included again.
+Bug fix (mainly in GEMV and mixed-precision implementations).
 Some minor updates.
 
 v1.4a

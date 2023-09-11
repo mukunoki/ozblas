@@ -1,10 +1,10 @@
 ## /home/users/daichi.mukunoki/matrix/bundle1.mtx	10581	10581	770901
 ## splitShift = 64 (6-bit), nSplitA = 4 -> 3
-## total time =	3.759e+00
-## total iter =	607
-## time per iter =	6.193e-03
-## GFlops/s =	2.695e-01
-## GB/s =	1.733e+00
+## total time =	2.859e+00
+## total iter =	515
+## time per iter =	5.551e-03
+## GFlops/s =	3.006e-01
+## GB/s =	1.933e+00
 ## ||b-Ax||/||b|| =	3.834e-05
-1.535e+00	2.668e-02	3.510e-02	1.696e+00	3.288e-01	1.573e-01	-1.926e-02	#(SpMV/MM, DOT/NRM, AXPY/SCAL, Sum, SpltVec, SpltMat, Other)
-607	3.834e-05	(0x1.4194f8958a0d4p-15)	3.759e+00	2.695e-01	1.733e+00	#(iter, trueres, sec, gflops, gbs)
+1.294e+00	2.431e-02	4.926e-02	1.048e+00	3.004e-01	1.607e-01	-1.784e-02	#(SpMV/MM, DOT/NRM, AXPY/SCAL, Sum, SpltVec, SpltMat, Other)
+515	3.834e-05	(0x1.4194f8955e289p-15)	2.859e+00	3.006e-01	1.933e+00	#(iter, trueres, sec, gflops, gbs)

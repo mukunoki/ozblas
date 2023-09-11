@@ -134,10 +134,14 @@ void cuozblasSplitCKernel (
 	__shared__ TYPE shm[SPLIT_T_NTX];
 
 	if (addry < n){
-		const TYPE sigma = CONST * scalbn (1., rho) * NextPowTwo <TYPE> (devMax[addry]) * splitShift;
+		//const TYPE sigma = CONST * scalbn (1., rho) * NextPowTwo <TYPE> (devMax[addry]) * splitShift;
+		const short tau = ceil(log2(fabs(devMax[addry])));
+		const TYPE sigma = CONST * scalbn (1., rho + tau) * splitShift;
 		TYPE max = 0.;
 		for (int32_t i = addrx; i < m; i += nTx) {
 			TYPE input = devInput[addry * ldi + i];
+			//const TYPE tmp = (input + sigma);
+			//const TYPE split = (tmp - sigma);
 			const TYPE split = ((input + sigma) - sigma);
 			input = input - split;
 			devSplit[addry * lds + i] = split;
@@ -187,6 +191,8 @@ void cuozblasSplitCKernel (
 		TYPE1 max = 0.;
 		for (int32_t i = addrx; i < m; i += nTx) {
 			TYPE1 input = devInput[addry * ldi + i];
+			//const TYPE1 tmp = input + sigma;
+			//const TYPE1 split = tmp - sigma;
 			const TYPE1 split = (input + sigma) - sigma;
 			input = input - split;
 			devSplit[addry * lds + i] = scalbn(split, -tau);
@@ -252,7 +258,9 @@ void cuozblasSplitVecKernel (
 	const int32_t addrx = iBx * nTx + iTx;
 	__shared__ TYPE shm[SPLIT_VEC_NTX];
 
-	const TYPE sigma = CONST * scalbn (1., rho) * NextPowTwo <TYPE> (devMax[0]) * splitShift;
+	//const TYPE sigma = CONST * scalbn (1., rho) * NextPowTwo <TYPE> (devMax[0]) * splitShift;
+	const short tau = ceil(log2(fabs(devMax[0])));
+	const TYPE sigma = CONST * scalbn (1., rho + tau) * splitShift;
 	TYPE max_ = 0.;
 	for (int32_t i = addrx; i < n; i += nTx * gridDim.x) {
 		TYPE input = devInput[i];
@@ -490,7 +498,9 @@ void cuozblasSplitSparseNKernel (
 	if (rowid < m){
 		const int32_t dim = devRowptr[rowid+1] - devRowptr[rowid];
 		const int32_t rho = getRho <TYPE, TYPE> (dim, splitEpsModeFlag);
-		const TYPE sigma = CONST * scalbn (1., rho) * NextPowTwo <TYPE> (devMax[rowid]) / splitShift;
+		//const TYPE sigma = CONST * scalbn (1., rho) * NextPowTwo <TYPE> (devMax[rowid]) / splitShift;
+		const short tau = ceil(log2(fabs(devMax[rowid])));
+		const TYPE sigma = CONST * scalbn (1., rho + tau) / splitShift;
 		TYPE max = 0.;
 		for (int32_t i = devRowptr[rowid] + lane; i < devRowptr[rowid+1]; i += 32) {
 			TYPE input = devInput[i];

@@ -4,8 +4,8 @@ include ../../make.inc
 NVCC	= $(CUDA_PATH)/bin/nvcc 
 AR		= ar
 LIB		:= ../../lib/libcuozblas.a
-FLAGS   := -Wall -MD -O0 -Wno-maybe-uninitialized -I$(INC_PATH) 
-NVCCFLAGS   := -O0 --expt-relaxed-constexpr #--ptxas-options=-v
+FLAGS   := -Wall -MD -O3 -Wno-maybe-uninitialized -I$(INC_PATH) 
+NVCCFLAGS   := -O3 --expt-relaxed-constexpr #--ptxas-options=-v
 #--ptxas-options=-v #--compiler-options='-finstrument-functions' -g
 
 ifeq ($(CC30),yes)
