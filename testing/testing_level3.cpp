@@ -123,6 +123,9 @@ main (int32_t argc, char **argv)
 		if ((th.dim_m_const == 0 && th.dim_m_dev > th.dim_stop) ||
 		    (th.dim_n_const == 0 && th.dim_n_dev > th.dim_stop) ||
 		    (th.dim_k_const == 0 && th.dim_k_dev > th.dim_stop)) break;
+		if (th.dim_m_dev == 0 || th.dim_n_dev == 0 || th.dim_k_dev == 0) {
+		} else {
+
 		// dim setup
 		// A
 		if (th.tranA == 'N' || th.tranA == 'n') {
@@ -255,6 +258,7 @@ main (int32_t argc, char **argv)
 		printf ("\n");
 		#endif
 
+		}
 		dim_dev_increment (&th);
 		if (th.dim_m_const && th.dim_n_const && th.dim_k_const) break;
 	}

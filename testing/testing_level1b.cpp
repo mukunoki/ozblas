@@ -90,6 +90,8 @@ main (int32_t argc, char **argv)
 	dim_dev_setup (&th);
 	while (1) {
 		if (th.dim_n_const == 0 && th.dim_n_dev > th.dim_stop) break;
+		if (th.dim_n_dev == 0) {
+		} else {
 
 		#if defined (CUDA)
 		int32_t sizeType = sizeof (FP_TYPE);
@@ -190,6 +192,7 @@ main (int32_t argc, char **argv)
 		printf ("\n");
 		#endif
 
+		}
 		dim_dev_increment (&th);
 		if (th.dim_m_const && th.dim_n_const && th.dim_k_const) break;
 	}

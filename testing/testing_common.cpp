@@ -350,11 +350,8 @@ void testingCreate (
 				printf ("\n");
 				printf ("[OzBLAS-parameters]\n");
 				printf ("--degree=N (maximum number of split matrices)\n");
-				printf ("--repromode={0,1}, 0: off, 1: on (call standard BLAS when repromode=0 and degree=1)\n");
 				printf ("--fastmode={0,1}, 0: off, 1: on (no effect on DOT)\n");
-				printf ("--usemygemm={0,1}, 0: off, 1: on\n");
 				printf ("--usebatchedgemm={0,1}, 0: off, 1: on (no effect on DOT)\n");
-				printf ("--usegpu={0,1}, 0: off, 1: on\n");
 				printf ("--summode={0,1,2,3}, 0: GlobalFsum, 1: GlobalNearsum, 2: LocalFsum, 3: LocalFsum3\n");
 				printf ("  (1 is not available on mixed-precision routines, 3 is available only when usebatchedgemm=0)\n");
 				printf ("--splitmode={0,1,3}, 0: normal, 1: inf-split, 3: split3\n");
