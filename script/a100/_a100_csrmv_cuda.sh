@@ -18,7 +18,6 @@ for((i = 0; i<${#ARRAY[*]};i++))
 	../../testing/testing_cuozblas_dcsrmv --nodisp=1 --summode=0 --mtx=${matsrc} > _dcsrmv_n_sum0_${matrix}_cuda.dat 
 	../../testing/testing_cuozblas_scsrmv --nodisp=1 --summode=1 --mtx=${matsrc} > _scsrmv_n_sum1_${matrix}_cuda.dat 
 	../../testing/testing_cuozblas_scsrmv --nodisp=1 --summode=0 --mtx=${matsrc} > _scsrmv_n_sum0_${matrix}_cuda.dat 
-	../../testing/testing_cuozblas_dscsrmv --nodisp=1 --summode=1 --mtx=${matsrc} > _dscsrmv_n_sum1_${matrix}_cuda.dat 
 	../../testing/testing_cuozblas_dscsrmv --nodisp=1 --summode=0 --mtx=${matsrc} > _dscsrmv_n_sum0_${matrix}_cuda.dat 
 }
 

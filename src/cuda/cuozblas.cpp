@@ -11,7 +11,6 @@ void cucounterInit (cuozblasHandle_t *oh) {
 	oh->t_comp = 0.;
 	oh->t_sum = 0.;
 	oh->t_total = 0.;
-	oh->n_comp = 0.;
 	oh->nSplitA = 0;
 	oh->nSplitB = 0;
 	oh->nSplitC = 0;

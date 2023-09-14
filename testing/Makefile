@@ -124,7 +124,6 @@ LIBS	+= -lmpblas__Float128_opt
 endif
 ifeq ($(CPU_ARCH),ARM)
 else
-LIBS	+= -Wl,-Bdynamic,-lquadmath 
 endif
 endif
 
@@ -150,9 +149,9 @@ FLAGS	+= -DMPLAPACK
 endif
 
 ifeq ($(LINKAGE),static)
-LIBS	+= -Wl,-Bdynamic
+LIBS	+= -Wl,-Bdynamic,-lquadmath
 endif
-LIBS	+= -lstdc++ -lm -lc -ldl 
+LIBS	+= -lstdc++ -lm -lc -ldl -lquadmath
 
 # compiler -----------------------------------
 ifeq ($(CXX),icpc)

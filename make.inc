@@ -76,8 +76,6 @@ CSRMV = yes
 
 # level-3
 GEMM = yes
-CSRMM = yes
-# -> CSRMM requires MKL on CPUs
 
 # solver
 CG = yes

@@ -236,10 +236,9 @@ void ozblasGlobalNearsumKernel (
 	const int32_t sumOrder, 
 	int32_t *check
 ) {
-	int32_t addrx;
 	#pragma omp parallel for
-	for (addrx = 0; addrx < m; addrx++) {
-		for (int32_t addry = 0; addry < n; addry++) {
+	for (int32_t addry = 0; addry < n; addry++) {
+		for (int32_t addrx = 0; addrx < m; addrx++) {
 			TYPE t = 0.;
 			int32_t ic = 0;
 			for (int32_t ik = 0; ik <= maxlevel; ik++) {
@@ -280,11 +279,9 @@ void ozblasGlobalNearsumKernel (
 	fprintf (OUTPUT, "OzBLAS error: ozblasGlobalNearsumKernel is not available when TYPE1 != TYPE2.\n");
 	exit(1);
 	/*
-	printf ("mixedprec\n");
-	int32_t addrx;
 	#pragma omp parallel for
-	for (addrx = 0; addrx < m; addrx++) {
-		for (int32_t addry = 0; addry < n; addry++) {
+	for (int32_t addry = 0; addry < n; addry++) {
+		for (int32_t addrx = 0; addrx < m; addrx++) {
 			TYPE1 t = 0.;
 			int32_t ic = 0;
 			for (int32_t ik = 0; ik <= maxlevel; ik++) {
@@ -335,10 +332,9 @@ void ozblasGlobalFsumKernel (
 	const int32_t sumOrder, 
 	int32_t *check
 ) {
-	int32_t addrx;
 	#pragma omp parallel for
-	for (addrx = 0; addrx < m; addrx++) {
-		for (int32_t addry = 0; addry < n; addry++) {
+	for (int32_t addry = 0; addry < n; addry++) {
+		for (int32_t addrx = 0; addrx < m; addrx++) {
 			TYPE t = 0.;
 			int32_t ic = 0;
 			for (int32_t ik = 0; ik <= maxlevel; ik++) {
@@ -385,10 +381,9 @@ void ozblasGlobalFsumKernel (
 	const int32_t sumOrder, 
 	int32_t *check
 ) {
-	int32_t addrx;
 	#pragma omp parallel for
-	for (addrx = 0; addrx < m; addrx++) {
-		for (int32_t addry = 0; addry < n; addry++) {
+	for (int32_t addry = 0; addry < n; addry++) {
+		for (int32_t addrx = 0; addrx < m; addrx++) {
 			TYPE1 t = 0.;
 			int32_t ic = 0;
 			for (int32_t ik = 0; ik <= maxlevel; ik++) {
@@ -474,9 +469,8 @@ int32_t ozblasLocalFsum (
 	const int32_t ic
 ) {
 	int32_t check = 0;
-	int32_t addry;
 	#pragma omp parallel for
-	for (addry = 0; addry < n; addry++) {
+	for (int32_t addry = 0; addry < n; addry++) {
 		short seB = devBSpExp[addry];
 		for (int32_t addrx = 0; addrx < m; addrx++) {
 			TYPE1 c = devCsplit[addry * ldcs + addrx];
@@ -511,9 +505,8 @@ int32_t ozblasAxpby (
 ) {
 	// note: check is not implemented
 	int32_t checkGlobal = 0;
-	int32_t addry;
 	#pragma omp parallel for
-	for (addry = 0; addry < n; addry++) {
+	for (int32_t addry = 0; addry < n; addry++) {
 		for (int32_t addrx = 0; addrx < m; addrx++) {
 			TYPE t = devCsplit[addry * ldsc + addrx];
 			devC[addry * ldc + addrx] = alpha * t + beta * devC[addry * ldc + addrx];
@@ -559,9 +552,8 @@ int32_t ozblasLocalFsum3 (
 	const int32_t ic
 ) {
 	int32_t checkGlobal = 0;
-	int32_t addry;
 	#pragma omp parallel for
-	for (addry = 0; addry < n; addry++) {
+	for (int32_t addry = 0; addry < n; addry++) {
 		int32_t checkLocal = 0;
 		#pragma omp atomic read
 		checkLocal = checkGlobal;
@@ -630,9 +622,8 @@ int32_t ozblasLocalFsum3 (
 	const int32_t ic
 ) {
 	int32_t checkGlobal = 0;
-	int32_t addry;
 	#pragma omp parallel for
-	for (addry = 0; addry < n; addry++) {
+	for (int32_t addry = 0; addry < n; addry++) {
 		int32_t checkLocal = 0;
 		#pragma omp atomic read
 		checkLocal = checkGlobal;

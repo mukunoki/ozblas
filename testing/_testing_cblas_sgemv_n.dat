@@ -1,0 +1,37 @@
+# Testing info -----------------------------
+# 	Date:	Tue Sep 12 15:30:50 JST 2023
+# 	CPU:	model name	: AMD EPYC 7763 64-Core Processor
+# 	OMP:	OMP_NUM_THREADS =  256, MKL_NUM_THREADS = 
+# 	OS:	Linux a100-1.cloud.r-ccs.riken.jp 4.18.0-425.3.1.el8.x86_64 #1 SMP Wed Nov 9 20:13:27 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux
+# 	Host:	a100-1.cloud.r-ccs.riken.jp
+# 	Compiler:	GCC 9
+#	Routine:	SGEMV
+#	Library:	unknown-library
+#	mode: performance evaluation
+#	NLOOP / WLOOP:	3/2
+# BLAS parameter ---------------------------
+#	tranA:	N
+#	tranB:	N
+# Problem setting --------------------------
+#	phi = 1 (on erange-mode, [1e0,1e1))
+#	dim_start:	128
+#	dim_stop:	8192
+#	dim_step:	1
+#	M:	range
+#	N:	range
+#	K:	range
+#	input: initialized with const-mode	
+#	input: initialized with const-mode	
+#	input: initialized with erange-mode	range = 1.00 (max = 1.000e+01, min = 1.000e+00)
+#	input: initialized with erange-mode	range = 1.00 (max = 9.997e+00, min = 1.001e+00)
+#	input: initialized with const-mode	
+# Evaluation result ------------------------
+# (* shows the value at the last execution, ** shows the value of the last block at the last execution)
+# M	N	K	Time[sec]	Perf[GFlops]	Perf[GB/s]	itr
+128	128	--	1.764e-05	1.879e+00	3.802e+00	3
+256	256	--	2.400e-05	5.493e+00	1.105e+01	3
+512	512	--	8.639e-05	6.087e+00	1.221e+01	3
+1024	1024	--	2.890e-04	7.268e+00	1.456e+01	3
+2048	2048	--	5.716e-04	1.469e+01	2.939e+01	3
+4096	4096	--	3.612e-03	9.292e+00	1.859e+01	3
+8192	8192	--	2.756e-02	4.872e+00	9.745e+00	3

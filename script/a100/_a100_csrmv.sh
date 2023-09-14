@@ -18,11 +18,8 @@ for((i = 0; i<${#ARRAY[*]};i++))
 	../../testing/testing_ozblas_dcsrmv --nodisp=1 --summode=0 --mtx=${matsrc} > _dcsrmv_n_sum0_${matrix}.dat 
 	../../testing/testing_ozblas_scsrmv --nodisp=1 --summode=1 --mtx=${matsrc} > _scsrmv_n_sum1_${matrix}.dat 
 	../../testing/testing_ozblas_scsrmv --nodisp=1 --summode=0 --mtx=${matsrc} > _scsrmv_n_sum0_${matrix}.dat 
-	../../testing/testing_ozblas_dscsrmv --nodisp=1 --summode=1 --mtx=${matsrc} > _dscsrmv_n_sum1_${matrix}.dat 
 	../../testing/testing_ozblas_dscsrmv --nodisp=1 --summode=0 --mtx=${matsrc} > _dscsrmv_n_sum0_${matrix}.dat 
-	../../testing/testing_ozblas_qdcsrmv --nodisp=1 --summode=1 --mtx=${matsrc} > _qdcsrmv_n_sum1_${matrix}.dat 
 	../../testing/testing_ozblas_qdcsrmv --nodisp=1 --summode=0 --mtx=${matsrc} > _qdcsrmv_n_sum0_${matrix}.dat 
-	../../testing/testing_ozblas_qscsrmv --nodisp=1 --summode=1 --mtx=${matsrc} > _qscsrmv_n_sum1_${matrix}.dat 
 	../../testing/testing_ozblas_qscsrmv --nodisp=1 --summode=0 --mtx=${matsrc} > _qscsrmv_n_sum0_${matrix}.dat 
 }
 

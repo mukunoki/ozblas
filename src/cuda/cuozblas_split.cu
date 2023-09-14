@@ -16,12 +16,14 @@
 
 #define CONST 0.75 // for splitting
 
+/*
 template <typename TYPE>
 __device__
 TYPE NextPowTwo (const TYPE p) {
 	constexpr int32_t epse_type = getEpse <TYPE> ();
 	return scalbn (p, epse_type) - (TYPE)((scalbn (1., epse_type) - 1) * p);
 }
+*/
 
 template <typename TYPE1, typename TYPE2>
 __host__ __device__

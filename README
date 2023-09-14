@@ -14,7 +14,7 @@ internally. If you want to use it in real applications,
 please contact us.
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-(1) Overview
+[Overview]
 Accurate and reproducible BLAS routines "OzBLAS" [3] based on Ozaki scheme [1]
 This version contains following routines:
 DOT, NRM2, GEMV, GEMM, AXPY, CSRMV, and CG solver (unpreconditioned) on single and double-precision for NVIDIA GPUs and CPUs.
@@ -25,7 +25,7 @@ The CPU version uses CBLAS (MKL, OpenBLAS, etc.) for the internal computation.
 The GPU version uses NVIDIA cuBLAS for the internal computation.
 This code is an experimental alpha version. We do not guarantee the computation result. However, we welcome your feedback.
 
-(2) Requirements:
+[Requirements]
 libozblas.a:
 - GNU or Intel compiler
 - MKL or OpenBLAS
@@ -41,32 +41,27 @@ testing:
 - BeBOP Sparse Matrix Converter (http://bebop.cs.berkeley.edu/smc/)
 -> For sparse matrix handling
 
-(3) Build:
-After modifying Makefiles in src and testing directories, execute make in the current directory.
+[Build]
+After modify make.inc and Makefiles in src and testing directories, execute make in the current directory.
+Also, modify testing_setting.h for testing.
 
-(4) Usage:
-See examples in 'testing' directory.
+[Usage]
+See examples (with _quick_test.sh) in 'testing' directory.
 
-(5) Limitations:
+[Limitations]
 - CSRMV supports 32-bit indexing only.
 - incx and incy are not supported.
 
-(6) References:
-[1] K. Ozaki, T. Ogita, S. Oishi, S. M. Rump: Error-free transformations of matrix multiplication by using fast routines of matrix multiplication and its applications, Numer. Algorithms, vol. 59, no. 1, pp. 95-118, 2012.
-[2] D. Mukunoki, T. Ogita, K. Ozaki: Accurate and Reproducible BLAS Routines with Ozaki Scheme for Many-core Architectures, Proc. 13th International Conference on Parallel Processing and Applied Mathematics (PPAM2019), LNCS, Vol. 12043, pp. 516-527, 2019.
-[3] D. Mukunoki, K. Ozaki, T. Ogita, T. Imamura: DGEMM using Tensor Cores, and Its Accurate and Reproducible Versions, ISC High Performance 2020, Lecture Notes in Computer Science, Vol. 12151, pp. 230-248, 2020.
-[4] D. Mukunoki, K. Ozaki, T. Ogita, R. Iakymchuk: Conjugate Gradient Solvers with High Accuracy and Bit-wise Reproducibility between CPU and GPU using Ozaki scheme, Proc. The International Conference on High Performance Computing in Asia-Pacific Region (HPCAsia 2021), pp. 100-109, 2021.
-
-(7) History:
+[History]
 v1.5a
-Demonstration of fast OzDOT using Dot2 (Mukunoki et al. 2022 at PPAM2022).
+Demonstration of fast OzDOT using Dot2 [6].
 GPU version is included again.
 Bug fix (mainly in GEMV and mixed-precision implementations).
 Some minor updates.
 
 v1.4a
-Binary128 support.
-Mixed-precision support.
+Mixed-precision support [3] (partially).
+Binary128 support [5].
 CPU version has been updated with C++ template.
 Performance improvement of CPU version.
 GPU version is temporarily excluded.
@@ -79,7 +74,7 @@ Bug fix (previously, reproducibility was not ensured in some cases between CPU a
 Some minor updates.
 
 v1.2a
-Unpreconditioned CG solver is added.
+Unpreconditioned CG solver is added [4].
 CSRMV for CPUs is added.
 Single-precision routines are added.
 Single-precision routines performed with double are added (partially).
@@ -95,3 +90,20 @@ Some bugs are fixed.
 
 v1.0a03
 First release.
+
+[Development notes]
+- Although the implementation is designed to be reproducible using pure floating-point sum (summode=0), reproducibility cannot be observed if the problem generation in the test routine is thread-parallelized.
+- NextPowTwo is non-reproducible between CPU and CUDA (more investigation is needed...)
+
+[Publications]
+[1] K. Ozaki, T. Ogita, S. Oishi, S. M. Rump: Error-free transformations of matrix multiplication by using fast routines of matrix multiplication and its applications, Numer. Algorithms, vol. 59, no. 1, pp. 95-118, 2012.
+[2] D. Mukunoki, T. Ogita, K. Ozaki: Accurate and Reproducible BLAS Routines with Ozaki Scheme for Many-core Architectures, Proc. 13th International Conference on Parallel Processing and Applied Mathematics (PPAM2019), LNCS, Vol. 12043, pp. 516-527, 2019.
+[3] D. Mukunoki, K. Ozaki, T. Ogita, T. Imamura: DGEMM using Tensor Cores, and Its Accurate and Reproducible Versions, Proc. ISC High Performance 2020, Lecture Notes in Computer Science, Vol. 12151, pp. 230-248, 2020.
+[4] D. Mukunoki, K. Ozaki, T. Ogita, R. Iakymchuk: Conjugate Gradient Solvers with High Accuracy and Bit-wise Reproducibility between CPU and GPU using Ozaki scheme, Proc. The International Conference on High Performance Computing in Asia-Pacific Region (HPCAsia 2021), pp. 100-109, 2021.
+[5] D. Mukunoki, K. Ozaki, T. Ogita, T. Imamura, Accurate Matrix Multiplication on Binary128 Format Accelerated by Ozaki Scheme, Proc. The 50th International Conference on Parallel Processing (ICPP-2021), No. 78, pp. 1-11, 2021.
+[6] D. Mukunoki, K. Ozaki, T. Ogita, T. Imamura, Infinite-precision Inner Product and Sparse Matrix Vector Multiplication using Ozaki Scheme with Dot2 on Many-core Processors, Proc. 14th International Conference on Parallel Processing and Applied Mathematics (PPAM 2022), LNCS, Vol 13826, pp. 40-54, 2023.
+
+[Acknowledgement]
+The development of this software was supported by grant numbers #19K20286 and #20KK0259 from the Grants-in-Aid for Scientific Research Program (KAKENHI) of the Japan Society for the Promotion of Science (JSPS).
+
+

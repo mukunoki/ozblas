@@ -50,7 +50,7 @@ echo "# Ozaki scheme with a specific number of split matrices (result can be ina
 echo "./testing_ozblas_dgemm --mnk=128 --k=440 --degree=2 --splitmode=0 --phi=15"
 ./testing_ozblas_dgemm --mnk=128 --k=440 --degree=2 --splitmode=0 --phi=15
 
-echo "# performance test (averaged runtime of 10 executions)"
+echo "# performance test"
 echo "./testing_ozblas_dgemm --range=1:1024:pow --mode=p"
 ./testing_ozblas_dgemm --range=1:1024:pow --mode=p
 

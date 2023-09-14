@@ -1,0 +1,44 @@
+# Testing info -----------------------------
+# 	Date:	Tue Sep 12 15:32:10 JST 2023
+# 	CPU:	model name	: AMD EPYC 7763 64-Core Processor
+# 	OMP:	OMP_NUM_THREADS =  256, MKL_NUM_THREADS = 
+# 	OS:	Linux a100-1.cloud.r-ccs.riken.jp 4.18.0-425.3.1.el8.x86_64 #1 SMP Wed Nov 9 20:13:27 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux
+# 	Host:	a100-1.cloud.r-ccs.riken.jp
+# 	Compiler:	GCC 9
+#	Routine:	SDOT
+#	Library:	unknown-library
+#	mode: performance evaluation
+#	NLOOP / WLOOP:	3/2
+# BLAS parameter ---------------------------
+#	tranA:	N
+#	tranB:	N
+# Problem setting --------------------------
+#	phi = 1 (on erange-mode, [1e0,1e1))
+#	dim_start:	128
+#	dim_stop:	8192000
+#	dim_step:	1
+#	M:	range
+#	N:	range
+#	K:	range
+#	input: initialized with erange-mode	range = 1.00 (max = 1.000e+01, min = 1.000e+00)
+#	input: initialized with erange-mode	range = 1.00 (max = 1.000e+01, min = 1.000e+00)
+### Warning: batchedGemm is ignored on DOT because DOT is computed by a GEMM.
+# Evaluation result ------------------------
+# (* shows the value at the last execution, ** shows the value of the last block at the last execution)
+# M	N	K	Time[sec]	Perf[GFlops]	Perf[GB/s]	itr
+--	128	--	3.179e-07	8.053e-01	3.221e+00	3
+--	256	--	0.000e+00	inf	inf	3
+--	512	--	0.000e+00	inf	inf	3
+--	1024	--	3.179e-07	6.442e+00	2.577e+01	3
+--	2048	--	3.179e-07	1.288e+01	5.154e+01	3
+--	4096	--	7.153e-07	1.145e+01	4.581e+01	3
+--	8192	--	2.305e-06	7.109e+00	2.844e+01	3
+--	16384	--	2.702e-06	1.213e+01	4.851e+01	3
+--	32768	--	4.053e-06	1.617e+01	6.468e+01	3
+--	65536	--	9.696e-06	1.352e+01	5.407e+01	3
+--	131072	--	1.431e-05	1.833e+01	7.330e+01	3
+--	262144	--	3.266e-05	1.605e+01	6.421e+01	3
+--	524288	--	4.832e-05	2.170e+01	8.680e+01	3
+--	1048576	--	4.768e-05	4.398e+01	1.759e+02	3
+--	2097152	--	4.800e-05	8.738e+01	3.495e+02	3
+--	4194304	--	4.164e-05	2.014e+02	8.057e+02	3

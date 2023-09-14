@@ -1,0 +1,52 @@
+# Testing info -----------------------------
+# 	Date:	Tue Sep 12 15:36:22 JST 2023
+# 	CPU:	model name	: AMD EPYC 7763 64-Core Processor
+# 	OMP:	OMP_NUM_THREADS =  256, MKL_NUM_THREADS = 
+# 	OS:	Linux a100-1.cloud.r-ccs.riken.jp 4.18.0-425.3.1.el8.x86_64 #1 SMP Wed Nov 9 20:13:27 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux
+# 	Host:	a100-1.cloud.r-ccs.riken.jp
+# 	Compiler:	GCC 9
+# 	Device[0]	NVIDIA A100-SXM4-80GB
+# 	- Theoretical Peak Memory Bandwidth:	2039.0 [GB/s]
+# 	- Theoretical Peak Performance (SP):	 0.0 [GFlops]
+# 	- Theoretical Peak Performance (DP):	 0.0 [GFlops]
+# 	- Total Gmem:	85.0 [GB]
+# 	- CC:	8.0
+# 	- MultiProcessorCount:	108
+# 	Driver / Runtime:	12000, 12000
+#	Routine:	DDOT
+#	Library:	unknown-library
+#	mode: performance evaluation
+#	NLOOP / WLOOP:	3/2
+# BLAS parameter ---------------------------
+#	tranA:	N
+#	tranB:	N
+# Problem setting --------------------------
+#	phi = 1 (on erange-mode, [1e0,1e1))
+#	dim_start:	128
+#	dim_stop:	8192000
+#	dim_step:	1
+#	M:	range
+#	N:	range
+#	K:	range
+#	input: initialized with erange-mode	range = 1.00 (max = 1.000e+01, min = 1.000e+00)
+#	input: initialized with erange-mode	range = 1.00 (max = 1.000e+01, min = 1.000e+00)
+### Warning: batchedGemm is ignored on DOT because DOT is computed by a GEMM.
+# Evaluation result ------------------------
+# (* shows the value at the last execution, ** shows the value of the last block at the last execution)
+# M	N	K	Time[sec]	Perf[GFlops]	Perf[GB/s]	itr
+--	128	--	3.004e-05	8.522e-03	6.817e-02	3
+--	256	--	3.735e-05	1.371e-02	1.097e-01	3
+--	512	--	2.702e-05	3.790e-02	3.032e-01	3
+--	1024	--	2.901e-05	7.060e-02	5.648e-01	3
+--	2048	--	2.940e-05	1.393e-01	1.114e+00	3
+--	4096	--	2.631e-05	3.114e-01	2.491e+00	3
+--	8192	--	2.702e-05	6.063e-01	4.851e+00	3
+--	16384	--	3.497e-05	9.371e-01	7.497e+00	3
+--	32768	--	3.465e-05	1.891e+00	1.513e+01	3
+--	65536	--	4.101e-05	3.196e+00	2.557e+01	3
+--	131072	--	3.537e-05	7.412e+00	5.930e+01	3
+--	262144	--	3.195e-05	1.641e+01	1.313e+02	3
+--	524288	--	3.099e-05	3.383e+01	2.706e+02	3
+--	1048576	--	3.735e-05	5.615e+01	4.492e+02	3
+--	2097152	--	4.737e-05	8.855e+01	7.084e+02	3
+--	4194304	--	6.700e-05	1.252e+02	1.002e+03	3

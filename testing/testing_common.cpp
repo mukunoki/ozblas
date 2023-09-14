@@ -51,10 +51,6 @@ struct testingHandle_t {
 	int32_t ldb_dev;
 	int32_t ldc_dev;
 	int32_t dim_step_mode;
-	#if defined (CUOZBLAS)
-//	cublasPointerMode_t pmode;
-//	cublasAtomicsMode_t amode;
-	#endif
 
 	// options
 	char tranA; // N, T, C
@@ -343,7 +339,6 @@ void testingCreate (
 				strcpy (th->mtx_file, optarg);
 				break;
 			} case 'g':{
-//				th->devno = atoi(optarg);
 				printf ("[Test-setting]\n");
 				printf ("--mode={c,p} c: check, p: performance (default: c)\n");
 				printf ("--nodisp={0, 1}, 0: off, 1:on\n");
@@ -815,9 +810,8 @@ void mublasConvMat (
 	mpreal *dst,
 	const int32_t ldd
 ) {
-	int32_t j;
 	#pragma omp parallel for
-	for (j = 0; j < cd; j++) {
+	for (int32_t j = 0; j < cd; j++) {
 		for (int32_t i = 0; i < rd; i++) 
 			dst[j*ldd+i] = toMpreal (src[j*lds+i]);
 	}
@@ -831,9 +825,8 @@ void mublasCopyMat (
 	FP_TYPE *dst,
 	const int32_t ldd
 ) {
-	int32_t j;
 	#pragma omp parallel for
-	for (j = 0; j < cd; j++) {
+	for (int32_t j = 0; j < cd; j++) {
 		for (int32_t i = 0; i < rd; i++) 
 			dst[j*ldd+i] = src[j*lds+i];
 	}
@@ -1081,7 +1074,7 @@ void print_info2 (
 ) {
 	if (!th->nodisp) {
 		printf ("# Evaluation result ------------------------\n");
-		if (th->mode == 'p') printf ("(* shows the value at the last execution, ** shows the value of the last block at the last execution)\n");
+		if (th->mode == 'p') printf ("# (* shows the value at the last execution, ** shows the value of the last block at the last execution)\n");
 		#if defined (CSRMV) || defined (CSRMM) || defined (CG)
 		printf ("# Mat\tM\tN\tNNZ");
 		#else
@@ -1097,7 +1090,7 @@ void print_info2 (
 			printf("\terr(rlt.max)\tnum-err");
 		}
 		#if defined (CUOZBLAS) || defined (OZBLAS)
-		printf("\t*t_SpltA\t*t_SpltB\t*t_Comp \t*t_Sum  \t*t_Other\t*t_Total\t*#sA\t*#sB\t*#sC\t*Mem[GB]\tGFlops(Comp)\tmbk\tnbk");
+		printf("\t*t_SpltA\t*t_SpltB\t*t_Comp \t*t_Sum  \t*t_Other\t*t_Total\t*#sA\t*#sB\t*#GEMMs\t*Mem[GB]\tGFlops(Comp)\tmbk\tnbk");
 		#endif
 		#endif
 		printf("\n");
@@ -1113,7 +1106,6 @@ void print_info3 (
 		double t_other = ha->t_total - ha->t_SplitA - ha->t_SplitB - ha->t_comp - ha->t_sum;
 		printf ("\t%1.2e\t%1.2e\t%1.2e\t%1.2e\t%1.2e\t%1.2e", ha->t_SplitA, ha->t_SplitB, ha->t_comp, ha->t_sum, t_other, ha->t_total);
 		printf ("\t%1.1f\t%1.1f\t%1.1f\t%1.1e", ha->nSplitA, ha->nSplitB, ha->nSplitC, ha->memAddr*1.e-9);
-		printf ("\t%1.2e", 1e-9*ha->n_comp/ha->t_comp);
 		printf ("\t%d\t%d", ha->mbk, ha->nbk);
 		printf ("\n");
 	}

@@ -1,0 +1,47 @@
+# Testing info -----------------------------
+# 	Date:	Tue Sep 12 15:31:53 JST 2023
+# 	CPU:	model name	: AMD EPYC 7763 64-Core Processor
+# 	OMP:	OMP_NUM_THREADS =  256, MKL_NUM_THREADS = 
+# 	OS:	Linux a100-1.cloud.r-ccs.riken.jp 4.18.0-425.3.1.el8.x86_64 #1 SMP Wed Nov 9 20:13:27 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux
+# 	Host:	a100-1.cloud.r-ccs.riken.jp
+# 	Compiler:	GCC 9
+#	Routine:	QDGEMV
+#	Library:	OzBLAS (using MKL)
+#	mode: performance evaluation
+#	NLOOP / WLOOP:	3/2
+# OzBLAS -----------------------------------
+#	Work-mem size = 1.6e+10 (bytes)
+#	Degree = 0
+#	splitMode = 1 (0:none, 1:infSplit (warn when infSplit is failed), 3:fastSplit+infSplit)
+#	FastMode = 0
+#	ReproMode = 1
+#	SumMode = 0 (0:GlobalFSum, 1:GlobalNearsum, 2:LocalFsum, 3:LocalFsum3)
+#	UseBatchedGemm = 1
+#	SplitEpsMode = 1
+#	precx = 0
+# BLAS parameter ---------------------------
+#	tranA:	N
+#	tranB:	N
+# Problem setting --------------------------
+#	phi = 1 (on erange-mode, [1e0,1e1))
+#	dim_start:	128
+#	dim_stop:	8192
+#	dim_step:	1
+#	M:	range
+#	N:	range
+#	K:	range
+#	input: initialized with const-mode	
+#	input: initialized with const-mode	
+#	input: initialized with erange-mode	range = 1.00 (max = 1.000e+01, min = 1.000e+00)
+#	input: initialized with erange-mode	range = 1.00 (max = 9.997e+00, min = 1.001e+00)
+#	input: initialized with const-mode	
+# Evaluation result ------------------------
+# (* shows the value at the last execution, ** shows the value of the last block at the last execution)
+# M	N	K	Time[sec]	Perf[GFlops]	Perf[GB/s]	itr	*t_SpltA	*t_SpltB	*t_Comp 	*t_Sum  	*t_Other	*t_Total	*#sA	*#sB	*#GEMMs	*Mem[GB]	GFlops(Comp)	mbk	nbk
+128	128	--	2.048e-01	1.619e-04	1.310e-03	3	1.04e-01	7.16e-02	1.37e-02	2.01e-02	1.19e-06	2.09e-01	5.0	5.0	5.0	5.2e-03	0.00e+00	128	1
+256	256	--	2.047e-01	6.442e-04	5.183e-03	3	1.18e-01	8.42e-02	8.04e-03	2.37e-02	1.19e-06	2.34e-01	6.0	6.0	6.0	1.9e-02	0.00e+00	256	1
+512	512	--	2.379e-01	2.210e-03	1.773e-02	3	1.20e-01	8.36e-02	8.31e-03	3.10e-02	2.15e-06	2.43e-01	6.0	6.0	6.0	7.1e-02	0.00e+00	512	1
+1024	1024	--	2.533e-01	8.290e-03	6.642e-02	3	1.27e-01	8.62e-02	1.33e-02	2.26e-02	9.54e-07	2.49e-01	6.0	6.0	6.0	2.8e-01	0.00e+00	1024	1
+2048	2048	--	2.741e-01	3.063e-02	2.452e-01	3	1.56e-01	8.32e-02	2.03e-02	2.25e-02	1.91e-06	2.82e-01	6.0	6.0	6.0	1.1e+00	0.00e+00	2048	1
+4096	4096	--	3.633e-01	9.240e-02	7.395e-01	3	2.22e-01	8.60e-02	2.65e-02	2.54e-02	1.19e-06	3.60e-01	6.0	6.0	6.0	4.3e+00	0.00e+00	4096	1
+8192	8192	--	9.281e-01	1.446e-01	1.157e+00	3	5.62e-01	8.76e-02	1.86e-01	5.15e-02	1.00e-05	8.87e-01	6.0	6.0	6.0	8.6e+00	0.00e+00	4096	1

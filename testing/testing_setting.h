@@ -2,8 +2,8 @@
 #define TESTING_SETTING
 
 // ***** SETTING ***********************************
-#define WLOOP			3 // (times)
-#define NLOOP			10 // (times)
+#define WLOOP			2 // (times)
+#define NLOOP			3 // (times)
 #define MPFR_PREC		2048 // (bits)
 #define WORK_MEM_SIZE	16e9 // (bytes)
 

@@ -1,0 +1,54 @@
+# Testing info -----------------------------
+# 	Date:	Tue Sep 12 15:34:04 JST 2023
+# 	CPU:	model name	: AMD EPYC 7763 64-Core Processor
+# 	OMP:	OMP_NUM_THREADS =  256, MKL_NUM_THREADS = 
+# 	OS:	Linux a100-1.cloud.r-ccs.riken.jp 4.18.0-425.3.1.el8.x86_64 #1 SMP Wed Nov 9 20:13:27 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux
+# 	Host:	a100-1.cloud.r-ccs.riken.jp
+# 	Compiler:	GCC 9
+#	Routine:	QDDOT
+#	Library:	OzBLAS (using MKL)
+#	mode: performance evaluation
+#	NLOOP / WLOOP:	3/2
+# OzBLAS -----------------------------------
+#	Work-mem size = 1.6e+10 (bytes)
+#	Degree = 0
+#	splitMode = 1 (0:none, 1:infSplit (warn when infSplit is failed), 3:fastSplit+infSplit)
+#	FastMode = 0
+#	ReproMode = 1
+#	SumMode = 0 (0:GlobalFSum, 1:GlobalNearsum, 2:LocalFsum, 3:LocalFsum3)
+#	UseBatchedGemm = 1
+#	SplitEpsMode = 1
+#	precx = 0
+# BLAS parameter ---------------------------
+#	tranA:	N
+#	tranB:	N
+# Problem setting --------------------------
+#	phi = 1 (on erange-mode, [1e0,1e1))
+#	dim_start:	128
+#	dim_stop:	8192000
+#	dim_step:	1
+#	M:	range
+#	N:	range
+#	K:	range
+#	input: initialized with erange-mode	range = 1.00 (max = 1.000e+01, min = 1.000e+00)
+#	input: initialized with erange-mode	range = 1.00 (max = 1.000e+01, min = 1.000e+00)
+### Warning: batchedGemm is ignored on DOT because DOT is computed by a GEMM.
+# Evaluation result ------------------------
+# (* shows the value at the last execution, ** shows the value of the last block at the last execution)
+# M	N	K	Time[sec]	Perf[GFlops]	Perf[GB/s]	itr	*t_SpltA	*t_SpltB	*t_Comp 	*t_Sum  	*t_Other	*t_Total	*#sA	*#sB	*#GEMMs	*Mem[GB]	GFlops(Comp)	mbk	nbk
+--	128	--	1.223e-01	2.093e-06	3.348e-05	3	6.72e-02	1.00e-02	1.53e-04	2.36e-02	4.05e-06	1.01e-01	5.0	5.0	1.0	1.0e-03	0.00e+00	1	1
+--	256	--	2.044e-01	2.505e-06	4.009e-05	3	8.46e-02	8.53e-02	7.43e-03	2.37e-02	9.54e-07	2.01e-01	6.0	6.0	1.0	1.1e-03	0.00e+00	1	1
+--	512	--	1.938e-01	5.283e-06	8.452e-05	3	9.02e-02	8.57e-02	8.38e-03	3.14e-02	1.91e-06	2.16e-01	6.0	6.0	1.0	1.2e-03	0.00e+00	1	1
+--	1024	--	1.512e-01	1.355e-05	2.168e-04	3	7.91e-02	6.75e-02	7.15e-04	2.76e-02	4.29e-06	1.75e-01	6.0	6.0	1.0	1.5e-03	0.00e+00	1	1
+--	2048	--	2.043e-01	2.005e-05	3.208e-04	3	8.30e-02	8.62e-02	9.93e-03	2.40e-02	9.54e-07	2.03e-01	6.0	6.0	1.0	2.0e-03	0.00e+00	1	1
+--	4096	--	2.058e-01	3.981e-05	6.370e-04	3	8.64e-02	8.62e-02	8.37e-03	2.37e-02	9.54e-07	2.05e-01	6.0	6.0	1.0	3.0e-03	0.00e+00	1	1
+--	8192	--	2.073e-01	7.902e-05	1.264e-03	3	8.59e-02	8.52e-02	8.09e-03	2.43e-02	1.91e-06	2.03e-01	6.0	6.0	1.0	5.1e-03	0.00e+00	1	1
+--	16384	--	2.086e-01	1.571e-04	2.514e-03	3	8.82e-02	8.48e-02	7.79e-03	2.54e-02	0.00e+00	2.06e-01	6.0	6.0	1.0	9.3e-03	0.00e+00	1	1
+--	32768	--	2.101e-01	3.119e-04	4.990e-03	3	8.62e-02	8.43e-02	1.24e-02	2.14e-02	9.54e-07	2.04e-01	6.0	6.0	1.0	1.8e-02	0.00e+00	1	1
+--	65536	--	2.336e-01	5.612e-04	8.979e-03	3	1.03e-01	9.84e-02	1.06e-02	2.36e-02	5.01e-06	2.36e-01	7.0	7.0	1.0	3.4e-02	0.00e+00	1	1
+--	131072	--	2.435e-01	1.077e-03	1.722e-02	3	1.05e-01	9.98e-02	1.20e-02	2.78e-02	0.00e+00	2.45e-01	7.0	7.0	1.0	6.8e-02	0.00e+00	1	1
+--	262144	--	2.427e-01	2.160e-03	3.456e-02	3	1.13e-01	1.01e-01	1.48e-02	2.21e-02	1.91e-06	2.51e-01	7.0	7.0	1.0	1.4e-01	0.00e+00	1	1
+--	524288	--	2.747e-01	3.817e-03	6.108e-02	3	1.09e-01	1.12e-01	4.63e-02	1.50e-02	1.91e-06	2.82e-01	7.0	7.0	1.0	2.7e-01	0.00e+00	1	1
+--	1048576	--	2.996e-01	7.000e-03	1.120e-01	3	1.26e-01	1.30e-01	3.79e-02	1.58e-02	2.86e-06	3.10e-01	7.0	7.0	1.0	5.4e-01	0.00e+00	1	1
+--	2097152	--	3.560e-01	1.178e-02	1.885e-01	3	1.55e-01	9.82e-02	4.24e-02	1.95e-02	2.86e-06	3.15e-01	7.0	7.0	1.0	1.1e+00	0.00e+00	1	1
+--	4194304	--	4.110e-01	2.041e-02	3.266e-01	3	1.60e-01	1.55e-01	8.00e-02	1.60e-02	3.10e-06	4.11e-01	8.0	8.0	1.0	2.1e+00	0.00e+00	1	1

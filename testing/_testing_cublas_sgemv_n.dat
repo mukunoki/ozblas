@@ -1,0 +1,45 @@
+# Testing info -----------------------------
+# 	Date:	Tue Sep 12 15:35:49 JST 2023
+# 	CPU:	model name	: AMD EPYC 7763 64-Core Processor
+# 	OMP:	OMP_NUM_THREADS =  256, MKL_NUM_THREADS = 
+# 	OS:	Linux a100-1.cloud.r-ccs.riken.jp 4.18.0-425.3.1.el8.x86_64 #1 SMP Wed Nov 9 20:13:27 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux
+# 	Host:	a100-1.cloud.r-ccs.riken.jp
+# 	Compiler:	GCC 9
+# 	Device[0]	NVIDIA A100-SXM4-80GB
+# 	- Theoretical Peak Memory Bandwidth:	2039.0 [GB/s]
+# 	- Theoretical Peak Performance (SP):	 0.0 [GFlops]
+# 	- Theoretical Peak Performance (DP):	 0.0 [GFlops]
+# 	- Total Gmem:	85.0 [GB]
+# 	- CC:	8.0
+# 	- MultiProcessorCount:	108
+# 	Driver / Runtime:	12000, 12000
+#	Routine:	SGEMV
+#	Library:	unknown-library
+#	mode: performance evaluation
+#	NLOOP / WLOOP:	3/2
+# BLAS parameter ---------------------------
+#	tranA:	N
+#	tranB:	N
+# Problem setting --------------------------
+#	phi = 1 (on erange-mode, [1e0,1e1))
+#	dim_start:	128
+#	dim_stop:	8192
+#	dim_step:	1
+#	M:	range
+#	N:	range
+#	K:	range
+#	input: initialized with const-mode	
+#	input: initialized with const-mode	
+#	input: initialized with erange-mode	range = 1.00 (max = 1.000e+01, min = 1.000e+00)
+#	input: initialized with erange-mode	range = 1.00 (max = 9.997e+00, min = 1.001e+00)
+#	input: initialized with const-mode	
+# Evaluation result ------------------------
+# (* shows the value at the last execution, ** shows the value of the last block at the last execution)
+# M	N	K	Time[sec]	Perf[GFlops]	Perf[GB/s]	itr
+128	128	--	1.701e-05	1.949e+00	3.944e+00	3
+256	256	--	2.734e-05	4.822e+00	9.701e+00	3
+512	512	--	2.797e-05	1.880e+01	3.770e+01	3
+1024	1024	--	3.497e-05	6.006e+01	1.203e+02	3
+2048	2048	--	2.829e-05	2.967e+02	5.939e+02	3
+4096	4096	--	5.865e-05	5.723e+02	1.145e+03	3
+8192	8192	--	1.709e-04	7.853e+02	1.571e+03	3
