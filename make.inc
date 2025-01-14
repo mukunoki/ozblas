@@ -10,9 +10,9 @@ LINKAGE = static
 
 #--- PATH ------------------------------------
 #CUDA_PATH	= /work/opt/local/x86_64/cores/cuda/12.0
-CUDA_PATH	= /usr/local/cuda-12.0
-LIB_PATH	= $(HOME)/local_a100/lib
-INC_PATH	= $(HOME)/local_a100/include
+CUDA_PATH	= /usr/local/cuda
+LIB_PATH	= $(HOME)/local/lib
+INC_PATH	= $(HOME)/local/include
 # -> installation path of external libraries
 
 #--- Compiler --------------------------------
@@ -27,7 +27,7 @@ CUDA = yes
 
 #--- BLAS (CPU) ------------------------------
 #CPU_BLAS: MKL, OpenBLAS, SSL2
-CPU_BLAS = MKL
+CPU_BLAS = OpenBLAS
 # CSRMV & CG require MKL because OpenBLAS does not have sparse routines.
 
 #--- MPLAPACK (for testing) ------------------

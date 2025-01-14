@@ -877,8 +877,19 @@ void blasRomatcopy (const char trans, const int32_t m, const int32_t n, const __
 	fprintf (OUTPUT, "OzBLAS error: omatcopy is not available.\n");
 	exit(1);
 	#else
-	const double done = 1.;
-	cblas_zomatcopy (CblasColMajor, ToCblasOp(trans), m, n, &done, (const double*)A, lda, (double*)B, ldb);
+	//const double done = 1.;
+	//cblas_zomatcopy (CblasColMajor, ToCblasOp(trans), m, n, &done, (const double*)A, lda, (double*)B, ldb);
+    ///*
+
+	#pragma omp parallel
+    for (size_t j = 0; j < n; j++) {
+        for (size_t i = 0; i < m; i++) {
+            __float128 tmp = A[j * lda + i];
+            B[i * ldb + j] = tmp;
+        }
+    }
+
+//*/
 	#endif
 }
 

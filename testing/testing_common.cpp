@@ -853,7 +853,7 @@ void mublasCheckMatrix (
 			trg = toMpreal (trgf);
 			dif = trg - ref;
 			rerr = (ref == toMpreal(0.)) ? toMpreal(0.) : fabs (dif / ref);
-//			printf ("[%lu,%lu] trg=%a mpref=%a dif=%+1.18e rel=%+1.18e\n", j, i, toDouble (trg), toDouble (ref), toDouble (dif), toDouble (rerr));
+			//printf ("[%lu,%lu] trg=%a mpref=%a dif=%+1.18e rel=%+1.18e\n", j, i, toDouble (trg), toDouble (ref), toDouble (dif), toDouble (rerr));
 			if (rerrmax < rerr) rerrmax = rerr;
 			#if defined (PREC_DD)
 			if (isinf1(trgf.x[0]) || isnan1(trgf.x[0])) {

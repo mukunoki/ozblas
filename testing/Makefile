@@ -21,7 +21,7 @@ OBJS	+= $(CUOZBLAS_OBJS)
 OBJS	+= $(CUBLAS_OBJS) 
 INCS	+= -I$(CUDA_PATH)/include 
 LDFLAGS	+= -L$(CUDA_PATH)/lib64
-LIBS	+= -lcublasLt -lcudart -lcublas -lcusparse -lcuozblas
+LIBS	+= -lcuozblas -lcublasLt -lcudart -lcublas -lcusparse
 endif
 ifeq ($(CUBLAS),yes)
 INCS	+= -I$(CUDA_PATH)/include 

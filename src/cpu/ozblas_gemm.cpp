@@ -228,8 +228,9 @@ int32_t ozblasRgemm (
 							for (int32_t ia = 0; ia < nSplitA; ia++) {
 								for (int32_t ib = 0; ib < nSplitB; ib++) {
 									if (ik == ia + ib) {
-										ptrA = devASplit+ldas*mbk*ia;
-										ptrB = devBSplit+ldbs*nbk*ib;
+										ptrA = devASplit+ldas*mbk_*ia;
+										ptrB = devBSplit+ldbs*nbk_*ib;
+										//ptrC = (oh->sumModeFlag < 2) ? devCSplit+ldcs*nbk_*ic : devCSplit;//NG
 										ptrC = (oh->sumModeFlag < 2) ? devCSplit+ldcs*nbk*ic : devCSplit;
 										// Computation (GEMM) -----------------------------------
 										blasRgemm (transA_, transB_, mbk_, nbk_, k, fone, ptrA, ldas, ptrB, ldbs, fzero, ptrC, ldcs);
@@ -267,6 +268,7 @@ int32_t ozblasRgemm (
 				t1 = timer();
 				int32_t sumorder = 1;
 				if (m == 1 && n == 1) { // DOT
+                printf ("sum dot mbk_=%d nbk_=%d\n", mbk_, nbk_);
 					sumorder = (oh->fastModeFlag == 0) ? 2 : 1; // DOT w/o fastmode -> 2
 					if (oh->splitEpsModeFlag == 2) maxlevel = (nSplitA-1) + (nSplitB*2-1);
 					if (ozblasGlobalSum (oh, 1, 1, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB*((oh->splitEpsModeFlag==2)?2:1),
@@ -275,6 +277,7 @@ int32_t ozblasRgemm (
 						exit (1);
 					}
 				} else if (n == 1) { // GEMV 
+                printf ("sum gemv mbk_=%d nbk_=%d\n", mbk_, nbk_);
 					sumorder = (oh->fastModeFlag == 0) ? 3 : 1; // GEMV w/o fastmode -> 3
 					if (ozblasGlobalSum (oh, mbk_, nbk_, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB,
 										devCSplit, ldcs*nbk, ldcs, &devC[ldc*(in*nbk)+im*mbk], ldc, alpha, beta, maxlevel, sumorder)) {
@@ -282,6 +285,7 @@ int32_t ozblasRgemm (
 						exit (1);
 					}
 				} else { // GEMM
+//                printf ("sum gemm mbk_=%d nbk_=%d\n", mbk_, nbk_);
 					if (ozblasGlobalSum (oh, mbk_, nbk_, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB,
 										devCSplit, ldcs*nbk, ldcs, &devC[ldc*(in*nbk)+im*mbk], ldc, alpha, beta, maxlevel, sumorder)) {
 						fprintf (OUTPUT, "OzBLAS error: sum is failed\n");
