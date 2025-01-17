@@ -143,7 +143,7 @@ int32_t ozblasRcsrmv (
 					if (ik == ia + ib) {
 						int32_t it = nSplitB * ia + ib; // unlike GEMV, here is transposed
 						if (ozblasLocalFsum3 (m, 1, &devASpExp[ldase*ia], &devBSpExp[ib], devCSplit+ldcs*it, ldcs,
-											devCTmp, m, devCTmp1, m, devCTmp2, m, devCTmp3, m, (ic==nSplitC-1)?-1:ic)) {
+											devCTmp, m, devCTmp1, m, devCTmp2, m, devCTmp3, m, (ic==nSplitC-1)?-1:ic, 0, 0)) {
 							fprintf (OUTPUT, "OzBLAS error: Sum3 is failed.\n");
 							exit (1);
 						}
@@ -156,7 +156,7 @@ int32_t ozblasRcsrmv (
 	} else { // sumMode < 3
 		if (oh->splitEpsModeFlag == 2) maxlevel = (nSplitA-1) + (nSplitB*2-1);
 		if (ozblasGlobalSum (oh, m, 1, devASpExp, ldase, nSplitA,
-							devBSpExp, 1, nSplitB*((oh->splitEpsModeFlag == 2)?2:1), devCSplit, ldcs, ldcs, devC, 1, alpha, beta, maxlevel, 3)) {
+							devBSpExp, 1, nSplitB*((oh->splitEpsModeFlag == 2)?2:1), devCSplit, ldcs, ldcs, devC, 1, alpha, beta, maxlevel, 3, 0, 0)) {
 			fprintf (OUTPUT, "OzBLAS error: sum is failed\n");
 			exit (1);
 		}

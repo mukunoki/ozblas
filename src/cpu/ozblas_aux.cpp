@@ -60,7 +60,9 @@ int32_t rangeCheck (
 		int32_t checkLocal = 1;
 		for (int32_t addrx = 0; addrx < m; addrx++) {
 			TYPE1 valAbs = fabs1(mat[addry * ld + addrx]);
-			if (valAbs > type1MaxAbs || valAbs < type1MinAbs) checkLocal = 0; // NG
+			if (valAbs != 0. && (valAbs > type1MaxAbs || valAbs < type1MinAbs)) {
+                checkLocal = 0; // NG
+            }
 		}
 		if (checkLocal == 0) { // If NG
 			#pragma omp atomic write
@@ -245,7 +247,7 @@ double timer () {
 }
 
 // note: this is temporal...
-#define ALIGN 128
+#define ALIGN 8
 int32_t getPitchSize (int32_t n) {
 	return ceil((float)n / ALIGN) * ALIGN;
 }

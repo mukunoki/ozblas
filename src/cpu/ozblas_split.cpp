@@ -433,13 +433,17 @@ int32_t ozblasSplit3 (
 			devTmpD1[addry * ldt1 + addrx] = tmp1d;
 			devTmpD2[addry * ldt2 + addrx] = tmpd;
 			devTmpD3[addry * ldt3 + addrx] = tmp3d;
+
+     //       devSplit[addry * lds + addrx] = (TYPE2)devInput[addry * ldi + addrx];
 		}
 	}
+    //int32_t s=1;
 				
 	// FindMax^(0)
 	ozblasFindMaxDevice (major, m, n, devTmpD1, ldt1, devMax);
 	// Split^(0) & FindMax^(1)
-	ozblasSplitDevice2 (major, m, n, devTmpD1, ldt1, devTmp, ldt, devTmpD2, ldt2, devTmpD3, ldt3, &devSplit[0], lds, devSpExp, devMax, oh->splitEpsModeFlag, oh->splitShift);
+	ozblasSplitDevice2 (major, m, n, devTmpD1, ldt1, devTmp, ldt, devTmpD2, ldt2, devTmpD3, ldt3, devSplit, lds, devSpExp, devMax, oh->splitEpsModeFlag, oh->splitShift);
+	//ozblasSplitDevice2 (major, m, n, devTmpD1, ldt1, devTmp, ldt, devTmpD2, ldt2, devTmpD3, ldt3, &devSplit[0], lds, devSpExp, devMax, oh->splitEpsModeFlag, oh->splitShift);
 	const int32_t maxS = (oh->nSplitMax > 0) ? oh->nSplitMax : NumSplitDefaultMax;
 	int32_t s;
 	for (s = 1; s < maxS; s++) {
@@ -450,6 +454,7 @@ int32_t ozblasSplit3 (
 	}
 	if (oh->splitModeFlag > 0)
 		fprintf (OUTPUT, "OzBLAS error: infSplit is failed.\n");
+
 	return s;
 }
 

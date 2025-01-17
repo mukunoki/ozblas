@@ -1090,7 +1090,7 @@ void print_info2 (
 			printf("\terr(rlt.max)\tnum-err");
 		}
 		#if defined (CUOZBLAS) || defined (OZBLAS)
-		printf("\t*t_SpltA\t*t_SpltB\t*t_Comp \t*t_Sum  \t*t_Other\t*t_Total\t*#sA\t*#sB\t*#GEMMs\t*Mem[GB]\tGFlops(Comp)\tmbk\tnbk");
+		printf("\t*t_SpltA\t*t_SpltB\t*t_Comp \t*t_Sum  \t*t_Other\t*t_Total\t*#sA\t*#sB\t*#GEMMs\t*Mem[GB]\tmbk\tnbk");
 		#endif
 		#endif
 		printf("\n");
