@@ -42,6 +42,10 @@ else
 LIBS	+= -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core #-littnotify#-liomp5 
 # note: gcc with MKL may not work with OMP?
 endif
+#===========FOR VTUNE=========================
+#LIBS	+= -littnotify
+#FLAGS 	+= -I/work/opt/local/x86_64/cores/intel/2022.1.2/vtune/2022.0.0/include -L/work/opt/local/x86_64/cores/intel/2022.1.2/vtune/2022.0.0/lib64
+#===========FOR VTUNE=========================
 endif
 ifeq ($(CPU_BLAS),OpenBLAS)
 FLAGS	+= -DOpenBLAS
@@ -57,6 +61,7 @@ ifeq ($(CXX),FCC)
 FLAGS	+= -DSSL2 -SSL2BLAMP
 else
 LIBS	+= -lfjsrcinfo -lc++abi -lclang_rt.asan-aarch64 -lfj90pxrscif -lfjstringsve -lclang_rt.hwasan-aarch64 -lfj90rt -lfjlapackexsve -lfmtl -lclang_rt.scudo-aarch64 -lfjarmci -loptf -lclang_rt.ubsan_minimal-aarch64 -lfjc++abi -lfjpthr -lstdtl -lclang_rt.ubsan_standalone-aarch64 -lfjcex -lcpubind -lfjcrt -lfjrtcl -lc++ -lfjc++ -lfjompcrt -lfj90f -lfjdemgl -lfjomphk -lfj90icaf -lfjomp -lfjsrcinfo -lfj90i
+#LIBS	+= -lc++abi -lfj90i -lfjlapackex -lfjprofcore -lfjstring_internal -lopen-pal_mt -lclang_rt.asan-aarch64 -lfj90pxrscif -lfjlapackexsve_ilp64 -lfjprofmpif -lfjstringsve -lopen-pal -lclang_rt.hwasan-aarch64 -lfj90rt -lfjlapackexsve -lfjprofmpi -lfmtl -lopen-rte -lclang_rt.scudo-aarch64 -lfjarmci -lfjlapack_ilp64 -lfjprofomp -lmpi_cxx -loptf -lclang_rt.ubsan_minimal-aarch64 -lfjc++abi -lfjlapack -lfjpthr -lmpi_java -lstdtl -lclang_rt.ubsan_standalone-aarch64 -lfjcex -lfjlapacksve_ilp64 -lfjrtcl_io -lmpi_mpifh -lcpubind -lfjcrt -lfjlapacksve -lfjrtcl -lmpi_mt -lc++ -lfjc++ -lfjompcrt -lfjscalapack -lmpi -lfj90f -lfjdemgl -lfjomphk -lfjscalapacksve -lmpi_usempif08 -lfj90icaf -lfjlapackex_ilp64 -lfjomp -lfjsrcinfo -lmpi_usempi_ignore_tkr
 endif
 else
 PREC_H_H = no

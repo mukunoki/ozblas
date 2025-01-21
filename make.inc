@@ -17,8 +17,7 @@ INC_PATH	= $(HOME)/local/include
 
 #--- Compiler --------------------------------
 CXX = g++
-# -> Intel Compiler (icpc) should work (but not tested)
-# -> Intel LLVM Compiler (icpx) does NOT work (for quadruple-precision)
+# -> Intel LLVM Compiler (icpx) is not supported
 
 #--- CPU (OzBLAS) / CUDA (cuOzBLAS) ----------
 CPU  = yes

@@ -6,7 +6,6 @@
 
 #define OUTPUT stdout // stderr
 
-#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cmath> 

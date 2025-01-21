@@ -57,7 +57,7 @@ int32_t ozblasRgemm (
 	while (mbk > 0 && nbk > 0) { // blocking
 		int32_t sizeCn = (oh->useBatchedGemmFlag || oh->sumModeFlag < 2) ? (nbk * nSplitMaxLoc * nSplitMaxLoc) : nbk;
 		if (oh->splitEpsModeFlag == 2) sizeCn *= 2;
-		ozblasMatAddrAlloc (oh, k, mbk * nSplitMaxLoc, sizeType2, (void**)&devASplit, ldas); // Note: A is transposed!! so ldas is k-based
+		ozblasMatAddrAlloc (oh, k, mbk * nSplitMaxLoc, sizeType2, (void**)&devASplit, ldas); // Note: A is transposed!! o ldas is k-based
 		ozblasMatAddrAlloc (oh, k, nbk * nSplitMaxLoc, sizeType2, (void**)&devBSplit, ldbs);
 		ozblasMatAddrAlloc (oh, mbk, sizeCn,           sizeType2, (void**)&devCSplit, ldcs);
 		ozblasMatAddrAlloc (oh, k, std::max(mbk,nbk),  sizeType1, (void**)&devTmp1,   ldt); // TRANSPOSE
@@ -112,7 +112,7 @@ int32_t ozblasRgemm (
 		} else { // transposed 
 			split3FlagA = (oh->splitModeFlag == 3) ? rangeCheck <TYPE1, TYPE2> (k, mbk_, devA+im*mbk, lda) : 0; // on (if 1)
 			if (split3FlagA == 1)
-				nSplitA = ozblasSplit3 (oh, 'c', k, mbk_, devA+im*mbk, lda, devASplit, ldas, devASpExp, ldase,
+				nSplitA = ozblasSplit3 (oh, 'c', k, mbk_, devA+im*mbk*lda, lda, devASplit, ldas, devASpExp, ldase,
 										devMax2, devTmp21, ldt, devTmp22, ldt, devTmp23, ldt, devTmp21, ldt);
 			else 
 				nSplitA = ozblasSplit (oh, 'c', k, mbk_, devA+im*mbk*lda, lda, devTmp1, ldt, devASplit, ldas, devASpExp, ldase, devMax1);
@@ -271,6 +271,7 @@ int32_t ozblasRgemm (
 						exit (1);
 					}
 				} else {
+                printf ("mbk_=%d nbk_=%d\n", mbk_, nbk_);
 					sumorder = (oh->fastModeFlag == 0 && nbk_ == 1) ? 3 : 1; // GEMV w/o fastmode -> 3
 					if (ozblasGlobalSum (oh, mbk_, nbk_, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB,
 										devCSplit, ldcs*nbk_, ldcs, &devC[ldc*(in*nbk)+im*mbk], ldc, alpha, beta, maxlevel, sumorder, split3FlagA, split3FlagB)) {
