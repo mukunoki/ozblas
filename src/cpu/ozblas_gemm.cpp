@@ -271,7 +271,6 @@ int32_t ozblasRgemm (
 						exit (1);
 					}
 				} else {
-                printf ("mbk_=%d nbk_=%d\n", mbk_, nbk_);
 					sumorder = (oh->fastModeFlag == 0 && nbk_ == 1) ? 3 : 1; // GEMV w/o fastmode -> 3
 					if (ozblasGlobalSum (oh, mbk_, nbk_, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB,
 										devCSplit, ldcs*nbk_, ldcs, &devC[ldc*(in*nbk)+im*mbk], ldc, alpha, beta, maxlevel, sumorder, split3FlagA, split3FlagB)) {
