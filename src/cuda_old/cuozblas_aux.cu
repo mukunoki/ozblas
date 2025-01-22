@@ -19,7 +19,6 @@ cusparseOperation_t ToCusparseOp (const char tran) {
 	return CUSPARSE_OPERATION_NON_TRANSPOSE; //default
 }
 
-
 void cuPrintMatInt (
 	const int32_t m,
 	const int32_t n,

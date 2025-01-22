@@ -1,6 +1,6 @@
 #include "cuozblas_common.h"
 
-template <typename TYPE1, typename TYPE2>
+template <typename TYPE1, typename TYPE2, typename TYPE3>
 int32_t cuozblasRdot (
 	cuozblasHandle_t *oh,
 	const int32_t n,
@@ -23,7 +23,7 @@ int32_t cuozblasRdot (
 	}
 
 	TYPE1 fone = 1., fzero = 0.;
-	cuozblasRgemm <TYPE1, TYPE2> (oh, 't', 'n', 1, 1, n, fone, devA, n, devB, n, fzero, (TYPE1*)oh->devWorkCommon, 1);
+	cuozblasRgemm <TYPE1, TYPE2, TYPE3> (oh, 't', 'n', 1, 1, n, fone, devA, n, devB, n, fzero, (TYPE1*)oh->devWorkCommon, 1);
 	cudaMemcpy (ret, oh->devWorkCommon, sizeof(TYPE1), cudaMemcpyDeviceToHost);
 
 	// for CG, time
@@ -38,8 +38,10 @@ int32_t cuozblasRdot (
 
 	return 0;
 }
-template int32_t cuozblasRdot <double, double> (cuozblasHandle_t *oh, const int32_t n, const double *devA, const int32_t incx, const double *devB, const int32_t incy, double *ret);
-template int32_t cuozblasRdot <double, float> (cuozblasHandle_t *oh, const int32_t n, const double *devA, const int32_t incx, const double *devB, const int32_t incy, double *ret);
-template int32_t cuozblasRdot <float, float> (cuozblasHandle_t *oh, const int32_t n, const float *devA, const int32_t incx, const float *devB, const int32_t incy, float *ret);
-template int32_t cuozblasRdot <float, double> (cuozblasHandle_t *oh, const int32_t n, const float *devA, const int32_t incx, const float *devB, const int32_t incy, float *ret);
+template int32_t cuozblasRdot <double, double, double> (cuozblasHandle_t *oh, const int32_t n, const double *devA, const int32_t incx, const double *devB, const int32_t incy, double *ret);
+template int32_t cuozblasRdot <double, float, float> (cuozblasHandle_t *oh, const int32_t n, const double *devA, const int32_t incx, const double *devB, const int32_t incy, double *ret);
+template int32_t cuozblasRdot <double, half, float> (cuozblasHandle_t *oh, const int32_t n, const double *devA, const int32_t incx, const double *devB, const int32_t incy, double *ret);
+template int32_t cuozblasRdot <float, float, float> (cuozblasHandle_t *oh, const int32_t n, const float *devA, const int32_t incx, const float *devB, const int32_t incy, float *ret);
+template int32_t cuozblasRdot <float, half, float> (cuozblasHandle_t *oh, const int32_t n, const float *devA, const int32_t incx, const float *devB, const int32_t incy, float *ret);
+template int32_t cuozblasRdot <float, double, double> (cuozblasHandle_t *oh, const int32_t n, const float *devA, const int32_t incx, const float *devB, const int32_t incy, float *ret);
 

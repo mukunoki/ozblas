@@ -1,0 +1,545 @@
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#include "../cueft.h"
+
+
+/*
+
+__device__ __forceinline__ float4
+cuSmad414
+	(const float4 a, const float b, const float4 c)
+{
+	return make_float4 (a.x*b+c.x, a.y*b+c.y, a.z*b+c.z, a.w*b+c.w);
+}
+
+__device__ __forceinline__ float4
+cuSmad144
+	(const float a, const float4 b, const float4 c)
+{
+	return make_float4 (a*b.x+c.x, a*b.y+c.y, a*b.z+c.z, a*b.w+c.w);
+}
+
+__device__ __forceinline__ float4
+cuSmul14
+	(const float a, const float4 b)
+{
+	return make_float4 (a*b.x, a*b.y, a*b.z, a*b.w);
+}
+
+__global__ void MUBLAS_GEMM_NN_DEVICE_tb8x8_rb8x8_v4_maxwell (
+	const size_t m,
+	const size_t n,
+	const size_t k,
+	const float alpha,
+	const float * __restrict__ Ag,
+	const size_t lda,
+	const float * __restrict__ Bg,
+	const size_t ldb,
+	const float beta,
+	float *Cg,
+	const size_t ldc
+) {
+	int32_t i, j, jk, ki;
+	const int32_t iBx = blockIdx.x;
+	const int32_t iBy = blockIdx.y;
+	const int32_t iTx = threadIdx.x;
+	const int32_t iTy = threadIdx.y;
+	const int32_t addrx = iBx*64+iTx*4;
+	const int32_t addry = iBy*64+iTy*8;
+	__shared__ float4 As4[8][16+1];
+	__shared__ float4 Bs4[8][16+1];
+	register float4 Tr4[8][2];
+	register float4 Ar4[2];
+	register float4 Br4[2];
+	register float4 Cr4[2];
+
+	const float * addrAg = &Ag[iTy*lda + addrx];
+	const float * addrBg = &Bg[addry*ldb + iTx];
+	const float * addrCg = &Cg[addry*ldc + addrx];
+
+	#pragma unroll
+	for (j = 0; j < 8; j++) 
+		#pragma unroll
+		for (i = 0; i < 2; i++)
+			Tr4[j][i] = make_float4 (0., 0., 0., 0.);
+
+	for (jk = 0; jk < k; jk += 8) {
+		As4[iTy][iTx+0] = (float4&)*(addrAg+0);
+		As4[iTy][iTx+8] = (float4&)*(addrAg+32);
+		Br4[0].x = *addrBg+0*ldb;
+		Br4[0].y = *addrBg+1*ldb;
+		Br4[0].z = *addrBg+2*ldb;
+		Br4[0].w = *addrBg+3*ldb;
+		Br4[1].x = *addrBg+4*ldb;
+		Br4[1].y = *addrBg+5*ldb;
+		Br4[1].z = *addrBg+6*ldb;
+		Br4[1].w = *addrBg+7*ldb;
+		Bs4[iTx][iTy*2+0] = Br4[0];
+		Bs4[iTx][iTy*2+1] = Br4[1];
+		__syncthreads ();
+
+		#pragma unroll
+		for (ki = 0; ki < 8; ki++) {
+			Ar4[0] = As4[ki][iTx+0];
+			Ar4[1] = As4[ki][iTx+8];
+			Br4[0] = Bs4[ki][iTy*2+0];
+			Br4[1] = Bs4[ki][iTy*2+1];
+			Tr4[0][0] = cuSmad414 (Ar4[0], Br4[0].x, Tr4[0][0]); 
+			Tr4[1][0] = cuSmad414 (Ar4[0], Br4[0].y, Tr4[1][0]); 
+			Tr4[2][0] = cuSmad414 (Ar4[0], Br4[0].z, Tr4[2][0]); 
+			Tr4[3][0] = cuSmad414 (Ar4[0], Br4[0].w, Tr4[3][0]); 
+			Tr4[4][0] = cuSmad414 (Ar4[0], Br4[1].x, Tr4[4][0]); 
+			Tr4[5][0] = cuSmad414 (Ar4[0], Br4[1].y, Tr4[5][0]); 
+			Tr4[6][0] = cuSmad414 (Ar4[0], Br4[1].z, Tr4[6][0]); 
+			Tr4[7][0] = cuSmad414 (Ar4[0], Br4[1].w, Tr4[7][0]); 
+			Tr4[0][1] = cuSmad414 (Ar4[1], Br4[0].x, Tr4[0][1]); 
+			Tr4[1][1] = cuSmad414 (Ar4[1], Br4[0].y, Tr4[1][1]); 
+			Tr4[2][1] = cuSmad414 (Ar4[1], Br4[0].z, Tr4[2][1]); 
+			Tr4[3][1] = cuSmad414 (Ar4[1], Br4[0].w, Tr4[3][1]); 
+			Tr4[4][1] = cuSmad414 (Ar4[1], Br4[1].x, Tr4[4][1]); 
+			Tr4[5][1] = cuSmad414 (Ar4[1], Br4[1].y, Tr4[5][1]); 
+			Tr4[6][1] = cuSmad414 (Ar4[1], Br4[1].z, Tr4[6][1]); 
+			Tr4[7][1] = cuSmad414 (Ar4[1], Br4[1].w, Tr4[7][1]); 
+		}
+		__syncthreads ();
+		addrAg += 8*lda;
+		addrBg += 8;
+	}
+
+	#pragma unroll 
+	for (j = 0; j < 8; j++) {
+		Cr4[0] = (float4&)*(addrCg+ 0);
+		Cr4[1] = (float4&)*(addrCg+32);
+		Cr4[0] = cuSmad144 (alpha, Tr4[j][0], cuSmul14 (beta, Cr4[0]));
+		Cr4[1] = cuSmad144 (alpha, Tr4[j][1], cuSmul14 (beta, Cr4[1]));
+		(float4&)*(addrCg+ 0) = Cr4[0];
+		(float4&)*(addrCg+32) = Cr4[1];
+		addrCg += ldc;
+	}
+
+}
+*/
+
+#define NTX_DGEMM 16
+#define NTY_DGEMM 16
+#define REGBK 8
+
+#define NTX_SGEMM 16//16
+#define NTY_SGEMM 16//16
+#define REGBKA 8//8
+#define REGBKB 16//16
+#define KBK 16//16
+
+__global__ void myblas_sgemm_nn_kernel (
+	const size_t m,
+	const size_t n,
+	const size_t k,
+	const float alpha,
+	const float *Ag,
+	const size_t lda,
+	const float *Bg,
+	const size_t ldb,
+	const float beta,
+	float *Cg,
+	const size_t ldc
+) {
+	int32_t jk, ki, ia, ib;
+	const int32_t iBx = blockIdx.x;
+	const int32_t iBy = blockIdx.y;
+	const int32_t nTx = blockDim.x;
+	const int32_t nTy = blockDim.y;
+	const int32_t iTx = threadIdx.x;
+	const int32_t iTy = threadIdx.y;
+	const int32_t addrx = (iBx*nTx+iTx)*REGBKA;
+	const int32_t addry = (iBy*nTy+iTy)*REGBKB;
+	__shared__ float As1[NTY_SGEMM][NTX_SGEMM*REGBKA+1];
+	__shared__ float Bs1[NTX_SGEMM*REGBKB][NTY_SGEMM+1];
+	register float Ar1[REGBKA], Br1[REGBKB], Cr1, Tr1[REGBKB][REGBKA];
+
+	#pragma unroll 
+    for (ib = 0; ib < REGBKB; ib++) {
+		#pragma unroll 
+        for (ia = 0; ia < REGBKA; ia++) {
+    	    Tr1[ib][ia] = 0.;
+        }
+    }
+
+	for (jk = 0; jk < k; jk += KBK) {
+		#pragma unroll 
+        for (ia = 0; ia < REGBKA; ia++)
+    		As1[iTy][iTx+ia*nTx] = Ag[(jk+iTy)*lda + (addrx+ia)];
+		#pragma unroll 
+        for (ib = 0; ib < REGBKB; ib++)
+    	    Bs1[iTx+ib*nTx][iTy] = Bg[(addry+ib)*ldb + (iTx+jk)];
+		__syncthreads ();
+		#pragma unroll 
+		for (ki = 0; ki < KBK; ki++) {
+		    #pragma unroll 
+            for (ia = 0; ia < REGBKA; ia++)
+		    	Ar1[ia] = As1[ki][iTx+ia*nTx];
+		    #pragma unroll 
+            for (ib = 0; ib < REGBKB; ib++)
+			    Br1[ib] = Bs1[ki+ib*nTx][iTy];
+		    #pragma unroll 
+            for (ib = 0; ib < REGBKB; ib++)
+		        #pragma unroll 
+                for (ia = 0; ia < REGBKA; ia++)
+			        Tr1[ib][ia] = Ar1[ia] * Br1[ib] + Tr1[ib][ia]; 
+		}
+		__syncthreads ();
+	}
+
+	if (addrx < m && addry < n) {
+		#pragma unroll 
+        for (ib = 0; ib < REGBKB; ib++) {
+		    #pragma unroll 
+            for (ia = 0; ia < REGBKA; ia++) {
+	            Cr1 = Cg[(addry+ib)*ldc + addrx+ia];
+		        Cr1 = (alpha * Tr1[ib][ia] + (beta * Cr1));
+    	        Cg[(addry+ib)*ldc + addrx+ia] = Cr1;
+            }
+        }
+	}
+    
+}
+
+
+__global__ void myblas_dgemm_nn_kernel (
+	const size_t m,
+	const size_t n,
+	const size_t k,
+	const double alpha,
+	const double *Ag,
+	const size_t lda,
+	const double *Bg,
+	const size_t ldb,
+	const double beta,
+	double *Cg,
+	const size_t ldc
+) {
+	int32_t jk, ki;
+	const int32_t iBx = blockIdx.x;
+	const int32_t iBy = blockIdx.y;
+	const int32_t nTx = blockDim.x;
+	const int32_t nTy = blockDim.y;
+	const int32_t iTx = threadIdx.x;
+	const int32_t iTy = threadIdx.y;
+	const int32_t addrx = iBx*nTx+iTx;
+	const int32_t addry = iBy*nTy+iTy;
+	__shared__ double As1[NTY_DGEMM][NTX_DGEMM+1];
+	__shared__ double Bs1[NTX_DGEMM][NTY_DGEMM+1];
+	register double Ar1, Br1, Cr1, Tr1;
+
+	double* addrCg = &Cg[addry*ldc + addrx];
+	Tr1 = 0.;
+
+	for (jk = 0; jk < k-KBK; jk += KBK) {
+		As1[iTy][iTx] = Ag[(jk+iTy)*lda + MIN(m-1,addrx)];
+		Bs1[iTx][iTy] = Bg[MIN(n-1,addry)*ldb + (iTx+jk)];
+		__syncthreads ();
+		#pragma unroll 
+		for (ki = 0; ki < KBK; ki++) {
+			Ar1 = As1[ki][iTx];
+			Br1 = Bs1[ki][iTy];
+			Tr1 = Ar1 * Br1 + Tr1; 
+		}
+		__syncthreads ();
+	} {
+		As1[iTy][iTx] = Ag[MIN(k-1,jk+iTy)*lda + MIN(m-1,addrx)];
+		Br1 = Bg[MIN(n-1,addry)*ldb + MIN(k-1,iTx+jk)];
+		Bs1[iTx][iTy] = Br1;
+		__syncthreads ();
+		#pragma unroll 
+		for (ki = 0; ki+jk < k; ki++) {
+			Ar1 = As1[ki][iTx];
+			Br1 = Bs1[ki][iTy];
+			Tr1 = Ar1 * Br1 + Tr1;
+		}
+		__syncthreads ();
+	}
+
+	if (addrx < m && addry < n) {
+		Cr1 = addrCg[0];
+		Cr1 = (alpha * Tr1 + (beta * Cr1));
+		addrCg[0] = Cr1;
+	}
+    
+}
+
+#define NTX_QTWGEMM 16//16
+#define NTY_QTWGEMM 16//16
+#define KBK 16//16
+
+#define FLOAT3MODE 0
+#if (FLOAT3MODE)
+#define REGBKA 2//2
+#define REGBKB 4//4
+#else
+#define REGBKA 2//2
+#define REGBKB 4//4
+#endif
+__global__ void myblas_qtwgemm_nn_kernel (
+	const size_t m,
+	const size_t n,
+	const size_t k,
+	const double alpha,
+	const double *Ag,
+	const size_t lda,
+	const double *Bg,
+	const size_t ldb,
+	const double beta,
+	double *Cg,
+	const size_t ldc
+) {
+	int32_t jk, ki, ia, ib;
+	const int32_t iBx = blockIdx.x;
+	const int32_t iBy = blockIdx.y;
+	const int32_t nTx = blockDim.x;
+	const int32_t nTy = blockDim.y;
+	const int32_t iTx = threadIdx.x;
+	const int32_t iTy = threadIdx.y;
+	const int32_t addrx = (iBx*nTx+iTx)*REGBKA;
+	const int32_t addry = (iBy*nTy+iTy)*REGBKB;
+	//__shared__ double As1[NTY_QTWGEMM][NTX_QTWGEMM*REGBKA+1];
+	__shared__ float3 As1[NTY_QTWGEMM][NTX_QTWGEMM*REGBKA+1];
+	//__shared__ double Bs1[NTX_QTWGEMM*REGBKB][NTY_QTWGEMM+1];
+	__shared__ float3 Bs1[NTX_QTWGEMM*REGBKB][NTY_QTWGEMM+1];
+	register float3 Ar1[REGBKA], Br1[REGBKB], Cr1, Tr1[REGBKB][REGBKA];
+
+	#pragma unroll 
+    for (ib = 0; ib < REGBKB; ib++) {
+		#pragma unroll 
+        for (ia = 0; ia < REGBKA; ia++) {
+    	    Tr1[ib][ia] = make_float3 (0., 0., 0.);
+        }
+    }
+
+	for (jk = 0; jk < k; jk += KBK) {
+		#pragma unroll 
+        for (ia = 0; ia < REGBKA; ia++) {
+            #if (FLOAT3MODE)
+    		//As1[iTy][iTx*REGBKA+ia] = make_float3 (Ag[(jk+iTy)*lda + (addrx+ia)], 0., 0.);
+    		As1[iTy][iTx+ia*nTx] = make_float3 (Ag[(jk+iTy)*lda + (addrx+ia)], 0., 0.);
+            #else
+    		//As1[iTy][iTx*REGBKA+ia] = double_to_float3 (Ag[(jk+iTy)*lda + (addrx+ia)]);
+    		As1[iTy][iTx+ia*nTx] = double_to_float3 (Ag[(jk+iTy)*lda + (addrx+ia)]);
+            #endif
+        }
+		#pragma unroll 
+        for (ib = 0; ib < REGBKB; ib++) {
+            #if (FLOAT3MODE)
+    	    //Bs1[iTx*REGBKB+ib][iTy] = make_float3 (Bg[(addry+ib)*ldb + (iTx+jk)], 0., 0.);
+    	    Bs1[iTx+ib*nTx][iTy] = make_float3 (Bg[(addry+ib)*ldb + (iTx+jk)], 0., 0.);
+            #else
+    	    //Bs1[iTx*REGBKB+ib][iTy] = double_to_float3 (Bg[(addry+ib)*ldb + (iTx+jk)]);
+    	    Bs1[iTx+ib*nTx][iTy] = double_to_float3 (Bg[(addry+ib)*ldb + (iTx+jk)]);
+            #endif
+        }
+		__syncthreads ();
+		#pragma unroll 
+		for (ki = 0; ki < KBK; ki++) {
+		    #pragma unroll 
+            for (ia = 0; ia < REGBKA; ia++)
+		    	//Ar1[ia] = As1[ki][iTx*REGBKA+ia];
+		    	Ar1[ia] = As1[ki][iTx+ia*nTx];
+		    #pragma unroll 
+            for (ib = 0; ib < REGBKB; ib++)
+			    //Br1[ib] = Bs1[ki*REGBKB+ib][iTy];
+			    Br1[ib] = Bs1[ki+ib*nTx][iTy];
+		    #pragma unroll 
+            for (ib = 0; ib < REGBKB; ib++)
+		        #pragma unroll 
+                for (ia = 0; ia < REGBKA; ia++)
+			        Tr1[ib][ia] = cuQTWadd (cuQTWmul (Ar1[ia], Br1[ib]), Tr1[ib][ia]); 
+		}
+		__syncthreads ();
+	}
+
+	if (addrx < m && addry < n) {
+		#pragma unroll 
+        for (ib = 0; ib < REGBKB; ib++) {
+		    #pragma unroll 
+            for (ia = 0; ia < REGBKA; ia++) {
+                #if (FLOAT3MODE)
+	            Cr1 = make_float3 (Cg[(addry+ib)*ldc + addrx+ia], 0., 0.);
+                #else
+	            Cr1 = double_to_float3 (Cg[(addry+ib)*ldc + addrx+ia]);
+                #endif
+		        Cr1 = cuQTWadd(cuQTWmul (double_to_float3 (alpha), Tr1[ib][ia]), cuQTWmul(double_to_float3 (beta), Cr1));
+    	        Cg[(addry+ib)*ldc + addrx+ia] = float3_to_double (Cr1);
+            }
+        }
+	}
+    
+}
+
+
+/*
+
+__global__ void myblas_qtw_gemm_nn_kernel (
+	const size_t m,
+	const size_t n,
+	const size_t k,
+	const double alpha,
+	const double *Ag,
+	const size_t lda,
+	const double *Bg,
+	const size_t ldb,
+	const double beta,
+	double *Cg,
+	const size_t ldc
+) {
+	int32_t jk, ki;
+	const int32_t iBx = blockIdx.x;
+	const int32_t iBy = blockIdx.y;
+	const int32_t nTx = blockDim.x;
+	const int32_t nTy = blockDim.y;
+	const int32_t iTx = threadIdx.x;
+	const int32_t iTy = threadIdx.y;
+	const int32_t addrx = iBx*nTx+iTx;
+	const int32_t addry = iBy*nTy+iTy;
+	__shared__ float3 As1[NTY_DGEMM][NTX_DGEMM+1];
+	__shared__ float3 Bs1[NTX_DGEMM][NTY_DGEMM+1];
+	register   float3 Ar1, Br1, Cr1, Tr1;
+
+	double* addrCg = &Cg[addry*ldc + addrx];
+	Tr1 = make_float3 (0., 0., 0.);
+
+	for (jk = 0; jk < k-KBK; jk += KBK) {
+		//As1[iTy][iTx]   = make_float3(Ag[(jk+iTy)*lda + MIN(m-1,addrx)],0,0);
+		//Bs1[iTx][iTy]   = make_float3(Bg[MIN(n-1,addry)*ldb + (iTx+jk)],0,0);
+		As1[iTy][iTx] = double_to_float3 (Ag[(jk+iTy)*lda + MIN(m-1,addrx)]);
+		Bs1[iTx][iTy] = double_to_float3 (Bg[MIN(n-1,addry)*ldb + (iTx+jk)]);
+		__syncthreads ();
+		#pragma unroll 
+		for (ki = 0; ki < KBK; ki++) {
+			Ar1 = As1[ki][iTx];
+			Br1 = Bs1[ki][iTy];
+			//Tr1.x = Ar1.x * Br1.x + Tr1.x; 
+			Tr1 = cuQTWadd (cuQTWmul (Ar1, Br1), Tr1); 
+		}
+		__syncthreads ();
+	} {
+		As1[iTy][iTx]   = double_to_float3 (Ag[MIN(k-1,jk+iTy)*lda + MIN(m-1,addrx)]);
+		Bs1[iTx][iTy]   = double_to_float3 (Bg[MIN(n-1,addry)*ldb + MIN(k-1,iTx+jk)]);
+		__syncthreads ();
+		#pragma unroll 
+		for (ki = 0; ki+jk < k; ki++) {
+			Ar1 = As1[ki][iTx];
+			Br1 = Bs1[ki][iTy];
+			//Tr1.x = Ar1.x * Br1.x + Tr1.x; 
+			Tr1 = cuQTWadd (cuQTWmul (Ar1, Br1), Tr1); 
+		}
+		__syncthreads ();
+	}
+
+	if (addrx < m && addry < n) {
+	    Cr1 = double_to_float3 (addrCg[0]);
+		Cr1 = cuQTWadd(cuQTWmul (double_to_float3 (alpha), Tr1), cuQTWmul(double_to_float3 (beta), Cr1));
+		//addrCg[0] = Cr1.x + Cr1.y + Cr1.z;
+		addrCg[0] = float3_to_double (Cr1);
+	}
+    
+}
+*/
+
+/*
+__global__ void myblas_qtw_gemm_nn_kernel (
+	const size_t m,
+	const size_t n,
+	const size_t k,
+	const double alpha,
+	const double *Ag,
+	const size_t lda,
+	const double *Bg,
+	const size_t ldb,
+	const double beta,
+	double *Cg,
+	const size_t ldc
+) {
+	int32_t jk, ki;
+	const int32_t iBx = blockIdx.x;
+	const int32_t iBy = blockIdx.y;
+	const int32_t nTx = blockDim.x;
+	const int32_t nTy = blockDim.y;
+	const int32_t iTx = threadIdx.x;
+	const int32_t iTy = threadIdx.y;
+	const int32_t addrx = iBx*nTx+iTx;
+	const int32_t addry = iBy*nTy+iTy;
+	__shared__ double As1[NTY_DGEMM][NTX_DGEMM+1];
+	__shared__ double Bs1[NTX_DGEMM][NTY_DGEMM+1];
+	register   float3 Ar1, Br1, Cr1, Tr1;
+
+	double* addrCg = &Cg[addry*ldc + addrx];
+	Tr1 = make_float3 (0., 0., 0.);
+
+	for (jk = 0; jk < k-KBK; jk += KBK) {
+		As1[iTy][iTx] = Ag[(jk+iTy)*lda + MIN(m-1,addrx)];
+		Bs1[iTx][iTy] = Bg[MIN(n-1,addry)*ldb + (iTx+jk)];
+		__syncthreads ();
+		#pragma unroll 
+		for (ki = 0; ki < KBK; ki++) {
+			Ar1 = double_to_float3 (As1[ki][iTx]);
+			Br1 = double_to_float3 (Bs1[ki][iTy]);
+			Tr1 = cuQTWadd (cuQTWmul (Ar1, Br1), Tr1); 
+		}
+		__syncthreads ();
+	} {
+		As1[iTy][iTx] = Ag[MIN(k-1,jk+iTy)*lda + MIN(m-1,addrx)];
+		Bs1[iTx][iTy] = Bg[MIN(n-1,addry)*ldb + MIN(k-1,iTx+jk)];
+		__syncthreads ();
+		#pragma unroll 
+		for (ki = 0; ki+jk < k; ki++) {
+			Ar1 = double_to_float3 (As1[ki][iTx]);
+			Br1 = double_to_float3 (Bs1[ki][iTy]);
+			Tr1 = cuQTWadd (cuQTWmul (Ar1, Br1), Tr1); 
+		}
+		__syncthreads ();
+	}
+
+	if (addrx < m && addry < n) {
+		Cr1 = double_to_float3 (addrCg[0]);
+		Cr1 = cuQTWadd(cuQTWmul (double_to_float3 (alpha), Tr1), cuQTWmul(double_to_float3 (beta), Cr1));
+		addrCg[0] = float3_to_double (Cr1);
+	}
+    
+}
+*/
+
+//#include <stdio.h>
+__host__ int32_t
+cumyblas_dgemm (
+	const char transA, const char transB,
+	const size_t m, const size_t n, const size_t k,
+	const double alpha,
+	const double *a, const size_t lda,
+	const double *b, const size_t ldb,
+	const double beta,
+	double *c, const size_t ldc
+) {
+	dim3 threads = dim3 (NTX_QTWGEMM, NTY_QTWGEMM);
+	dim3 grid = dim3 (ceil((float)m/NTX_QTWGEMM/REGBKA), ceil((float)n/NTY_QTWGEMM/REGBKB));
+	//myblas_dgemm_nn_kernel <<< grid, threads >>> (m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
+	myblas_qtwgemm_nn_kernel <<< grid, threads >>> (m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
+
+	return 0;
+}
+
+__host__ int32_t
+cumyblas_sgemm (
+	const char transA, const char transB,
+	const size_t m, const size_t n, const size_t k,
+	const float alpha,
+	const float *a, const size_t lda,
+	const float *b, const size_t ldb,
+	const float beta,
+	float *c, const size_t ldc
+) {
+	dim3 threads = dim3 (NTX_SGEMM, NTY_SGEMM);
+	dim3 grid = dim3 (ceil((float)m/NTX_SGEMM/REGBKA), ceil((float)n/NTY_SGEMM/REGBKB));
+ //   MUBLAS_GEMM_NN_DEVICE_tb8x8_rb8x8_v4_maxwell <<< grid, threads >>> (m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
+	myblas_sgemm_nn_kernel <<< grid, threads >>> (m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
+
+	return 0;
+}
+

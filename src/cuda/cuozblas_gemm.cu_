@@ -1,10 +1,7 @@
 #include "cuozblas_common.h"
-//#include "blas/myblas_dot.cu"
+#include "blas/myblas_dot.cu"
 
-//TYPE1: interface data-type
-//TYPE2: split data-type
-//TYPE3: computation data-type 
-template <typename TYPE1, typename TYPE2, typename TYPE3>
+template <typename TYPE1, typename TYPE2>
 int32_t cuozblasRgemm (
 	cuozblasHandle_t *oh,	
 	const char transA, const char transB,
@@ -33,12 +30,11 @@ int32_t cuozblasRgemm (
 
 	TYPE1 *devATmp, *devBTmp, *devCTmp;
 	TYPE1 *devAmax, *devBmax;
-	TYPE2 *devASplit, *devBSplit;
-    TYPE3 *devCSplit;
-	TYPE3 fone = 1., fzero = 0.;
+	TYPE2 *devASplit, *devBSplit, *devCSplit;
+	TYPE2 fone = 1., fzero = 0.;
 	short *devASpExp, *devBSpExp;
-	TYPE3 *devCTmp1, *devCTmp2, *devCTmp3;
-	int32_t sizeTypeT = sizeof (TYPE3);
+	TYPE2 *devCTmp1, *devCTmp2, *devCTmp3;
+	int32_t sizeTypeT = sizeof (TYPE2);
 	int32_t ldas, ldbs, ldcs, ldase, ldbse, ldat, ldbt, ldct;
 	int32_t ldct1, ldct2, ldct3;
 	int32_t mbk = m;
@@ -46,14 +42,11 @@ int32_t cuozblasRgemm (
 	int32_t nSplitMaxLoc = (oh->nSplitMax > 0) ? oh->nSplitMax : NumSplitDefaultMax;
 	int32_t sizeType1 = sizeof (TYPE1);
 	int32_t sizeType2 = sizeof (TYPE2);
-	int32_t sizeType3 = sizeof (TYPE3);
 	int32_t sizeTypeS = sizeof (short);
 
 	// Memory allocation 
-	TYPE2 **batchAptr, **batchBptr;
-    TYPE3 **batchCptr;
-	TYPE2 **batchAptrHst, **batchBptrHst;
-    TYPE3 **batchCptrHst;
+	TYPE2 **batchAptr, **batchBptr, **batchCptr;
+	TYPE2 **batchAptrHst, **batchBptrHst, **batchCptrHst;
 	if (oh->useBatchedGemmFlag) {
 		int32_t memorysize = 0;
 		batchAptr    = (TYPE2**)(oh->devBatchAddr);
@@ -61,9 +54,9 @@ int32_t cuozblasRgemm (
 		memorysize  += sizeof(TYPE2*) * nSplitMaxLoc * nSplitMaxLoc;
 		batchBptr    = (TYPE2**)(oh->devBatchAddr + memorysize);
 		batchBptrHst = (TYPE2**)(oh->hstBatchAddr + memorysize);
-		memorysize  += sizeof(TYPE3*) * nSplitMaxLoc * nSplitMaxLoc;
-		batchCptr    = (TYPE3**)(oh->devBatchAddr + memorysize);
-		batchCptrHst = (TYPE3**)(oh->hstBatchAddr + memorysize);
+		memorysize  += sizeof(TYPE2*) * nSplitMaxLoc * nSplitMaxLoc;
+		batchCptr    = (TYPE2**)(oh->devBatchAddr + memorysize);
+		batchCptrHst = (TYPE2**)(oh->hstBatchAddr + memorysize);
 	}
 
 	int32_t memAddrTmp = oh->memAddr;
@@ -72,7 +65,7 @@ int32_t cuozblasRgemm (
 		if (oh->splitEpsModeFlag == 2) sizeCn *= 2;
 		cuozblasMatAddrAlloc (oh, k, mbk * nSplitMaxLoc, sizeType2, (void**)&devASplit, ldas); 
 		cuozblasMatAddrAlloc (oh, k, nbk * nSplitMaxLoc, sizeType2, (void**)&devBSplit, ldbs);
-		cuozblasMatAddrAlloc (oh, mbk, sizeCn,           sizeType3, (void**)&devCSplit, ldcs);
+		cuozblasMatAddrAlloc (oh, mbk, sizeCn,           sizeType2, (void**)&devCSplit, ldcs);
 		cuozblasMatAddrAlloc (oh, k, mbk,                sizeType1, (void**)&devATmp,   ldat); 
 		cuozblasMatAddrAlloc (oh, k, nbk,                sizeType1, (void**)&devBTmp,   ldbt); 
 		cuozblasMatAddrAlloc (oh, mbk, nbk,              sizeType1, (void**)&devCTmp,   ldct);
@@ -132,14 +125,12 @@ int32_t cuozblasRgemm (
 			int32_t ic = 0;
 			int32_t maxlevel = (oh->fastModeFlag) ? MIN (nSplitA-1, nSplitB-1) : (nSplitA-1) + (nSplitB-1);
 			if (n == 1 && m == 1 && oh->splitEpsModeFlag == 2 && oh->fastModeFlag == 0 && oh->sumModeFlag < 2) { // Dot2 (only on DOT)
-				TYPE2 *ptrA, *ptrB;
-                TYPE3 *ptrC;
+				TYPE2 *ptrA, *ptrB, *ptrC;
 				ptrA = devASplit;
 				ptrB = devBSplit;
 				ptrC = devCSplit;
 				// Computation (GEMM) -----------------------------------
 				blasRgemmSkinny_x2 (oh, transA_, transB_, nSplitA, nSplitB, k, fone, ptrA, ldas, ptrB, ldbs, fzero, ptrC, nSplitA);
-				oh->n_comp += 2. * nSplitA * nSplitB * k;
 				ic++;
 			} else {
 				if (oh->useBatchedGemmFlag) { // with batched GEMM (for DOT, useBatchedGemmFlag is always 0)
@@ -168,21 +159,19 @@ int32_t cuozblasRgemm (
 					}
 					cudaMemcpy(batchAptr, batchAptrHst, sizeof(TYPE2*) * ic, cudaMemcpyHostToDevice);
 					cudaMemcpy(batchBptr, batchBptrHst, sizeof(TYPE2*) * ic, cudaMemcpyHostToDevice);
-					cudaMemcpy(batchCptr, batchCptrHst, sizeof(TYPE3*) * ic, cudaMemcpyHostToDevice);
+					cudaMemcpy(batchCptr, batchCptrHst, sizeof(TYPE2*) * ic, cudaMemcpyHostToDevice);
 					int32_t n_ = (n == 1 && oh->fastModeFlag == 0) ? numB : nbk_;
 					blasRgemmBatch (oh->ch, transA_, transB_, mbk_, n_, k, fone, (const TYPE2**)batchAptr, ldas,
-									(const TYPE2**)batchBptr, ldbs, fzero, (TYPE3**)batchCptr, ldcs, 1, ic);
-					oh->n_comp += 2. * mbk_ * nbk_ * k * ic;
+									(const TYPE2**)batchBptr, ldbs, fzero, (TYPE2**)batchCptr, ldcs, 1, ic);
 				} else { // without batchedGEMM (DOT always goes without batchedGEMM)
-					TYPE2 *ptrA, *ptrB;
-                    TYPE3 *ptrC;
+					TYPE2 *ptrA, *ptrB, *ptrC;
 					if (n == 1 && m == 1 && oh->fastModeFlag == 0 && oh->sumModeFlag < 2) { // DOT with fast=0 with sumMode=0 or 1
 						ptrA = devASplit;
 						ptrB = devBSplit;
 						ptrC = devCSplit;
 						// Computation (GEMM) -----------------------------------
+					//	blasRgemm (oh->ch, transA, transB, nSplitA, nSplitB, k, fone, ptrA, ldas, ptrB, ldbs, fzero, ptrC, nSplitA);
 						blasRgemmSkinny (oh, transA_, transB_, nSplitA, nSplitB, k, fone, ptrA, ldas, ptrB, ldbs, fzero, ptrC, nSplitA);
-					    oh->n_comp += 2. * nSplitA * nSplitB * k;
 						ic++;
 					} else if (n == 1 && oh->fastModeFlag == 0 && oh->sumModeFlag < 2) { // GEMV with fast=0 with sumMode=0 or 1
 						for (int32_t ia = 0; ia < MIN (maxlevel+1, nSplitA); ia++) {
@@ -192,7 +181,6 @@ int32_t cuozblasRgemm (
 							ptrC = devCSplit+ldcs*numB*ic;
 							// Computation (GEMM) -----------------------------------
 							blasRgemm (oh->ch, transA_, transB_, mbk_, numB, k, fone, ptrA, ldas, ptrB, ldbs, fzero, ptrC, ldcs);
-					        oh->n_comp += 2. * mbk_ * numB * k;
 							ic++;
 						} // EndFor (ia)
 					} else { // GEMM and the other cases with fast=1
@@ -214,7 +202,6 @@ int32_t cuozblasRgemm (
 										ptrC = (oh->sumModeFlag < 2) ? devCSplit+ldcs*nbk*ic : devCSplit;
 										// Computation (GEMM) -----------------------------------
 										blasRgemm (oh->ch, transA_, transB_, mbk_, nbk_, k, fone, ptrA, ldas, ptrB, ldbs, fzero, ptrC, ldcs);
-					                     oh->n_comp += 2. * mbk_ * nbk_ * k;
 										// Summation ------------------------------------
 										if (oh->sumModeFlag == 2) {
 											double t000 = cutimer();
@@ -245,20 +232,20 @@ int32_t cuozblasRgemm (
 				if (m == 1 && n == 1) { // DOT
 					sumorder = (oh->fastModeFlag == 0) ? 2 : 1; // DOT w/o fastmode -> 2
 					if (oh->splitEpsModeFlag == 2) maxlevel = (nSplitA-1) + (nSplitB*2-1);
-					if (cuozblasGlobalSum <TYPE1, TYPE2, TYPE3> (oh, 1, 1, k, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB*((oh->splitEpsModeFlag==2)?2:1),
+					if (cuozblasGlobalSum (oh, 1, 1, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB*((oh->splitEpsModeFlag==2)?2:1),
 										devCSplit, 1, 1, &devC[ldc*(in*nbk)+im*mbk], ldc, alpha, beta, maxlevel, sumorder)) {
 						fprintf (OUTPUT, "OzBLAS error: sum is failed\n");
 						exit (1);
 					}
 				} else if (n == 1) { // GEMV
 					sumorder = (oh->fastModeFlag == 0) ? 3 : 1; // GEMV w/o fastmode -> 2
-					if (cuozblasGlobalSum <TYPE1, TYPE2, TYPE3> (oh, mbk_, nbk_, k, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB,
+					if (cuozblasGlobalSum (oh, mbk_, nbk_, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB,
 										devCSplit, ldcs*nbk, ldcs, &devC[ldc*(in*nbk)+im*mbk], ldc, alpha, beta, maxlevel, sumorder)) {
 						fprintf (OUTPUT, "OzBLAS error: sum is failed\n");
 						exit (1);
 					}
 				} else { // GEMM
-					if (cuozblasGlobalSum <TYPE1, TYPE2, TYPE3> (oh, mbk_, nbk_, k, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB,
+					if (cuozblasGlobalSum (oh, mbk_, nbk_, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB,
 										devCSplit, ldcs*nbk, ldcs, &devC[ldc*(in*nbk)+im*mbk], ldc, alpha, beta, maxlevel, sumorder)) {
 						fprintf (OUTPUT, "OzBLAS error: sum is failed\n");
 						exit (1);
@@ -283,10 +270,9 @@ int32_t cuozblasRgemm (
 
 	return 0;
 }
-template int32_t cuozblasRgemm <double, double, double> (cuozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const double alpha, const double *devA, const int32_t lda, const double *devB, const int32_t ldb, const double beta, double *devC, const int32_t ldc);
-template int32_t cuozblasRgemm <double, float, float> (cuozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const double alpha, const double *devA, const int32_t lda, const double *devB, const int32_t ldb, const double beta, double *devC, const int32_t ldc);
-template int32_t cuozblasRgemm <double, half, float> (cuozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const double alpha, const double *devA, const int32_t lda, const double *devB, const int32_t ldb, const double beta, double *devC, const int32_t ldc);
-template int32_t cuozblasRgemm <float, float, float> (cuozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const float alpha, const float *devA, const int32_t lda, const float *devB, const int32_t ldb, const float beta, float *devC, const int32_t ldc); 
-template int32_t cuozblasRgemm <float, half, float> (cuozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const float alpha, const float *devA, const int32_t lda, const float *devB, const int32_t ldb, const float beta, float *devC, const int32_t ldc); 
-template int32_t cuozblasRgemm <float, double, double> (cuozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const float alpha, const float *devA, const int32_t lda, const float *devB, const int32_t ldb, const float beta, float *devC, const int32_t ldc); 
+template int32_t cuozblasRgemm <double, double> (cuozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const double alpha, const double *devA, const int32_t lda, const double *devB, const int32_t ldb, const double beta, double *devC, const int32_t ldc);
+template int32_t cuozblasRgemm <double, float> (cuozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const double alpha, const double *devA, const int32_t lda, const double *devB, const int32_t ldb, const double beta, double *devC, const int32_t ldc);
+template int32_t cuozblasRgemm <double, half> (cuozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const double alpha, const double *devA, const int32_t lda, const double *devB, const int32_t ldb, const double beta, double *devC, const int32_t ldc);
+template int32_t cuozblasRgemm <float, float> (cuozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const float alpha, const float *devA, const int32_t lda, const float *devB, const int32_t ldb, const float beta, float *devC, const int32_t ldc); 
+template int32_t cuozblasRgemm <float, double> (cuozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const float alpha, const float *devA, const int32_t lda, const float *devB, const int32_t ldb, const float beta, float *devC, const int32_t ldc); 
 

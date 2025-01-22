@@ -19,9 +19,10 @@ LDFLAGS += -L$(LIB_PATH) -L../lib
 ifeq ($(CUDA),yes)
 OBJS	+= $(CUOZBLAS_OBJS) 
 OBJS	+= $(CUBLAS_OBJS) 
+OBJS	+= $(CUMYBLAS_OBJS) 
 INCS	+= -I$(CUDA_PATH)/include 
 LDFLAGS	+= -L$(CUDA_PATH)/lib64
-LIBS	+= -lcuozblas -lcublasLt -lcudart -lcublas -lcusparse
+LIBS	+= -lcuozblas -lcublasLt -lcudart -lcublas -lcusparse 
 endif
 ifeq ($(CUBLAS),yes)
 INCS	+= -I$(CUDA_PATH)/include 
@@ -42,6 +43,10 @@ else
 LIBS	+= -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core #-littnotify#-liomp5 
 # note: gcc with MKL may not work with OMP?
 endif
+#===========FOR VTUNE=========================
+#LIBS	+= -littnotify
+#FLAGS 	+= -I/work/opt/local/x86_64/cores/intel/2022.1.2/vtune/2022.0.0/include -L/work/opt/local/x86_64/cores/intel/2022.1.2/vtune/2022.0.0/lib64
+#===========FOR VTUNE=========================
 endif
 ifeq ($(CPU_BLAS),OpenBLAS)
 FLAGS	+= -DOpenBLAS
@@ -57,6 +62,7 @@ ifeq ($(CXX),FCC)
 FLAGS	+= -DSSL2 -SSL2BLAMP
 else
 LIBS	+= -lfjsrcinfo -lc++abi -lclang_rt.asan-aarch64 -lfj90pxrscif -lfjstringsve -lclang_rt.hwasan-aarch64 -lfj90rt -lfjlapackexsve -lfmtl -lclang_rt.scudo-aarch64 -lfjarmci -loptf -lclang_rt.ubsan_minimal-aarch64 -lfjc++abi -lfjpthr -lstdtl -lclang_rt.ubsan_standalone-aarch64 -lfjcex -lcpubind -lfjcrt -lfjrtcl -lc++ -lfjc++ -lfjompcrt -lfj90f -lfjdemgl -lfjomphk -lfj90icaf -lfjomp -lfjsrcinfo -lfj90i
+#LIBS	+= -lc++abi -lfj90i -lfjlapackex -lfjprofcore -lfjstring_internal -lopen-pal_mt -lclang_rt.asan-aarch64 -lfj90pxrscif -lfjlapackexsve_ilp64 -lfjprofmpif -lfjstringsve -lopen-pal -lclang_rt.hwasan-aarch64 -lfj90rt -lfjlapackexsve -lfjprofmpi -lfmtl -lopen-rte -lclang_rt.scudo-aarch64 -lfjarmci -lfjlapack_ilp64 -lfjprofomp -lmpi_cxx -loptf -lclang_rt.ubsan_minimal-aarch64 -lfjc++abi -lfjlapack -lfjpthr -lmpi_java -lstdtl -lclang_rt.ubsan_standalone-aarch64 -lfjcex -lfjlapacksve_ilp64 -lfjrtcl_io -lmpi_mpifh -lcpubind -lfjcrt -lfjlapacksve -lfjrtcl -lmpi_mt -lc++ -lfjc++ -lfjompcrt -lfjscalapack -lmpi -lfj90f -lfjdemgl -lfjomphk -lfjscalapacksve -lmpi_usempif08 -lfj90icaf -lfjlapackex_ilp64 -lfjomp -lfjsrcinfo -lmpi_usempi_ignore_tkr
 endif
 else
 PREC_H_H = no
@@ -177,6 +183,10 @@ OZBLAS_OBJS += testing_ozblas_sdot
 CUBLAS_OBJS += testing_cublas_sdot
 CBLAS_OBJS += testing_cblas_sdot
 endif
+ifeq ($(PREC_S_H),yes)
+CUOZBLAS_OBJS += testing_cuozblas_shdot
+#OZBLAS_OBJS += testing_ozblas_sddot
+endif
 ifeq ($(PREC_S_D),yes)
 CUOZBLAS_OBJS += testing_cuozblas_sddot
 OZBLAS_OBJS += testing_ozblas_sddot
@@ -184,6 +194,10 @@ endif
 ifeq ($(PREC_D_S),yes)
 CUOZBLAS_OBJS += testing_cuozblas_dsdot
 OZBLAS_OBJS += testing_ozblas_dsdot
+endif
+ifeq ($(PREC_D_H),yes)
+CUOZBLAS_OBJS += testing_cuozblas_dhdot
+#OZBLAS_OBJS += testing_ozblas_dhdot
 endif
 ifeq ($(PREC_D_D),yes)
 CUOZBLAS_OBJS += testing_cuozblas_ddot
@@ -216,6 +230,10 @@ OZBLAS_OBJS += testing_ozblas_sgemv
 CUBLAS_OBJS += testing_cublas_sgemv
 CBLAS_OBJS += testing_cblas_sgemv
 endif
+ifeq ($(PREC_S_H),yes)
+CUOZBLAS_OBJS += testing_cuozblas_shgemv
+#OZBLAS_OBJS += testing_ozblas_sdgemv
+endif
 ifeq ($(PREC_S_D),yes)
 CUOZBLAS_OBJS += testing_cuozblas_sdgemv
 OZBLAS_OBJS += testing_ozblas_sdgemv
@@ -223,6 +241,10 @@ endif
 ifeq ($(PREC_D_S),yes)
 CUOZBLAS_OBJS += testing_cuozblas_dsgemv
 OZBLAS_OBJS += testing_ozblas_dsgemv
+endif
+ifeq ($(PREC_D_H),yes)
+CUOZBLAS_OBJS += testing_cuozblas_dhgemv
+#OZBLAS_OBJS += testing_ozblas_dhgemv
 endif
 ifeq ($(PREC_D_D),yes)
 CUOZBLAS_OBJS += testing_cuozblas_dgemv
@@ -321,6 +343,10 @@ OZBLAS_OBJS += testing_ozblas_sgemm
 CUBLAS_OBJS += testing_cublas_sgemm
 CBLAS_OBJS += testing_cblas_sgemm
 endif
+ifeq ($(PREC_S_H),yes)
+CUOZBLAS_OBJS += testing_cuozblas_shgemm
+#OZBLAS_OBJS += testing_ozblas_shgemm
+endif
 ifeq ($(PREC_S_D),yes)
 CUOZBLAS_OBJS += testing_cuozblas_sdgemm
 OZBLAS_OBJS += testing_ozblas_sdgemm
@@ -328,6 +354,10 @@ endif
 ifeq ($(PREC_D_S),yes)
 CUOZBLAS_OBJS += testing_cuozblas_dsgemm
 OZBLAS_OBJS += testing_ozblas_dsgemm
+endif
+ifeq ($(PREC_D_H),yes)
+CUOZBLAS_OBJS += testing_cuozblas_dhgemm
+#OZBLAS_OBJS += testing_ozblas_dhgemm
 endif
 ifeq ($(PREC_D_D),yes)
 CUOZBLAS_OBJS += testing_cuozblas_dgemm
@@ -520,6 +550,20 @@ testing_cuozblas_dsdot: $(SRC_L1B)
 testing_cuozblas_dscg: $(SRC_SS)
 	$(CXX) $(FLAGS) $(INCS) $(LDFLAGS) $< -o $@ $(LIBS) -DCUDA -DCUOZBLAS -DCG -DPREC_D_S 
 
+testing_cuozblas_dhgemm: $(SRC_L3)
+	$(CXX) $(FLAGS) $(INCS) $(LDFLAGS) $< -o $@ $(LIBS) -DCUDA -DCUOZBLAS -DGEMM -DPREC_D_H
+testing_cuozblas_dhgemv: $(SRC_L2)
+	$(CXX) $(FLAGS) $(INCS) $(LDFLAGS) $< -o $@ $(LIBS) -DCUDA -DCUOZBLAS -DGEMV -DPREC_D_H
+testing_cuozblas_dhdot: $(SRC_L1B)
+	$(CXX) $(FLAGS) $(INCS) $(LDFLAGS) $< -o $@ $(LIBS) -DCUDA -DCUOZBLAS -DDOT -DPREC_D_H
+
+testing_cuozblas_shgemm: $(SRC_L3)
+	$(CXX) $(FLAGS) $(INCS) $(LDFLAGS) $< -o $@ $(LIBS) -DCUDA -DCUOZBLAS -DGEMM -DPREC_S_H
+testing_cuozblas_shgemv: $(SRC_L2)
+	$(CXX) $(FLAGS) $(INCS) $(LDFLAGS) $< -o $@ $(LIBS) -DCUDA -DCUOZBLAS -DGEMV -DPREC_S_H
+testing_cuozblas_shdot: $(SRC_L1B)
+	$(CXX) $(FLAGS) $(INCS) $(LDFLAGS) $< -o $@ $(LIBS) -DCUDA -DCUOZBLAS -DDOT -DPREC_S_H
+
 testing_cuozblas_dgemm: $(SRC_L3)
 	$(CXX) $(FLAGS) $(INCS) $(LDFLAGS) $< -o $@ $(LIBS) -DCUDA -DCUOZBLAS -DGEMM -DPREC_D_D
 testing_cuozblas_dgemv: $(SRC_L2)
@@ -612,7 +656,6 @@ testing_mpblas_rgemv_dd: $(SRC_L2)
 	$(CXX) $(FLAGS) $(INCS) $(LDFLAGS) $< -o $@ $(LIBS) -DMPBLAS -DGEMV -DPREC_DD
 testing_mpblas_rgemm_dd: $(SRC_L3)
 	$(CXX) $(FLAGS) $(INCS) $(LDFLAGS) $< -o $@ $(LIBS) -DMPBLAS -DGEMM -DPREC_DD
-
 
 clean:
 	$(RM) $(OBJS)

@@ -36,16 +36,16 @@ ifeq ($(CC61),yes)
 NVCCFLAGS += -gencode arch=compute_61,code=sm_61
 endif
 ifeq ($(CC70),yes)
-NVCCFLAGS += -gencode arch=compute_70,code=sm_70
+NVCCFLAGS += -gencode arch=compute_60,code=sm_70
 endif
 ifeq ($(CC75),yes)
-NVCCFLAGS += -gencode arch=compute_75,code=sm_75
+NVCCFLAGS += -gencode arch=compute_60,code=sm_75
 endif
 ifeq ($(CC80),yes)
-NVCCFLAGS += -gencode arch=compute_80,code=sm_80
+NVCCFLAGS += -gencode arch=compute_60,code=sm_80
 endif
 ifeq ($(CC86),yes)
-NVCCFLAGS += -gencode arch=compute_86,code=sm_86
+NVCCFLAGS += -gencode arch=compute_60,code=sm_86
 endif
 
 all: blas
@@ -54,9 +54,7 @@ ALLSRC += \
 cuozblas_blas_wrapper.cu \
 cuozblas_split.cu \
 cuozblas_sum.cu \
-cuozblas_aux.cu \
-blas/myblas_gemm.cu \
-blas/myblas_dot.cu 
+cuozblas_aux.cu 
 
 ALLHDR = \
 cuozblas_common.h \
@@ -94,9 +92,9 @@ blas: $(ALLOBJ)
 	$(AR) rv $(LIB) $(ALLOBJ) 
 
 %.o: %.cu
-	$(NVCC) $(NVCCFLAGS) -o $@ -c $< -I$(INC_PATH)
+	$(NVCC) $(NVCCFLAGS) -o $@ -c $< 
 cuozblas.o: cuozblas.cpp
-	$(CXX) $(FLAGS) -o $@ -c $< -I$(CUDA_PATH)/include -I$(INC_PATH)
+	$(CXX) $(FLAGS) -o $@ -c $< -I$(CUDA_PATH)/include
 
 clean :
 	$(RM) *.o *.d

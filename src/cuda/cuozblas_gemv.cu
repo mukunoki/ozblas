@@ -1,6 +1,6 @@
 #include "cuozblas_common.h"
 
-template <typename TYPE1, typename TYPE2>
+template <typename TYPE1, typename TYPE2, typename TYPE3>
 int32_t cuozblasRgemv (
 	cuozblasHandle_t *oh,
 	const char transA, 
@@ -21,14 +21,16 @@ int32_t cuozblasRgemv (
 	}
 
 	if (cucheckTrans (transA) == 0) 
-		cuozblasRgemm <TYPE1, TYPE2> (oh, 'n', 'n', m, 1, n, alpha, devA, lda, devB, n, beta, devC, m);
+		cuozblasRgemm <TYPE1, TYPE2, TYPE3> (oh, 'n', 'n', m, 1, n, alpha, devA, lda, devB, n, beta, devC, m);
 	else
-		cuozblasRgemm <TYPE1, TYPE2> (oh, 't', 'n', n, 1, m, alpha, devA, lda, devB, m, beta, devC, n);
+		cuozblasRgemm <TYPE1, TYPE2, TYPE3> (oh, 't', 'n', n, 1, m, alpha, devA, lda, devB, m, beta, devC, n);
 
 	return 0;
 }
-template int32_t cuozblasRgemv <double, double> (cuozblasHandle_t *oh, const char transA, const int32_t m, const int32_t n, const double alpha, const double *devA, const int32_t lda, const double *devB, const int32_t incx, const double beta, double *devC, const int32_t incy);
-template int32_t cuozblasRgemv <double, float> (cuozblasHandle_t *oh, const char transA, const int32_t m, const int32_t n, const double alpha, const double *devA, const int32_t lda, const double *devB, const int32_t incx, const double beta, double *devC, const int32_t incy);
-template int32_t cuozblasRgemv <float, float> (cuozblasHandle_t *oh, const char transA, const int32_t m, const int32_t n, const float alpha, const float *devA, const int32_t lda, const float *devB, const int32_t incx, const float beta, float *devC, const int32_t incy);
-template int32_t cuozblasRgemv <float, double> (cuozblasHandle_t *oh, const char transA, const int32_t m, const int32_t n, const float alpha, const float *devA, const int32_t lda, const float *devB, const int32_t incx, const float beta, float *devC, const int32_t incy);
+template int32_t cuozblasRgemv <double, double, double> (cuozblasHandle_t *oh, const char transA, const int32_t m, const int32_t n, const double alpha, const double *devA, const int32_t lda, const double *devB, const int32_t incx, const double beta, double *devC, const int32_t incy);
+template int32_t cuozblasRgemv <double, float, float> (cuozblasHandle_t *oh, const char transA, const int32_t m, const int32_t n, const double alpha, const double *devA, const int32_t lda, const double *devB, const int32_t incx, const double beta, double *devC, const int32_t incy);
+template int32_t cuozblasRgemv <double, half, float> (cuozblasHandle_t *oh, const char transA, const int32_t m, const int32_t n, const double alpha, const double *devA, const int32_t lda, const double *devB, const int32_t incx, const double beta, double *devC, const int32_t incy);
+template int32_t cuozblasRgemv <float, float, float> (cuozblasHandle_t *oh, const char transA, const int32_t m, const int32_t n, const float alpha, const float *devA, const int32_t lda, const float *devB, const int32_t incx, const float beta, float *devC, const int32_t incy);
+template int32_t cuozblasRgemv <float, half, float> (cuozblasHandle_t *oh, const char transA, const int32_t m, const int32_t n, const float alpha, const float *devA, const int32_t lda, const float *devB, const int32_t incx, const float beta, float *devC, const int32_t incy);
+template int32_t cuozblasRgemv <float, double, double> (cuozblasHandle_t *oh, const char transA, const int32_t m, const int32_t n, const float alpha, const float *devA, const int32_t lda, const float *devB, const int32_t incx, const float beta, float *devC, const int32_t incy);
 

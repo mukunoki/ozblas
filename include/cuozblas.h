@@ -72,13 +72,14 @@ extern void cuozblasDestroy (cuozblasHandle_t*);
 
 template <typename TYPE1, typename TYPE2> int32_t cuozblasRnrm2 (cuozblasHandle_t *oh, const int32_t n, const TYPE1* devX, const int32_t incx, TYPE1* ret);
 template <typename TYPE> int32_t cuozblasRaxpy (cuozblasHandle_t *oh, const int32_t n, const TYPE alpha, const TYPE *devX, const int32_t incx, TYPE *devY, const int32_t incy);
-template <typename TYPE1, typename TYPE2> int32_t cuozblasRdot (cuozblasHandle_t *oh, const int32_t n, const TYPE1 *devA, const int32_t incx, const TYPE1 *devB, const int32_t incy, TYPE1 *ret);
-template <typename TYPE1, typename TYPE2> int32_t cuozblasRgemv (cuozblasHandle_t *oh, const char tranA, const int32_t m, const int32_t n, const TYPE1 alpha, const TYPE1 *devA, const int32_t lda, const TYPE1 *devB, const int32_t incx, const TYPE1 beta, TYPE1 *devC, const int32_t incy);
-template <typename TYPE1, typename TYPE2> int32_t cuozblasRgemm (cuozblasHandle_t *oh,	const char tranA, const char tranB, const int32_t m, const int32_t n, const int32_t k, const TYPE1 alpha, const TYPE1 *devA, const int32_t lda, const TYPE1 *devB, const int32_t ldb, const TYPE1 beta, TYPE1 *devC, const int32_t ldc);
+template <typename TYPE1, typename TYPE2, typename TYPE3> int32_t cuozblasRdot (cuozblasHandle_t *oh, const int32_t n, const TYPE1 *devA, const int32_t incx, const TYPE1 *devB, const int32_t incy, TYPE1 *ret);
+template <typename TYPE1, typename TYPE2, typename TYPE3> int32_t cuozblasRgemv (cuozblasHandle_t *oh, const char tranA, const int32_t m, const int32_t n, const TYPE1 alpha, const TYPE1 *devA, const int32_t lda, const TYPE1 *devB, const int32_t incx, const TYPE1 beta, TYPE1 *devC, const int32_t incy);
+template <typename TYPE1, typename TYPE2, typename TYPE3> int32_t cuozblasRgemm (cuozblasHandle_t *oh,	const char tranA, const char tranB, const int32_t m, const int32_t n, const int32_t k, const TYPE1 alpha, const TYPE1 *devA, const int32_t lda, const TYPE1 *devB, const int32_t ldb, const TYPE1 beta, TYPE1 *devC, const int32_t ldc);
 template <typename TYPE1, typename TYPE2> int32_t cuozblasRcsrmv (cuozblasHandle_t *oh, const char tranA, const int32_t m, const int32_t n, const int32_t nnz, const TYPE1 alpha, const cusparseMatDescr_t descrA, const TYPE1 *devA, const int32_t *devAcolind, const int32_t *devArowptr, const TYPE1 *devB, const TYPE1 beta, TYPE1 *devC);
 template <typename TYPE1, typename TYPE2> TYPE2 * cuozblasRcsrmvSplitA (cuozblasHandle_t *oh, const char tranA, const int32_t m, const int32_t n, const int32_t nnz, const cusparseMatDescr_t descrA, const TYPE1 *devA, const int32_t *devArowptr);
 template <typename TYPE1, typename TYPE2> int32_t cuozblasRcg (cuozblasHandle_t *oh, const char tranA, const int32_t dimN, const int32_t dimNNZ, const cusparseMatDescr_t descrA, const TYPE1 *matA, const int32_t *matAcolind, const int32_t *matArowptr, const TYPE1 *vecB, TYPE1 *vecX, int32_t maxiter, TYPE1 tol);
 
 int32_t cuozblasRcgfr (cuozblasHandle_t *oh, const char tranA, const int32_t dimN, const int32_t dimNNZ, const cusparseMatDescr_t descrA, const double *matA, const int32_t *matAcolind, const int32_t *matArowptr, const double *vecB, double *vecX, int32_t maxiter, double tol);
 int32_t cuozblasRcgfr_x (cuozblasHandle_t *oh, const char tranA, const int32_t dimN, const int32_t dimNNZ, const cusparseMatDescr_t descrA, const double *matA, const int32_t *matAcolind, const int32_t *matArowptr, const double *vecB, double *vecX, int32_t maxiter, double tol);
+
 #endif

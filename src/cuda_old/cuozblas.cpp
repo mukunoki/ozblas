@@ -16,7 +16,6 @@ void cucounterInit (cuozblasHandle_t *oh) {
 	oh->nSplitC = 0;
 	oh->mbk = 0;
 	oh->nbk = 0;
-	oh->n_comp = 0.;
 	oh->memAddr = oh->memMaskSplitA;
 }
 

@@ -21,7 +21,7 @@ int32_t cuozblasRnrm2 (
 	}
 	cucounterInit (oh);
 	
-	cuozblasRdot <TYPE1, TYPE2, TYPE2> (oh, n, devX, incx, devX, incx, ret);
+	cuozblasRdot <TYPE1, TYPE2> (oh, n, devX, incx, devX, incx, ret);
 
 	// ------------------------------
 	// computation of SQRT (ret) on host

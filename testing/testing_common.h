@@ -58,6 +58,8 @@ extern "C" {
 #include <ozblas.h>
 #elif defined (CBLAS)
 #include <ozblas.h> // for blasRcsrmv/mm in ozblas.h
+#elif defined (CUMYBLAS)
+#include <cuozblas.h>
 #endif
 
 #if defined (CUDA)
@@ -75,9 +77,9 @@ extern "C" {
 // common for FP_TYPE
 #if defined (PREC_Q_D) || defined (PREC_Q_S)
 #define PREC_Q
-#elif defined (PREC_D_D) || defined (PREC_D_S)
+#elif defined (PREC_D_D) || defined (PREC_D_S) || defined (PREC_D_H) || defined (PREC_D_I)
 #define PREC_D
-#elif defined (PREC_S_S) || defined (PREC_S_D)
+#elif defined (PREC_S_S) || defined (PREC_S_H) || defined (PREC_S_D)
 #define PREC_S
 #elif defined (PREC_H_H) 
 #define PREC_H
@@ -241,6 +243,8 @@ extern "C" {
 #define	trgRgemv(ha,ta,m,n,al,a,la,x,ix,bt,y,iy)			rgemv(&ta,m,n,al,a,la,x,ix,bt,y,iy)
 #define trgRgemm(ha,ta,tb,m,n,k,al,A,lda,B,ldb,bt,C,ldc)	rgemm(&ta,&tb,m,n,k,al,A,lda,B,ldb,bt,C,ldc)
 //#define	trgRcg(ha,ta,n,nnz,da,a,ci,rp,b,x,itr,tol)			rcg(&ha,ta,n,nnz,da,a,ci,rp,b,x,itr,tol)	
+#elif defined (CUMYBLAS)
+#define trgRgemm(ha,ta,tb,m,n,k,al,A,lda,B,ldb,bt,C,ldc)	rgemm(ta,tb,m,n,k,al,A,lda,B,ldb,bt,C,ldc)
 #endif
 
 // ===========================================================
@@ -254,19 +258,19 @@ extern "C" {
 #if defined (PREC_Q_D)
 #if defined (CUOZBLAS)
 #define rcg				cuozblasRcg<__float128,double>
-#define rdot			cuozblasRdot<__float128,double>
+#define rdot			cuozblasRdot<__float128,double,double>
 #define rnrm2			cuozblasRnrm2<__float128,double>
 #define raxpy			cuozblasRaxpy<__float128>
 #define rgemv			cuozblasRgemv<__float128,double>
-#define rgemm			cuozblasRgemm<__float128,double>
+#define rgemm			cuozblasRgemm<__float128,double,double>
 #define rcsrmv			cuozblasRcsrmv<__float128,double>
 #define rcsrmvSplitA	cuozblasRcsrmvSplitA<__float128,double>
 #elif defined (OZBLAS)
 #define rcg				ozblasRcg<__float128,double>
-#define rdot			ozblasRdot<__float128,double>
+#define rdot			ozblasRdot<__float128,double,double>
 #define rnrm2			ozblasRnrm2<__float128,double>
-#define rgemv			ozblasRgemv<__float128,double>
-#define rgemm			ozblasRgemm<__float128,double>
+#define rgemv			ozblasRgemv<__float128,double,double>
+#define rgemm			ozblasRgemm<__float128,double,double>
 #define rcsrmv			ozblasRcsrmv<__float128,double>
 #define rcsrmvSplitA	ozblasRcsrmvSplitA<__float128,double>
 #elif defined (MPBLAS)
@@ -279,19 +283,19 @@ extern "C" {
 #elif defined (PREC_Q_S)
 #if defined (CUOZBLAS)
 #define rcg				cuozblasRcg<__float128,float>
-#define rdot			cuozblasRdot<__float128,float>
+#define rdot			cuozblasRdot<__float128,float,float>
 #define rnrm2			cuozblasRnrm2<__float128,float>
 #define raxpy			cuozblasRaxpy<__float128>
-#define rgemv			cuozblasRgemv<__float128,float>
-#define rgemm			cuozblasRgemm<__float128,float>
+#define rgemv			cuozblasRgemv<__float128,float,float>
+#define rgemm			cuozblasRgemm<__float128,float,float>
 #define rcsrmv			cuozblasRcsrmv<__float128,float>
 #define rcsrmvSplitA	cuozblasRcsrmvSplitA<__float128,float>
 #elif defined (OZBLAS)
 #define rcg				ozblasRcg<__float128,float>
-#define rdot			ozblasRdot<__float128,float>
+#define rdot			ozblasRdot<__float128,float,float>
 #define rnrm2			ozblasRnrm2<__float128,float>
-#define rgemv			ozblasRgemv<__float128,float>
-#define rgemm			ozblasRgemm<__float128,float>
+#define rgemv			ozblasRgemv<__float128,float,float>
+#define rgemm			ozblasRgemm<__float128,float,float>
 #define rcsrmv			ozblasRcsrmv<__float128,float>
 #define rcsrmvSplitA	ozblasRcsrmvSplitA<__float128,float>
 #endif
@@ -300,21 +304,65 @@ extern "C" {
 #elif defined (PREC_D_S)
 #if defined (CUOZBLAS)
 #define rcg				cuozblasRcg<double,float>
-#define rdot			cuozblasRdot<double,float>
+#define rdot			cuozblasRdot<double,float,float>
 #define rnrm2			cuozblasRnrm2<double,float>
 #define raxpy			cuozblasRaxpy<double>
-#define rgemv			cuozblasRgemv<double,float>
-#define rgemm			cuozblasRgemm<double,float>
+#define rgemv			cuozblasRgemv<double,float,float>
+#define rgemm			cuozblasRgemm<double,float,float>
 #define rcsrmv			cuozblasRcsrmv<double,float>
 #define rcsrmvSplitA	cuozblasRcsrmvSplitA<double,float>
 #elif defined (OZBLAS)
 #define rcg				ozblasRcg<double,float>
-#define rdot			ozblasRdot<double,float>
+#define rdot			ozblasRdot<double,float,float>
 #define rnrm2			ozblasRnrm2<double,float>
-#define rgemv			ozblasRgemv<double,float>
-#define rgemm			ozblasRgemm<double,float>
+#define rgemv			ozblasRgemv<double,float,float>
+#define rgemm			ozblasRgemm<double,float,float>
 #define rcsrmv			ozblasRcsrmv<double,float>
 #define rcsrmvSplitA	ozblasRcsrmvSplitA<double,float>
+#endif
+
+// ================================================
+#elif defined (PREC_D_H)
+#if defined (CUOZBLAS)
+#define rcg				cuozblasRcg<double,half>
+#define rdot			cuozblasRdot<double,half,float>
+#define rnrm2			cuozblasRnrm2<double,half>
+#define raxpy			cuozblasRaxpy<double>
+#define rgemv			cuozblasRgemv<double,half,float>
+#define rgemm			cuozblasRgemm<double,half,float>
+#define rcsrmv			cuozblasRcsrmv<double,half>
+#define rcsrmvSplitA	cuozblasRcsrmvSplitA<double,half>
+#elif defined (OZBLAS)
+/*
+#define rcg				ozblasRcg<double,half>
+#define rdot			ozblasRdot<double,half>
+#define rnrm2			ozblasRnrm2<double,half>
+#define rgemv			ozblasRgemv<double,half>
+#define rgemm			ozblasRgemm<double,half>
+#define rcsrmv			ozblasRcsrmv<double,half>
+#define rcsrmvSplitA	ozblasRcsrmvSplitA<double,half>
+*/
+#endif
+
+// ================================================
+#elif defined (PREC_D_I)
+#if defined (CUOZBLAS)
+#define rcg				cuozblasRcg<double,int32_t>
+#define rdot			cuozblasRdot<double,int32_t,int32_t>
+#define rnrm2			cuozblasRnrm2<double,int32_t>
+#define raxpy			cuozblasRaxpy<double>
+#define rgemv			cuozblasRgemv<double,int32_t,int32_t>
+#define rgemm			cuozblasRgemm<double,int32_t,int32_t>
+#define rcsrmv			cuozblasRcsrmv<double,int32_t>
+#define rcsrmvSplitA	cuozblasRcsrmvSplitA<double,int32_t>
+#elif defined (OZBLAS)
+#define rcg				ozblasRcg<double,int32_t>
+#define rdot			ozblasRdot<double,int32_t,int32_t>
+#define rnrm2			ozblasRnrm2<double,int32_t>
+#define rgemv			ozblasRgemv<double,int32_t,int32_t>
+#define rgemm			ozblasRgemm<double,int32_t,int32_t>
+#define rcsrmv			ozblasRcsrmv<double,int32_t>
+#define rcsrmvSplitA	ozblasRcsrmvSplitA<double,int32_t>
 #endif
 
 // ================================================
@@ -323,21 +371,21 @@ extern "C" {
 #define rcg				cuozblasRcg<double,double>
 #define rcgfr			cuozblasRcgfr
 #define rcgfr_x			cuozblasRcgfr_x
-#define rdot			cuozblasRdot<double,double>
+#define rdot			cuozblasRdot<double,double,double>
 #define rnrm2			cuozblasRnrm2<double,double>
 #define raxpy			cuozblasRaxpy<double>
-#define rgemv			cuozblasRgemv<double,double>
+#define rgemv			cuozblasRgemv<double,double,double>
 //#define rgemm			cuozblasDgemm
-#define rgemm			cuozblasRgemm<double,double>
+#define rgemm			cuozblasRgemm<double,double,double>
 #define rcsrmv			cuozblasRcsrmv<double,double>
 #define rcsrmvSplitA	cuozblasRcsrmvSplitA<double,double>
 #elif defined (OZBLAS)
 #define rcg				ozblasRcg<double,double>
-#define rdot			ozblasRdot<double,double>
+#define rdot			ozblasRdot<double,double,double>
 #define rnrm2			ozblasRnrm2<double,double>
-#define rgemv			ozblasRgemv<double,double>
+#define rgemv			ozblasRgemv<double,double,double>
 //#define rgemv			ozblasDgemv
-#define rgemm			ozblasRgemm<double,double>
+#define rgemm			ozblasRgemm<double,double,double>
 #define rcsrmv			ozblasRcsrmv<double,double>
 #define rcsrmvSplitA	ozblasRcsrmvSplitA<double,double>
 #elif defined (CUBLAS)
@@ -362,19 +410,19 @@ extern "C" {
 #elif defined (PREC_S_S)
 #if defined (CUOZBLAS)
 #define rcg				cuozblasRcg<float,float>
-#define rdot			cuozblasRdot<float,float>
+#define rdot			cuozblasRdot<float,float,float>
 #define rnrm2			cuozblasRnrm2<float,float>
 #define raxpy			cuozblasRaxpy<float>
-#define rgemv			cuozblasRgemv<float,float>
-#define rgemm			cuozblasRgemm<float,float>
+#define rgemv			cuozblasRgemv<float,float,float>
+#define rgemm			cuozblasRgemm<float,float,float>
 #define rcsrmv			cuozblasRcsrmv<float,float>
 #define rcsrmvSplitA	cuozblasRcsrmvSplitA<float,float>
 #elif defined (OZBLAS)
 #define rcg				ozblasRcg<float,float>
-#define rdot			ozblasRdot<float,float>
+#define rdot			ozblasRdot<float,float,float>
 #define rnrm2			ozblasRnrm2<float,float>
-#define rgemv			ozblasRgemv<float,float>
-#define rgemm			ozblasRgemm<float,float>
+#define rgemv			ozblasRgemv<float,float,float>
+#define rgemm			ozblasRgemm<float,float,float>
 #define rcsrmv			ozblasRcsrmv<float,float>
 #define rcsrmvSplitA	ozblasRcsrmvSplitA<float,float>
 #elif defined (CUBLAS)
@@ -395,22 +443,45 @@ extern "C" {
 #endif
 
 // ================================================
+#elif defined (PREC_S_H)
+#if defined (CUOZBLAS)
+#define rcg				cuozblasRcg<float,half>
+#define rdot			cuozblasRdot<float,half,float>
+#define rnrm2			cuozblasRnrm2<float,half>
+#define raxpy			cuozblasRaxpy<float>
+#define rgemv			cuozblasRgemv<float,half,float>
+#define rgemm			cuozblasRgemm<float,half,float>
+#define rcsrmv			cuozblasRcsrmv<float,half>
+#define rcsrmvSplitA	cuozblasRcsrmvSplitA<float,half>
+#elif defined (OZBLAS)
+/*
+#define rcg				ozblasRcg<float,half>
+#define rdot			ozblasRdot<float,half>
+#define rnrm2			ozblasRnrm2<float,half>
+#define rgemv			ozblasRgemv<float,half>
+#define rgemm			ozblasRgemm<float,half>
+#define rcsrmv			ozblasRcsrmv<float,half>
+#define rcsrmvSplitA	ozblasRcsrmvSplitA<float,half>
+*/
+#endif
+
+// ================================================
 #elif defined (PREC_S_D)
 #if defined (CUOZBLAS)
 #define rcg				cuozblasRcg<float,double>
-#define rdot			cuozblasRdot<float,double>
+#define rdot			cuozblasRdot<float,double,double>
 #define rnrm2			cuozblasRnrm2<float,double>
 #define raxpy			cuozblasRaxpy<float>
-#define rgemv			cuozblasRgemv<float,double>
-#define rgemm			cuozblasRgemm<float,double>
+#define rgemv			cuozblasRgemv<float,double,double>
+#define rgemm			cuozblasRgemm<float,double,double>
 #define rcsrmv			cuozblasRcsrmv<float,double>
 #define rcsrmvSplitA	cuozblasRcsrmvSplitA<float,double>
 #elif defined (OZBLAS)
 #define rcg				ozblasRcg<float,double>
-#define rdot			ozblasRdot<float,double>
+#define rdot			ozblasRdot<float,double, double>
 #define rnrm2			ozblasRnrm2<float,double>
-#define rgemv			ozblasRgemv<float,double>
-#define rgemm			ozblasRgemm<float,double>
+#define rgemv			ozblasRgemv<float,double,double>
+#define rgemm			ozblasRgemm<float,double,double>
 #define rcsrmv			ozblasRcsrmv<float,double>
 #define rcsrmvSplitA	ozblasRcsrmvSplitA<float,double>
 #endif
@@ -511,5 +582,8 @@ extern "C" {
 #endif
 #endif
 
+#if defined (CUBLAS) && defined (PREC_D_D)
+#define trgRgemm(ha,ta,tb,m,n,k,al,A,lda,B,ldb,bt,C,ldc)	cublasGemmEx (ha,ToCublasOp(ta),ToCublasOp(tb),m,n,k,(const void*)&al,(const void*)A,CUDA_R_64F, lda,(const void*)B,CUDA_R_64F, ldb,(const void*)&bt,(void*)C,CUDA_R_64F, ldc, CUBLAS_COMPUTE_64F, CUBLAS_GEMM_DEFAULT)
+#endif
 
 #endif

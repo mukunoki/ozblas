@@ -144,89 +144,13 @@ void blasRgemv (cublasHandle_t ch, const char trans, const int32_t m, const int3
 	cublasDgemv (ch, ToCublasOp(trans), m, n, &alpha, A, lda, x, incx, &beta, y, incy);
 }
 // GEMM
-/*
-#include <cutlass/numeric_types.h>
-#include <cutlass/gemm/device/gemm.h>
-#include <cutlass/util/host_tensor.h>
-cudaError_t CutlassIgemmNN( int M, int N, int K, int32_t alpha, int32_t const *A, int lda, int32_t const *B, int ldb, int32_t beta, int32_t *C, int ldc) {
-//    printf ("use cutlass CutlassIgemmNN\n");
-  using ColumnMajor = cutlass::layout::ColumnMajor;
-  using CutlassGemm = cutlass::gemm::device::Gemm<int32_t, ColumnMajor, int32_t, ColumnMajor, int32_t, ColumnMajor>;
-  CutlassGemm gemm_operator;
-  CutlassGemm::Arguments args({M , N, K}, {A, lda}, {B, ldb}, {C, ldc}, {C, ldc}, {alpha, beta});
-  cutlass::Status status = gemm_operator(args);
-  if (status != cutlass::Status::kSuccess) return cudaErrorUnknown;
-  return cudaSuccess;
-}
-cudaError_t CutlassIgemmTN( int M, int N, int K, int32_t alpha, int32_t const *A, int lda, int32_t const *B, int ldb, int32_t beta, int32_t *C, int ldc) {
-//    printf ("use cutlass CutlassIgemmTN\n");
-  using ColumnMajor = cutlass::layout::ColumnMajor;
-  using RowMajor = cutlass::layout::RowMajor;
-  using CutlassGemm = cutlass::gemm::device::Gemm<int32_t, RowMajor, int32_t, ColumnMajor, int32_t, ColumnMajor>;
-  CutlassGemm gemm_operator;
-  CutlassGemm::Arguments args({M , N, K}, {A, lda}, {B, ldb}, {C, ldc}, {C, ldc}, {alpha, beta});
-  cutlass::Status status = gemm_operator(args);
-  if (status != cutlass::Status::kSuccess) return cudaErrorUnknown;
-  return cudaSuccess;
-}
-
-cudaError_t CutlassSgemmNN( int M, int N, int K, float alpha, float const *A, int lda, float const *B, int ldb, float beta, float *C, int ldc) {
-//    printf ("use cutlass CutlassSgemmNN\n");
-  using ColumnMajor = cutlass::layout::ColumnMajor;
-  using CutlassGemm = cutlass::gemm::device::Gemm<float, ColumnMajor, float, ColumnMajor, float, ColumnMajor>;
-  CutlassGemm gemm_operator;
-  CutlassGemm::Arguments args({M , N, K}, {A, lda}, {B, ldb}, {C, ldc}, {C, ldc}, {alpha, beta});
-  cutlass::Status status = gemm_operator(args);
-  if (status != cutlass::Status::kSuccess) return cudaErrorUnknown;
-  return cudaSuccess;
-}
-
-cudaError_t CutlassDgemmNN( int M, int N, int K, double alpha, double const *A, int lda, double const *B, int ldb, double beta, double *C, int ldc) {
-//    printf ("use cutlass CutlassSgemmNN\n");
-  using ColumnMajor = cutlass::layout::ColumnMajor;
-  using CutlassGemm = cutlass::gemm::device::Gemm<double, ColumnMajor, double, ColumnMajor, double, ColumnMajor>;
-  CutlassGemm gemm_operator;
-  CutlassGemm::Arguments args({M , N, K}, {A, lda}, {B, ldb}, {C, ldc}, {C, ldc}, {alpha, beta});
-  cutlass::Status status = gemm_operator(args);
-  if (status != cutlass::Status::kSuccess) return cudaErrorUnknown;
-  return cudaSuccess;
-}
-
-void blasRgemm (cublasHandle_t ch, const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const int32_t alpha, const int32_t* A, const int32_t lda, const int32_t* B, const int32_t ldb, const int32_t beta, int32_t* C, const int32_t ldc) {
-//	cumyblas_igemm (transA, transB, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
-    if (transB == 'n' || transB == 'N') {
-        if (transA == 'n' || transA == 'N') {
-            CutlassIgemmNN(m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
-        } else {
-            CutlassIgemmTN(m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
-        }
-    } else {
-	    fprintf (OUTPUT, "GEMM-TT and NT is not available\n");
-	    exit(1);
-    }
-}
-*/
-
-void blasRgemm (cublasHandle_t ch, const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const float alpha, const half* A, const int32_t lda, const half* B, const int32_t ldb, const float beta, float* C, const int32_t ldc) {
-    cublasGemmEx (ch, ToCublasOp(transA), ToCublasOp(transB), m, n, k, &alpha, A, CUDA_R_16F, lda, B, CUDA_R_16F, ldb, &beta, C, CUDA_R_32F, ldc, CUBLAS_COMPUTE_32F, CUBLAS_GEMM_DFALT_TENSOR_OP);
-}
 void blasRgemm (cublasHandle_t ch, const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const float alpha, const float* A, const int32_t lda, const float* B, const int32_t ldb, const float beta, float* C, const int32_t ldc) {
 	cublasSgemm (ch, ToCublasOp(transA), ToCublasOp(transB), m, n, k, &alpha, A, lda, B, ldb, &beta, C, ldc);
-    //CutlassIgemmNN(m, n, k, (int32_t)alpha, (int32_t*)A, lda, (int32_t*)B, ldb, (int32_t)beta, (int32_t*)C, ldc);
-    //CutlassSgemmNN(m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
 }
 void blasRgemm (cublasHandle_t ch, const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const double alpha, const double* A, const int32_t lda, const double* B, const int32_t ldb, const double beta, double* C, const int32_t ldc) {
 	cublasDgemm (ch, ToCublasOp(transA), ToCublasOp(transB), m, n, k, &alpha, A, lda, B, ldb, &beta, C, ldc);
-    //CutlassDgemmNN(m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
 }
 // GEMM-BATCH
-//void blasRgemmBatch (cublasHandle_t ch, const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const int32_t alpha, const int32_t** A, const int32_t lda, const int32_t** B, const int32_t ldb, const int32_t beta, int32_t** C, const int32_t ldc, const int32_t grp, const int32_t cnt) {
-//	fprintf (OUTPUT, "OzBLAS error: blasRgemmBatch for int is not available.\n");
-//	exit(1);
-//}
-void blasRgemmBatch (cublasHandle_t ch, const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const float alpha, const half** A, const int32_t lda, const half** B, const int32_t ldb, const float beta, float** C, const int32_t ldc, const int32_t grp, const int32_t cnt) {
-    cublasGemmBatchedEx (ch, ToCublasOp(transA), ToCublasOp(transB), m, n, k, &alpha, (void**)A, CUDA_R_16F, lda, (void**)B, CUDA_R_16F, ldb, &beta, (void**)C, CUDA_R_32F, ldc, cnt, CUBLAS_COMPUTE_32F, CUBLAS_GEMM_DFALT_TENSOR_OP);
-}
 void blasRgemmBatch (cublasHandle_t ch, const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const float alpha, const float** A, const int32_t lda, const float** B, const int32_t ldb, const float beta, float** C, const int32_t ldc, const int32_t grp, const int32_t cnt) {
 	cublasSgemmBatched (ch, ToCublasOp(transA), ToCublasOp(transB), m, n, k, &alpha, A, lda, B, ldb, &beta, C, ldc, cnt);
 }

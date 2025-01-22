@@ -6,7 +6,6 @@
 
 #define OUTPUT stdout // stderr
 
-#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cmath> 
@@ -51,14 +50,6 @@ constexpr int32_t getEpse () {
 	return 0;
 }
 template <>
-constexpr int32_t getEpse <int32_t> () {
-	return 31;
-}
-template <>
-constexpr int32_t getEpse <half> () {
-	return 24;
-}
-template <>
 constexpr int32_t getEpse <float> () {
 	return 24;
 }
@@ -71,14 +62,6 @@ constexpr int32_t getEpse2 () {
 	fprintf (OUTPUT, "OzBLAS error: TYPE is not specified in getEpse2.\n");
 	exit (1);
 	return 0;
-}
-template <>
-constexpr int32_t getEpse2 <int32_t> () {
-	return 31;
-}
-template <>
-constexpr int32_t getEpse2 <half> () {
-	return 24;
 }
 template <>
 constexpr int32_t getEpse2 <float> () {

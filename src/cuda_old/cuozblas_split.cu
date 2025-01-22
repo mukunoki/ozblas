@@ -16,29 +16,6 @@
 
 #define CONST 0.75 // for splitting
 
-typedef union{
-	double d;
-	uint64_t i;
-} d_and_i;
-
-__device__ 
-void cuprintBitsB64 (double val) {
-	d_and_i di;
-	di.d = val;
-	// sign
-	printf ("%d", (int)((di.i >> 63) & 1));
-	printf ("|");
-	// exponent
-	for (int i = 62; i >= 62-10; i--) 
-		printf ("%d", (int)((di.i >> i) & 1));
-	printf ("|");
-	// fraction
-	for (int i = 62-11; i >= 0; i--) 
-		printf ("%d", (int)((di.i >> i) & 1));
-	printf (" : ");
-	printf ("%+1.18e\n", val);
-}
-
 /*
 template <typename TYPE>
 __device__
@@ -63,44 +40,6 @@ int32_t getRho (const int32_t dim, const int32_t splitEpsModeFlag) {
 			break;
 		default: // non-overflow-mode
 			return ceil((epse_type1-(epse_type2-log2(1.*dim))/2)); // standard-ver
-	}
-}
-
-// special treatment for half when m=n=k=1, 
-template <>
-__host__ __device__
-int32_t getRho <double, half> (const int32_t dim, const int32_t splitEpsModeFlag) {
-	constexpr int32_t epse_type1 = getEpse <double> ();
-	constexpr int32_t epse_type2 = getEpse <half> ();
-	constexpr int32_t epse_type22 = getEpse2 <half> ();
-    int32_t dim_ = (dim == 1) ? 2 : dim;
-	switch (splitEpsModeFlag) {
-		case 2: // Dot2
-			return ceil((epse_type1-(epse_type22-log2(1.*dim_))/2)); // standard-ver with Dot2
-			break;
-		case 9: // overflow-mode
-			return ceil((epse_type1-(epse_type2-log2(2.*sqrt(dim_)))/2)); // overflow-ver
-			break;
-		default: // non-overflow-mode
-			return ceil((epse_type1-(epse_type2-log2(1.*dim_))/2)); // standard-ver
-	}
-}
-template <>
-__host__ __device__
-int32_t getRho <float, half> (const int32_t dim, const int32_t splitEpsModeFlag) {
-	constexpr int32_t epse_type1 = getEpse <float> ();
-	constexpr int32_t epse_type2 = getEpse <half> ();
-	constexpr int32_t epse_type22 = getEpse2 <half> ();
-    int32_t dim_ = (dim == 1) ? 2 : dim;
-	switch (splitEpsModeFlag) {
-		case 2: // Dot2
-			return ceil((epse_type1-(epse_type22-log2(1.*dim_))/2)); // standard-ver with Dot2
-			break;
-		case 9: // overflow-mode
-			return ceil((epse_type1-(epse_type2-log2(2.*sqrt(dim_)))/2)); // overflow-ver
-			break;
-		default: // non-overflow-mode
-			return ceil((epse_type1-(epse_type2-log2(1.*dim_))/2)); // standard-ver
 	}
 }
 
@@ -370,8 +309,6 @@ void cuozblasSplitVecKernel (
 		const TYPE1 split = (input + sigma) - sigma;
 		input = input - split;
 		devSplit[i] = scalbn (split, -tau);
-		//int32_t tmp = double_to_int (scalbn (split, -tau), rho);
-		//				printf ("***split input=%1.18e, split=%d, split(double)=%1.18e, tau=%d \n", devInput[i], devSplit[i], split, tau);
 		devOutput[i] = input;
 		max_ = MAX(max_, fabs(input));
 	}
@@ -410,14 +347,11 @@ void cuozblasSplitDevice (
 
 	if ((major == 'r' && m == 1) || (major == 'c' && n == 1)) {
 		ntx = SPLIT_VEC_NTX;
-		//threads = dim3 (1);
 		threads = dim3 (ntx);
 		nbx = MIN (ceil((float)dim/ntx), SPLIT_VEC_NBX); 
-		//grid = dim3 (1);
 		grid = dim3 (nbx);
 		TYPE1 *work = (TYPE1*)oh->devWorkCommon;
 		cuozblasSplitVecKernel <<< grid, threads >>> (dim, rho, devInput, devOutput, devSplit, devSpExp, devMax, work, splitShift);
-        //printf ("@@debug grid1,1\n");
 		grid = dim3 (1);
 		cuozblasSplitVecSubKernel <<< grid, threads >>> (nbx, devMax, work);
 	} else {
@@ -482,12 +416,9 @@ int32_t cuozblasSplit (
 	delete[] hst;
 	return s;
 }
-
 template int32_t cuozblasSplit <double, double> (cuozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const double *devInput, const int32_t ldi, double *devOutput, const int32_t ldo, double *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax);
 template int32_t cuozblasSplit <double, float> (cuozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const double *devInput, const int32_t ldi, double *devOutput, const int32_t ldo, float *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax);
-template int32_t cuozblasSplit <double, half> (cuozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const double *devInput, const int32_t ldi, double *devOutput, const int32_t ldo, half *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax);
 template int32_t cuozblasSplit <float, float> (cuozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const float *devInput, const int32_t ldi, float *devOutput, const int32_t ldo, float *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, float *devMax);
-template int32_t cuozblasSplit <float, half> (cuozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const float *devInput, const int32_t ldi, float *devOutput, const int32_t ldo, half *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, float *devMax);
 template int32_t cuozblasSplit <float, double> (cuozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const float *devInput, const int32_t ldi, float *devOutput, const int32_t ldo, double *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, float *devMax);
 
 // =========================================

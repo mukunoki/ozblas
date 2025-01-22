@@ -9,7 +9,6 @@ CPU_ARCH =
 LINKAGE = static
 
 #--- PATH ------------------------------------
-#CUDA_PATH	= /work/opt/local/x86_64/cores/cuda/12.0
 CUDA_PATH	= /usr/local/cuda
 LIB_PATH	= $(HOME)/local/lib
 INC_PATH	= $(HOME)/local/include
@@ -21,11 +20,11 @@ CXX = g++
 
 #--- CPU (OzBLAS) / CUDA (cuOzBLAS) ----------
 CPU  = yes
-CUDA = yes
+CUDA = no
 # CPU must be yes also for CUDA
 
 #--- BLAS (CPU) ------------------------------
-#CPU_BLAS: MKL, OpenBLAS, SSL2
+#CPU_BLAS: OpenBLAS, MKL
 CPU_BLAS = OpenBLAS
 # CSRMV & CG require MKL because OpenBLAS does not have sparse routines.
 
@@ -54,13 +53,16 @@ CC86 = no
 
 #--- Precision -------------------------------
 # PREC_X_Y: X is I/O-precision, Y is compute-precision
-# Q: FP128, D: FP64, S: FP32
+# Q: FP128, D: FP64, S: FP32, H: FP16 
 PREC_Q_D = yes
 PREC_Q_S = yes
 PREC_D_D = yes
 PREC_D_S = yes
+PREC_D_H = yes
 PREC_S_S = yes
+PREC_S_H = yes
 PREC_S_D = yes
+# -> D_H and S_H are only on GPUs and use Tensor Cores
 
 #--- Routine ---------------------------------
 # level-1
@@ -70,14 +72,14 @@ AXPY = yes
 
 # level-2
 GEMV = yes
-CSRMV = yes
+CSRMV = no
 # -> CSRMV requires MKL on CPUs
 
 # level-3
 GEMM = yes
 
 # solver
-CG = yes
+CG = no
 # -> CG requires CSRMV, DOT, NRM2, and AXPY
 
 ##############################################
