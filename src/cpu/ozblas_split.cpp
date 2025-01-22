@@ -83,8 +83,9 @@ void ozblasSplitVecKernel (
 	TYPE *devMax,
 	const int32_t splitShift
 ) {
-	const short tau = ceil(log2(fabs(devMax[0])));
-	const TYPE sigma = CONST * scalbn1 (1., rho + tau) * splitShift;
+	const short tau = ceil(log21(fabs1(devMax[0])));
+    const TYPE one = (TYPE)1.;
+	const TYPE sigma = CONST * scalbn1 (one, rho + tau) * splitShift;
 	TYPE max_ = 0.;
 	#pragma omp parallel for reduction(max:max_)
 	for (int32_t i = 0; i < n; i++) {
@@ -109,8 +110,9 @@ void ozblasSplitVecKernel (
 	TYPE1 *devMax,
 	const int32_t splitShift
 ) {
-	const short tau = devSpExp[0] = ceil(log2(devMax[0]));
-	const TYPE1 sigma = CONST * scalbn1 (1., rho + tau) * splitShift;
+	const short tau = devSpExp[0] = ceil(log21(devMax[0]));
+    const TYPE1 one = (TYPE1)1.;
+	const TYPE1 sigma = CONST * scalbn1 (one, rho + tau) * splitShift;
 	TYPE1 max_ = 0.;
 	#pragma omp parallel for reduction(max:max_)
 	for (int32_t i = 0; i < n; i++) {
@@ -141,10 +143,11 @@ void ozblasSplitCKernel (
 	const int32_t splitShift
 ) {
 	int32_t addry = 0;
+    const TYPE one = (TYPE)1.;
 	#pragma omp parallel for
 	for (addry = 0; addry < n; addry++) {
-		const short tau = ceil(log2(fabs(devMax[addry])));
-		const TYPE sigma = CONST * scalbn1 (1., rho + tau) * splitShift;
+		const short tau = ceil(log21(fabs1(devMax[addry])));
+		const TYPE sigma = CONST * scalbn1 (one, rho + tau) * splitShift;
 		TYPE max = 0.;
 		for (int32_t addrx = 0; addrx < m; addrx++) {
 			TYPE input = devInput[addry * ldi + addrx];
@@ -174,10 +177,11 @@ void ozblasSplitCKernel (
 	const int32_t splitShift
 ) {
 	int32_t addry = 0;
+    const TYPE1 one = (TYPE1)1.;
 	#pragma omp parallel for
 	for (addry = 0; addry < n; addry++) {
-		const short tau = devSpExp[addry] = ceil(log2(devMax[addry]));
-		const TYPE1 sigma = CONST * scalbn1 (1., rho + tau) * splitShift;
+		const short tau = devSpExp[addry] = ceil(log21(devMax[addry]));
+		const TYPE1 sigma = CONST * scalbn1 (one, rho + tau) * splitShift;
 		TYPE1 max = 0.;
 		for (int32_t addrx = 0; addrx < m; addrx++) {
 			TYPE1 input = devInput[addry * ldi + addrx];
@@ -297,10 +301,11 @@ void ozblasSplitNKernel2 (
 	const int32_t splitShift
 ) {
 	int32_t addrx = 0;
+    const TYPE one = (TYPE)1.;
 	#pragma omp parallel for
 	for (addrx = 0; addrx < m; addrx++) {
-		const short tau = ceil(log2(fabs(devMax[addrx])));
-		const TYPE sigma = CONST * scalbn1 (1., rho + tau) * splitShift;
+		const short tau = ceil(log21(fabs1(devMax[addrx])));
+		const TYPE sigma = CONST * scalbn1 (one, rho + tau) * splitShift;
 		TYPE max = 0.;
 		for (int32_t j = 0; j < n; j++) {
 			TYPE input = devInput[j * ldi + addrx];
@@ -341,10 +346,11 @@ void ozblasSplitTKernel2 (
 	const int32_t splitShift
 ) {
 	int32_t addry = 0;
+    const TYPE one = (TYPE)1.;
 	#pragma omp parallel for
 	for (addry = 0; addry < n; addry++) {
-		const short tau = ceil(log2(fabs(devMax[addry])));
-		const TYPE sigma = CONST * scalbn1 (1., rho + tau) * splitShift;
+		const short tau = ceil(log21(fabs1(devMax[addry])));
+		const TYPE sigma = CONST * scalbn1 (one, rho + tau) * splitShift;
 		TYPE max = 0.;
 		for (int32_t i = 0; i < m; i++) {
 			TYPE input = devInput[addry * ldi + i];
@@ -534,14 +540,15 @@ void ozblasSplitNKernelA (
 	TYPE1 *devMax
 ) {
 	int32_t addrx = 0;
+    const TYPE1 one = (TYPE1)1.;
 	#pragma omp parallel for
 	for (addrx = 0; addrx < m; addrx++) {
 		TYPE1 max = 0.;
-		const short tau = devSpExp[addrx] = ceil(log2(devMax[addrx]));
-		const TYPE1 sigma = CONST * scalbn1 (1., rho + tau);
+		const short tau = devSpExp[addrx] = ceil(log21(devMax[addrx]));
+		const TYPE1 sigma = CONST * scalbn1 (one, rho + tau);
 		for (int32_t j = 0; j < n; j++) {
 			TYPE1 input = devInput[j * ldi + addrx];
-			const TYPE1  split = (input + sigma) - sigma;
+			const TYPE1 split = (input + sigma) - sigma;
 			input = input - split;
 			devSplitD[j * ldd + addrx] = fabs1(split);
 			devSplit[j * lds + addrx] = scalbn1(split, -tau);
@@ -569,11 +576,12 @@ void ozblasSplitNKernelA (
 	TYPE *devMax
 ) {
 	int32_t addrx = 0;
+    const TYPE one = (TYPE)1.;
 	#pragma omp parallel for
 	for (addrx = 0; addrx < m; addrx++) {
 		TYPE max = 0.;
-		const short tau = ceil(log2(fabs(devMax[addrx])));
-		const TYPE sigma = CONST * scalbn1 (1., rho + tau);
+		const short tau = ceil(log21(fabs1(devMax[addrx])));
+		const TYPE sigma = CONST * scalbn1 (one, rho + tau);
 		for (int32_t j = 0; j < n; j++) {
 			TYPE input = devInput[j * ldi + addrx];
 			const TYPE split = (input + sigma) - sigma;
@@ -604,11 +612,12 @@ void ozblasSplitTKernelA (
 	TYPE1 *devMax
 ) {
 	int32_t addry = 0;
+    const TYPE1 one = (TYPE1)1.;
 	#pragma omp parallel for
 	for (addry = 0; addry < n; addry++) {
 		TYPE1 max = 0.;
-		const short tau = devSpExp[addry] = ceil(log2(devMax[addry]));
-		const TYPE1 sigma = CONST * scalbn1 (1., rho + tau);
+		const short tau = devSpExp[addry] = ceil(log21(devMax[addry]));
+		const TYPE1 sigma = CONST * scalbn1 (one, rho + tau);
 		for (int32_t i = 0; i < m; i++) {
 			TYPE1 input = devInput[addry * ldi + i];
 			TYPE1 const split = (input + sigma) - sigma;
@@ -639,11 +648,12 @@ void ozblasSplitTKernelA (
 	TYPE *devMax
 ) {
 	int32_t addry = 0;
+    const TYPE one = (TYPE)1.;
 	#pragma omp parallel for
 	for (addry = 0; addry < n; addry++) {
 		TYPE max = 0.;
-		const short tau = ceil(log2(fabs(devMax[addry])));
-		const TYPE sigma = CONST * scalbn1 (1., rho + tau);
+		const short tau = ceil(log21(fabs1(devMax[addry])));
+		const TYPE sigma = CONST * scalbn1 (one, rho + tau);
 		for (int32_t i = 0; i < m; i++) {
 			TYPE input = devInput[addry * ldi + i];
 			const TYPE split = (input + sigma) - sigma;
@@ -805,12 +815,13 @@ void ozblasSplitSparseNKernel (
 	const int32_t splitShift
 ) {
 	int32_t addrx = 0;
+    const TYPE one = (TYPE)1.;
 	#pragma omp parallel for schedule (static) 
 	for (addrx = 0; addrx < m; addrx++) {
 		const int32_t dim = devRowptr[addrx+1] - devRowptr[addrx];
 		const int32_t rho = getRho <TYPE, TYPE> (dim, splitEpsModeFlag);
-		const short tau = ceil(log2(fabs(devMax[addrx])));
-		const TYPE sigma = CONST * scalbn1 (1., rho + tau) / splitShift;
+		const short tau = ceil(log21(fabs1(devMax[addrx])));
+		const TYPE sigma = CONST * scalbn1 (one, rho + tau) / splitShift;
 		TYPE max = 0.;
 		for (int32_t i = devRowptr[addrx]; i < devRowptr[addrx+1]; i++) {
 			TYPE input = devInput[i];
@@ -837,12 +848,13 @@ void ozblasSplitSparseNKernel (
 	const int32_t splitShift
 ) {
 	int32_t addrx = 0;
+    const TYPE1 one = (TYPE1)1.;
 	#pragma omp parallel for schedule (static) 
 	for (addrx = 0; addrx < m; addrx++) {
 		const int32_t dim = devRowptr[addrx+1] - devRowptr[addrx];
 		const int32_t rho = getRho <TYPE1, TYPE2> (dim, splitEpsModeFlag);
-		const short tau = devSpExp[addrx] = ceil(log2(devMax[addrx]));
-		const TYPE1 sigma = CONST * scalbn1 (1., rho+tau) / splitShift;
+		const short tau = devSpExp[addrx] = ceil(log21(devMax[addrx]));
+		const TYPE1 sigma = CONST * scalbn1 (one, rho+tau) / splitShift;
 		TYPE1 max = 0.;
 		for (int32_t i = devRowptr[addrx]; i < devRowptr[addrx+1]; i++) {
 			TYPE1 input = devInput[i];

@@ -82,10 +82,12 @@ int32_t ozblasRgemm (
         ldt = getPitchSize (k);
 		if (!memCheck (oh)) break; // check if work-memory is enough or not
 		oh->memAddr = memAddrTmp;
-        if (mbk >= nbk) 
-		    mbk = ceil (mbk / 2.);
-        else 
-		    nbk = ceil (nbk / 2.);
+        if (mbk != 1 && nbk != 1) {
+            if (mbk >= nbk) 
+		        mbk = ceil (mbk / 2.);
+            else 
+		        nbk = ceil (nbk / 2.);
+        }
 	}
 	oh->mbk = mbk;
 	oh->nbk = nbk;

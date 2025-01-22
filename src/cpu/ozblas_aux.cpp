@@ -34,6 +34,17 @@ __float128 scalbn1 (const __float128 v, const int n) {
 	return scalbnq(v, n);
 }
 
+template <typename TYPE>
+TYPE log21 (const TYPE v) {
+	return log2(v);
+}
+template float log21 <float> (const float v);
+template double log21 <double> (const double v);
+template <>
+__float128 log21 (const __float128 v) {
+	return log2q(v);
+}
+
 int32_t checkTrans (const char tran) {
 	if (tran == 'N' || tran == 'n') 
 		return 0;
