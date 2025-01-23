@@ -1,6 +1,6 @@
 #include "ozblas_common.h"
 
-template <typename TYPE1, typename TYPE2>
+template <typename TYPE1, typename TYPE2, typename TYPE3>
 int32_t ozblasRgemm (
 	ozblasHandle_t *oh,	
 	const char transA, const char transB,
@@ -299,9 +299,9 @@ int32_t ozblasRgemm (
 
 	return 0;
 }
-template int32_t ozblasRgemm <__float128, double> (ozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const __float128 alpha, const __float128 *devA, const int32_t lda, const __float128 *devB, const int32_t ldb, const __float128 beta, __float128 *devC, const int32_t ldc);
-template int32_t ozblasRgemm <__float128, float> (ozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const __float128 alpha, const __float128 *devA, const int32_t lda, const __float128 *devB, const int32_t ldb, const __float128 beta, __float128 *devC, const int32_t ldc);
-template int32_t ozblasRgemm <double, double> (ozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const double alpha, const double *devA, const int32_t lda, const double *devB, const int32_t ldb, const double beta, double *devC, const int32_t ldc);
-template int32_t ozblasRgemm <double, float> (ozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const double alpha, const double *devA, const int32_t lda, const double *devB, const int32_t ldb, const double beta, double *devC, const int32_t ldc);
-template int32_t ozblasRgemm <float, float> (ozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const float alpha, const float *devA, const int32_t lda, const float *devB, const int32_t ldb, const float beta, float *devC, const int32_t ldc); 
-template int32_t ozblasRgemm <float, double> (ozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const float alpha, const float *devA, const int32_t lda, const float *devB, const int32_t ldb, const float beta, float *devC, const int32_t ldc); 
+template int32_t ozblasRgemm <__float128, double, double> (ozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const __float128 alpha, const __float128 *devA, const int32_t lda, const __float128 *devB, const int32_t ldb, const __float128 beta, __float128 *devC, const int32_t ldc);
+template int32_t ozblasRgemm <__float128, float, float> (ozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const __float128 alpha, const __float128 *devA, const int32_t lda, const __float128 *devB, const int32_t ldb, const __float128 beta, __float128 *devC, const int32_t ldc);
+template int32_t ozblasRgemm <double, double, double> (ozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const double alpha, const double *devA, const int32_t lda, const double *devB, const int32_t ldb, const double beta, double *devC, const int32_t ldc);
+template int32_t ozblasRgemm <double, float, float> (ozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const double alpha, const double *devA, const int32_t lda, const double *devB, const int32_t ldb, const double beta, double *devC, const int32_t ldc);
+template int32_t ozblasRgemm <float, float, float> (ozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const float alpha, const float *devA, const int32_t lda, const float *devB, const int32_t ldb, const float beta, float *devC, const int32_t ldc); 
+template int32_t ozblasRgemm <float, double, double> (ozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const float alpha, const float *devA, const int32_t lda, const float *devB, const int32_t ldb, const float beta, float *devC, const int32_t ldc); 

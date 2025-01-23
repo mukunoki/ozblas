@@ -1,6 +1,6 @@
 #include "ozblas_common.h"
 
-template <typename TYPE1, typename TYPE2>
+template <typename TYPE1, typename TYPE2, typename TYPE3>
 TYPE1 ozblasRdot (
 	ozblasHandle_t *oh,
 	const int32_t n,
@@ -23,7 +23,7 @@ TYPE1 ozblasRdot (
 	}
 
 	TYPE1 fone = 1., fzero = 0., ret;
-	ozblasRgemm <TYPE1, TYPE2> (oh, 't', 'n', 1, 1, n, fone, devA, n, devB, n, fzero, &ret, 1);
+	ozblasRgemm <TYPE1, TYPE2, TYPE3> (oh, 't', 'n', 1, 1, n, fone, devA, n, devB, n, fzero, &ret, 1);
 
 	// for CG, time
 	// =================================
@@ -37,10 +37,10 @@ TYPE1 ozblasRdot (
 
 	return ret;
 }
-template __float128 ozblasRdot <__float128, double> (ozblasHandle_t *oh, const int32_t n, const __float128 *devA, const int32_t incx, const __float128 *devB, const int32_t incy);
-template __float128 ozblasRdot <__float128, float> (ozblasHandle_t *oh, const int32_t n, const __float128 *devA, const int32_t incx, const __float128 *devB, const int32_t incy);
-template double ozblasRdot <double, double> (ozblasHandle_t *oh, const int32_t n, const double *devA, const int32_t incx, const double *devB, const int32_t incy);
-template double ozblasRdot <double, float> (ozblasHandle_t *oh, const int32_t n, const double *devA, const int32_t incx, const double *devB, const int32_t incy);
-template float ozblasRdot <float, float> (ozblasHandle_t *oh, const int32_t n, const float *devA, const int32_t incx, const float *devB, const int32_t incy);
-template float ozblasRdot <float, double> (ozblasHandle_t *oh, const int32_t n, const float *devA, const int32_t incx, const float *devB, const int32_t incy);
+template __float128 ozblasRdot <__float128, double, double> (ozblasHandle_t *oh, const int32_t n, const __float128 *devA, const int32_t incx, const __float128 *devB, const int32_t incy);
+template __float128 ozblasRdot <__float128, float, float> (ozblasHandle_t *oh, const int32_t n, const __float128 *devA, const int32_t incx, const __float128 *devB, const int32_t incy);
+template double ozblasRdot <double, double, double> (ozblasHandle_t *oh, const int32_t n, const double *devA, const int32_t incx, const double *devB, const int32_t incy);
+template double ozblasRdot <double, float, float> (ozblasHandle_t *oh, const int32_t n, const double *devA, const int32_t incx, const double *devB, const int32_t incy);
+template float ozblasRdot <float, float, float> (ozblasHandle_t *oh, const int32_t n, const float *devA, const int32_t incx, const float *devB, const int32_t incy);
+template float ozblasRdot <float, double, double> (ozblasHandle_t *oh, const int32_t n, const float *devA, const int32_t incx, const float *devB, const int32_t incy);
 
