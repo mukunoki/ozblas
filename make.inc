@@ -35,10 +35,6 @@ MPLAPACK = yes
 # MPLAPACK does not work with SSL2 on Fugaku
 
 #--- CUDA Compute Capability -----------------
-CC30 = no
-CC32 = no
-CC35 = no
-CC37 = no
 CC50 = no
 CC52 = no
 CC53 = no
@@ -62,7 +58,8 @@ PREC_D_H = yes
 PREC_S_S = yes
 PREC_S_H = yes
 PREC_S_D = yes
-# -> D_H and S_H are only on GPUs and use Tensor Cores
+# -> D_H and S_H: GPU only
+# -> Q_D and Q_S: CPU only
 
 #--- Routine ---------------------------------
 # level-1

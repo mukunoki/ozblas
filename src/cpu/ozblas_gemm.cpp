@@ -27,8 +27,7 @@ int32_t ozblasRgemm (
 		oh->fastModeFlag = 0;
 	}
 	
-	TYPE1 *devTmp1, *devCTmp;
-	TYPE1 *devMax1;
+	TYPE1 *devTmp1, *devCTmp, *devMax1;
 	TYPE2 *devMax2, *devTmp21, *devTmp22, *devTmp23;
 	TYPE2 *devASplit, *devBSplit, *devCSplit;
 	TYPE2 fone = 1., fzero = 0.;
@@ -82,7 +81,11 @@ int32_t ozblasRgemm (
         ldt = getPitchSize (k);
 		if (!memCheck (oh)) break; // check if work-memory is enough or not
 		oh->memAddr = memAddrTmp;
-        if (mbk != 1 && nbk != 1) {
+        if (mbk == 1 && nbk == 1 && !memCheck (oh)) {
+            fprintf (OUTPUT, "OzBLAS error: out of memory\n");
+            exit (1);
+        }
+        if (mbk != 1 || nbk != 1) {
             if (mbk >= nbk) 
 		        mbk = ceil (mbk / 2.);
             else 
@@ -264,7 +267,7 @@ int32_t ozblasRgemm (
 			if (oh->useBatchedGemmFlag || oh->sumModeFlag < 2) {
 				t1 = timer();
 				int32_t sumorder = 1;
-				if (m == 1 && n == 1) { // DOT
+				if (m == 1 && n == 1) { 
 					sumorder = (oh->fastModeFlag == 0) ? 2 : 1; // DOT w/o fastmode -> 2
 					if (oh->splitEpsModeFlag == 2) maxlevel = (nSplitA-1) + (nSplitB*2-1);
 					if (ozblasGlobalSum (oh, 1, 1, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB*((oh->splitEpsModeFlag==2)?2:1),

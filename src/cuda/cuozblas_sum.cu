@@ -140,31 +140,6 @@ TYPE cuozblasNearsum (
 	return res;
 }
 
-template <typename TYPE1, typename TYPE2, typename TYPE3>
-__global__
-void cuozblasGlobalNearsumKernel (
-	const int32_t m,
-	const int32_t n,
-	const short *devASpExp,
-	const int32_t ldase,
-	const int32_t nSplitA,
-	const short *devBSpExp,
-	const int32_t ldbse,
-	const int32_t nSplitB,
-	TYPE3 *devCsplit,
-	const int32_t llsc,
-	const int32_t ldsc,
-	TYPE1 *devC,
-	const int32_t ldc,
-	const TYPE1 alpha,
-	const TYPE1 beta,
-	const int32_t maxlevel,
-	const int32_t sumOrder, 
-	int32_t *check
-) {
-	// dummy
-}
-
 template <typename TYPE>
 __global__
 void cuozblasGlobalNearsumKernel (
@@ -210,6 +185,32 @@ void cuozblasGlobalNearsumKernel (
 		t = cuozblasNearsum (ic, &devCsplit[addry * ldsc + addrx], llsc);
 		devC[addry * ldc + addrx] = fma (alpha, t, (beta * devC[addry * ldc + addrx]));
 	}
+}
+
+template <typename TYPE1, typename TYPE3>
+__global__
+void cuozblasGlobalNearsumKernel (
+	const int32_t m,
+	const int32_t n,
+	const short *devASpExp,
+	const int32_t ldase,
+	const int32_t nSplitA,
+	const short *devBSpExp,
+	const int32_t ldbse,
+	const int32_t nSplitB,
+	TYPE3 *devCsplit,
+	const int32_t llsc,
+	const int32_t ldsc,
+	TYPE1 *devC,
+	const int32_t ldc,
+	const TYPE1 alpha,
+	const TYPE1 beta,
+	const int32_t maxlevel,
+	const int32_t sumOrder, 
+	int32_t *check
+) {
+    printf ("dummy\n");
+	// dummy
 }
 
 // =========================================
@@ -272,7 +273,7 @@ void cuozblasGlobalFsumKernel (
 	}
 }
 
-template <typename TYPE1, typename TYPE2, typename TYPE3>
+template <typename TYPE1, typename TYPE3>
 __global__
 void cuozblasGlobalFsumKernel (
 	const int32_t m,
@@ -330,7 +331,7 @@ void cuozblasGlobalFsumKernel (
 	}
 }
 
-template <typename TYPE1, typename TYPE2, typename TYPE3>
+template <typename TYPE1, typename TYPE3>
 __host__
 int32_t cuozblasGlobalSum (
 	cuozblasHandle_t *oh,
@@ -368,22 +369,19 @@ int32_t cuozblasGlobalSum (
 			fprintf (OUTPUT, "OzBLAS error: Nearsum is not supported when TYPE1 != TYPE3.\n");
 			exit (1);
 		} else {
-			cuozblasGlobalNearsumKernel <TYPE1, TYPE2, TYPE3> <<< grid, threads >>> (m, n, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB,
+			cuozblasGlobalNearsumKernel <<< grid, threads >>> (m, n, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB,
 							  devCsplit, llsc, ldsc, devC, ldc, alpha, beta, maxlevel, sumOrder, &check);
 		}
 	} else { // Fsum
-		cuozblasGlobalFsumKernel <TYPE1, TYPE2, TYPE3> <<< grid, threads >>> (m, n, k, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB,
+		cuozblasGlobalFsumKernel <<< grid, threads >>> (m, n, k, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB,
 							  devCsplit, llsc, ldsc, devC, ldc, alpha, beta, maxlevel, sumOrder, &check);
 	}
 	return check;
 }
-template int32_t cuozblasGlobalSum <double, double, double> (cuozblasHandle_t *oh, const int32_t m, const int32_t n, const int32_t k, const short *devASpExp, const int32_t ldase, const int32_t nSplitA, const short *devBSpExp, const int32_t ldbse, const int32_t nSplitB, double *devCsplit, const int32_t llsc, const int32_t ldsc, double *devC, const int32_t ldc, const double alpha, const double beta, const int32_t maxlevel, const int32_t sumOrder);
-template int32_t cuozblasGlobalSum <double, float, float> (cuozblasHandle_t *oh, const int32_t m, const int32_t n, const int32_t k, const short *devASpExp, const int32_t ldase, const int32_t nSplitA, const short *devBSpExp, const int32_t ldbse, const int32_t nSplitB, float *devCsplit, const int32_t llsc, const int32_t ldsc, double *devC, const int32_t ldc, const double alpha, const double beta, const int32_t maxlevel, const int32_t sumOrder);
-template int32_t cuozblasGlobalSum <double, half, float> (cuozblasHandle_t *oh, const int32_t m, const int32_t n, const int32_t k, const short *devASpExp, const int32_t ldase, const int32_t nSplitA, const short *devBSpExp, const int32_t ldbse, const int32_t nSplitB, float *devCsplit, const int32_t llsc, const int32_t ldsc, double *devC, const int32_t ldc, const double alpha, const double beta, const int32_t maxlevel, const int32_t sumOrder);
-template int32_t cuozblasGlobalSum <float, float, float> (cuozblasHandle_t *oh, const int32_t m, const int32_t n, const int32_t k, const short *devASpExp, const int32_t ldase, const int32_t nSplitA, const short *devBSpExp, const int32_t ldbse, const int32_t nSplitB, float *devCsplit, const int32_t llsc, const int32_t ldsc, float *devC, const int32_t ldc, const float alpha, const float beta, const int32_t maxlevel, const int32_t sumOrder);
-template int32_t cuozblasGlobalSum <float, half, float> (cuozblasHandle_t *oh, const int32_t m, const int32_t n, const int32_t k, const short *devASpExp, const int32_t ldase, const int32_t nSplitA, const short *devBSpExp, const int32_t ldbse, const int32_t nSplitB, float *devCsplit, const int32_t llsc, const int32_t ldsc, float *devC, const int32_t ldc, const float alpha, const float beta, const int32_t maxlevel, const int32_t sumOrder);
-template int32_t cuozblasGlobalSum <float, double, double> (cuozblasHandle_t *oh, const int32_t m, const int32_t n, const int32_t k, const short *devASpExp, const int32_t ldase, const int32_t nSplitA, const short *devBSpExp, const int32_t ldbse, const int32_t nSplitB, double *devCsplit, const int32_t llsc, const int32_t ldsc, float *devC, const int32_t ldc, const float alpha, const float beta, const int32_t maxlevel, const int32_t sumOrder);
-
+template int32_t cuozblasGlobalSum <double, double> (cuozblasHandle_t *oh, const int32_t m, const int32_t n, const int32_t k, const short *devASpExp, const int32_t ldase, const int32_t nSplitA, const short *devBSpExp, const int32_t ldbse, const int32_t nSplitB, double *devCsplit, const int32_t llsc, const int32_t ldsc, double *devC, const int32_t ldc, const double alpha, const double beta, const int32_t maxlevel, const int32_t sumOrder);
+template int32_t cuozblasGlobalSum <double, float> (cuozblasHandle_t *oh, const int32_t m, const int32_t n, const int32_t k, const short *devASpExp, const int32_t ldase, const int32_t nSplitA, const short *devBSpExp, const int32_t ldbse, const int32_t nSplitB, float *devCsplit, const int32_t llsc, const int32_t ldsc, double *devC, const int32_t ldc, const double alpha, const double beta, const int32_t maxlevel, const int32_t sumOrder);
+template int32_t cuozblasGlobalSum <float, float> (cuozblasHandle_t *oh, const int32_t m, const int32_t n, const int32_t k, const short *devASpExp, const int32_t ldase, const int32_t nSplitA, const short *devBSpExp, const int32_t ldbse, const int32_t nSplitB, float *devCsplit, const int32_t llsc, const int32_t ldsc, float *devC, const int32_t ldc, const float alpha, const float beta, const int32_t maxlevel, const int32_t sumOrder);
+template int32_t cuozblasGlobalSum <float, double> (cuozblasHandle_t *oh, const int32_t m, const int32_t n, const int32_t k, const short *devASpExp, const int32_t ldase, const int32_t nSplitA, const short *devBSpExp, const int32_t ldbse, const int32_t nSplitB, double *devCsplit, const int32_t llsc, const int32_t ldsc, float *devC, const int32_t ldc, const float alpha, const float beta, const int32_t maxlevel, const int32_t sumOrder);
 
 // ==============================================
 // For Quadruple-precision
