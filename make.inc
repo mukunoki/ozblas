@@ -69,14 +69,14 @@ AXPY = yes
 
 # level-2
 GEMV = yes
-CSRMV = no
+CSRMV = yes
 # -> CSRMV requires MKL on CPUs
 
 # level-3
 GEMM = yes
 
 # solver
-CG = no
+CG = yes
 # -> CG requires CSRMV, DOT, NRM2, and AXPY
 
 ##############################################

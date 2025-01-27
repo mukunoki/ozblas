@@ -338,7 +338,6 @@ void ozblasGlobalFsumKernel (
 	const int32_t split3FlagB,
 	int32_t *check
 ) {
-printf ("sum mono\n");
 	#pragma omp parallel for
 	for (int32_t addry = 0; addry < n; addry++) {
 		for (int32_t addrx = 0; addrx < m; addrx++) {
@@ -390,7 +389,6 @@ void ozblasGlobalFsumKernel (
 	const int32_t split3FlagB,
 	int32_t *check
 ) {
-printf ("sum multi\n");
 	#pragma omp parallel for
 	for (int32_t addry = 0; addry < n; addry++) {
 		for (int32_t addrx = 0; addrx < m; addrx++) {

@@ -111,7 +111,7 @@ int32_t cuozblasRcsrmv (
 	t1 = cutimer();
 	ic = 0;
 	if (oh->splitEpsModeFlag == 2) maxlevel = (nSplitA-1) + (nSplitB*2-1);
-	if (cuozblasGlobalSum (oh, m, 1, devASpExp, ldase, nSplitA,
+	if (cuozblasGlobalSum (oh, m, 1, 1, devASpExp, ldase, nSplitA,
 						devBSpExp, 1, nSplitB*((oh->splitEpsModeFlag == 2)?2:1), devCSplit, ldcs, ldcs, devC, 1, alpha, beta, maxlevel, 3)) {
 		fprintf (OUTPUT, "OzBLAS error: sum is failed\n");
 		exit (1);

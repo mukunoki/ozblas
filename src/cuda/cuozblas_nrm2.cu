@@ -1,6 +1,6 @@
 #include "cuozblas_common.h"
 
-template <typename TYPE1, typename TYPE2>
+template <typename TYPE1, typename TYPE2, typename TYPE3>
 int32_t cuozblasRnrm2 (
 	cuozblasHandle_t *oh,
 	const int32_t n,
@@ -21,7 +21,7 @@ int32_t cuozblasRnrm2 (
 	}
 	cucounterInit (oh);
 	
-	cuozblasRdot <TYPE1, TYPE2, TYPE2> (oh, n, devX, incx, devX, incx, ret);
+	cuozblasRdot <TYPE1, TYPE2, TYPE3> (oh, n, devX, incx, devX, incx, ret);
 
 	// ------------------------------
 	// computation of SQRT (ret) on host
@@ -31,8 +31,10 @@ int32_t cuozblasRnrm2 (
 
 	return 0;
 }
-template int32_t cuozblasRnrm2 <double, double> (cuozblasHandle_t *oh, const int32_t n, const double* devX, const int32_t incx, double *ret);
-template int32_t cuozblasRnrm2 <double, float> (cuozblasHandle_t *oh, const int32_t n, const double* devX, const int32_t incx, double *ret);
-template int32_t cuozblasRnrm2 <float, float> (cuozblasHandle_t *oh, const int32_t n, const float* devX, const int32_t incx, float *ret);
-template int32_t cuozblasRnrm2 <float, double> (cuozblasHandle_t *oh, const int32_t n, const float* devX, const int32_t incx, float *ret);
+template int32_t cuozblasRnrm2 <double, double, double> (cuozblasHandle_t *oh, const int32_t n, const double* devX, const int32_t incx, double *ret);
+template int32_t cuozblasRnrm2 <double, float, float> (cuozblasHandle_t *oh, const int32_t n, const double* devX, const int32_t incx, double *ret);
+template int32_t cuozblasRnrm2 <double, half, float> (cuozblasHandle_t *oh, const int32_t n, const double* devX, const int32_t incx, double *ret);
+template int32_t cuozblasRnrm2 <float, float, float> (cuozblasHandle_t *oh, const int32_t n, const float* devX, const int32_t incx, float *ret);
+template int32_t cuozblasRnrm2 <float, half, float> (cuozblasHandle_t *oh, const int32_t n, const float* devX, const int32_t incx, float *ret);
+template int32_t cuozblasRnrm2 <float, double, double> (cuozblasHandle_t *oh, const int32_t n, const float* devX, const int32_t incx, float *ret);
 

@@ -59,11 +59,11 @@ int32_t ozblasRcg (
     oh->cg_numiter = 0;
 
 	TYPE2 *matASplit = ozblasRcsrmvSplitA <TYPE1, TYPE2> (oh, tranA, dimN, dimN, dimNNZ, descrA, matA, matArowptr);
-	nrmb = ozblasRnrm2 <TYPE1, TYPE2> (oh, dimN, vecB, 1); // nrmb = |b|
+	nrmb = ozblasRnrm2 <TYPE1, TYPE2, TYPE2> (oh, dimN, vecB, 1); // nrmb = |b|
 	// residual: r_0 = b-Ax_0
 	ozblasCopyVec (dimN, vecB, vecR);  // r = b
 	ozblasRcsrmv <TYPE1, TYPE2> (oh, tranA, dimN, dimN, dimNNZ, -1., descrA, (TYPE1*)matASplit, matAcolind, matArowptr, vecX, 1., vecR); // r = r-Ax (b-Ax)
-	dold = ozblasRdot <TYPE1, TYPE2> (oh, dimN, vecR, 1, vecR, 1); // dold = <r,r>
+	dold = ozblasRdot <TYPE1, TYPE2, TYPE2> (oh, dimN, vecR, 1, vecR, 1); // dold = <r,r>
 	resi = sqrt (dold); // resi = |r|
 	if (oh->verbose > 0) {
 		t2 = timer();
@@ -80,7 +80,7 @@ int32_t ozblasRcg (
         oh->cg_numiter++;
 
 		ozblasRcsrmv <TYPE1, TYPE2> (oh, tranA, dimN, dimN, dimNNZ, 1., descrA, (TYPE1*)matASplit, matAcolind, matArowptr, vecP, 0., vecQ); // q = Ap
-		tmp = ozblasRdot <TYPE1, TYPE2> (oh, dimN, vecP, 1, vecQ, 1); // tmp = <p,q>
+		tmp = ozblasRdot <TYPE1, TYPE2, TYPE2> (oh, dimN, vecP, 1, vecQ, 1); // tmp = <p,q>
         alpha = dold / tmp;
 
 		t0 = timer();
@@ -88,7 +88,7 @@ int32_t ozblasRcg (
 		ozblasRaxpy <TYPE1> (oh, dimN, -alpha, vecQ, 1, vecR, 1); // r = r-alpha*q
 		oh->t_AXPY_SCAL_total += timer() - t0;
 
-		dnew = ozblasRdot <TYPE1, TYPE2> (oh, dimN, vecR, 1, vecR, 1); // dnew = <r,r>
+		dnew = ozblasRdot <TYPE1, TYPE2, TYPE2> (oh, dimN, vecR, 1, vecR, 1); // dnew = <r,r>
 		resi = sqrt (dnew);
         beta = dnew / dold; // beta = dnew/dold
 		dold = dnew;

@@ -259,7 +259,7 @@ extern "C" {
 #if defined (CUOZBLAS)
 #define rcg				cuozblasRcg<__float128,double>
 #define rdot			cuozblasRdot<__float128,double,double>
-#define rnrm2			cuozblasRnrm2<__float128,double>
+#define rnrm2			cuozblasRnrm2<__float128,double,double>
 #define raxpy			cuozblasRaxpy<__float128>
 #define rgemv			cuozblasRgemv<__float128,double>
 #define rgemm			cuozblasRgemm<__float128,double,double>
@@ -268,7 +268,7 @@ extern "C" {
 #elif defined (OZBLAS)
 #define rcg				ozblasRcg<__float128,double>
 #define rdot			ozblasRdot<__float128,double,double>
-#define rnrm2			ozblasRnrm2<__float128,double>
+#define rnrm2			ozblasRnrm2<__float128,double,double>
 #define rgemv			ozblasRgemv<__float128,double,double>
 #define rgemm			ozblasRgemm<__float128,double,double>
 #define rcsrmv			ozblasRcsrmv<__float128,double>
@@ -284,7 +284,7 @@ extern "C" {
 #if defined (CUOZBLAS)
 #define rcg				cuozblasRcg<__float128,float>
 #define rdot			cuozblasRdot<__float128,float,float>
-#define rnrm2			cuozblasRnrm2<__float128,float>
+#define rnrm2			cuozblasRnrm2<__float128,float,float>
 #define raxpy			cuozblasRaxpy<__float128>
 #define rgemv			cuozblasRgemv<__float128,float,float>
 #define rgemm			cuozblasRgemm<__float128,float,float>
@@ -293,7 +293,7 @@ extern "C" {
 #elif defined (OZBLAS)
 #define rcg				ozblasRcg<__float128,float>
 #define rdot			ozblasRdot<__float128,float,float>
-#define rnrm2			ozblasRnrm2<__float128,float>
+#define rnrm2			ozblasRnrm2<__float128,float,float>
 #define rgemv			ozblasRgemv<__float128,float,float>
 #define rgemm			ozblasRgemm<__float128,float,float>
 #define rcsrmv			ozblasRcsrmv<__float128,float>
@@ -305,7 +305,7 @@ extern "C" {
 #if defined (CUOZBLAS)
 #define rcg				cuozblasRcg<double,float>
 #define rdot			cuozblasRdot<double,float,float>
-#define rnrm2			cuozblasRnrm2<double,float>
+#define rnrm2			cuozblasRnrm2<double,float,float>
 #define raxpy			cuozblasRaxpy<double>
 #define rgemv			cuozblasRgemv<double,float,float>
 #define rgemm			cuozblasRgemm<double,float,float>
@@ -314,7 +314,7 @@ extern "C" {
 #elif defined (OZBLAS)
 #define rcg				ozblasRcg<double,float>
 #define rdot			ozblasRdot<double,float,float>
-#define rnrm2			ozblasRnrm2<double,float>
+#define rnrm2			ozblasRnrm2<double,float,float>
 #define rgemv			ozblasRgemv<double,float,float>
 #define rgemm			ozblasRgemm<double,float,float>
 #define rcsrmv			ozblasRcsrmv<double,float>
@@ -326,7 +326,7 @@ extern "C" {
 #if defined (CUOZBLAS)
 #define rcg				cuozblasRcg<double,half>
 #define rdot			cuozblasRdot<double,half,float>
-#define rnrm2			cuozblasRnrm2<double,half>
+#define rnrm2			cuozblasRnrm2<double,half,float>
 #define raxpy			cuozblasRaxpy<double>
 #define rgemv			cuozblasRgemv<double,half,float>
 #define rgemm			cuozblasRgemm<double,half,float>
@@ -345,34 +345,13 @@ extern "C" {
 #endif
 
 // ================================================
-#elif defined (PREC_D_I)
-#if defined (CUOZBLAS)
-#define rcg				cuozblasRcg<double,int32_t>
-#define rdot			cuozblasRdot<double,int32_t,int32_t>
-#define rnrm2			cuozblasRnrm2<double,int32_t>
-#define raxpy			cuozblasRaxpy<double>
-#define rgemv			cuozblasRgemv<double,int32_t,int32_t>
-#define rgemm			cuozblasRgemm<double,int32_t,int32_t>
-#define rcsrmv			cuozblasRcsrmv<double,int32_t>
-#define rcsrmvSplitA	cuozblasRcsrmvSplitA<double,int32_t>
-#elif defined (OZBLAS)
-#define rcg				ozblasRcg<double,int32_t>
-#define rdot			ozblasRdot<double,int32_t,int32_t>
-#define rnrm2			ozblasRnrm2<double,int32_t>
-#define rgemv			ozblasRgemv<double,int32_t,int32_t>
-#define rgemm			ozblasRgemm<double,int32_t,int32_t>
-#define rcsrmv			ozblasRcsrmv<double,int32_t>
-#define rcsrmvSplitA	ozblasRcsrmvSplitA<double,int32_t>
-#endif
-
-// ================================================
 #elif defined (PREC_D_D)
 #if defined (CUOZBLAS)
 #define rcg				cuozblasRcg<double,double>
 #define rcgfr			cuozblasRcgfr
 #define rcgfr_x			cuozblasRcgfr_x
 #define rdot			cuozblasRdot<double,double,double>
-#define rnrm2			cuozblasRnrm2<double,double>
+#define rnrm2			cuozblasRnrm2<double,double,double>
 #define raxpy			cuozblasRaxpy<double>
 #define rgemv			cuozblasRgemv<double,double,double>
 //#define rgemm			cuozblasDgemm
@@ -382,7 +361,7 @@ extern "C" {
 #elif defined (OZBLAS)
 #define rcg				ozblasRcg<double,double>
 #define rdot			ozblasRdot<double,double,double>
-#define rnrm2			ozblasRnrm2<double,double>
+#define rnrm2			ozblasRnrm2<double,double,double>
 #define rgemv			ozblasRgemv<double,double,double>
 //#define rgemv			ozblasDgemv
 #define rgemm			ozblasRgemm<double,double,double>
@@ -411,7 +390,7 @@ extern "C" {
 #if defined (CUOZBLAS)
 #define rcg				cuozblasRcg<float,float>
 #define rdot			cuozblasRdot<float,float,float>
-#define rnrm2			cuozblasRnrm2<float,float>
+#define rnrm2			cuozblasRnrm2<float,float,float>
 #define raxpy			cuozblasRaxpy<float>
 #define rgemv			cuozblasRgemv<float,float,float>
 #define rgemm			cuozblasRgemm<float,float,float>
@@ -420,7 +399,7 @@ extern "C" {
 #elif defined (OZBLAS)
 #define rcg				ozblasRcg<float,float>
 #define rdot			ozblasRdot<float,float,float>
-#define rnrm2			ozblasRnrm2<float,float>
+#define rnrm2			ozblasRnrm2<float,float,float>
 #define rgemv			ozblasRgemv<float,float,float>
 #define rgemm			ozblasRgemm<float,float,float>
 #define rcsrmv			ozblasRcsrmv<float,float>
@@ -447,7 +426,7 @@ extern "C" {
 #if defined (CUOZBLAS)
 #define rcg				cuozblasRcg<float,half>
 #define rdot			cuozblasRdot<float,half,float>
-#define rnrm2			cuozblasRnrm2<float,half>
+#define rnrm2			cuozblasRnrm2<float,half,float>
 #define raxpy			cuozblasRaxpy<float>
 #define rgemv			cuozblasRgemv<float,half,float>
 #define rgemm			cuozblasRgemm<float,half,float>
@@ -470,7 +449,7 @@ extern "C" {
 #if defined (CUOZBLAS)
 #define rcg				cuozblasRcg<float,double>
 #define rdot			cuozblasRdot<float,double,double>
-#define rnrm2			cuozblasRnrm2<float,double>
+#define rnrm2			cuozblasRnrm2<float,double,double>
 #define raxpy			cuozblasRaxpy<float>
 #define rgemv			cuozblasRgemv<float,double,double>
 #define rgemm			cuozblasRgemm<float,double,double>
@@ -478,8 +457,8 @@ extern "C" {
 #define rcsrmvSplitA	cuozblasRcsrmvSplitA<float,double>
 #elif defined (OZBLAS)
 #define rcg				ozblasRcg<float,double>
-#define rdot			ozblasRdot<float,double, double>
-#define rnrm2			ozblasRnrm2<float,double>
+#define rdot			ozblasRdot<float,double,double>
+#define rnrm2			ozblasRnrm2<float,double,double>
 #define rgemv			ozblasRgemv<float,double,double>
 #define rgemm			ozblasRgemm<float,double,double>
 #define rcsrmv			ozblasRcsrmv<float,double>

@@ -62,11 +62,11 @@ int32_t cuozblasRcg (
     oh->cg_numiter = 0;
 
 	TYPE2 *matASplit = cuozblasRcsrmvSplitA <TYPE1, TYPE2> (oh, tranA, dimN, dimN, dimNNZ, descrA, matA, matArowptr); // splitting only
-	cuozblasRnrm2 <TYPE1, TYPE2> (oh, dimN, vecB, 1, &nrmb); // nrmb = |b|
+	cuozblasRnrm2 <TYPE1, TYPE2, TYPE2> (oh, dimN, vecB, 1, &nrmb); // nrmb = |b|
 	// residual: r_0 = b-Ax_0
 	cuozblasCopyVec (dimN, vecB, vecR);  // r = b
 	cuozblasRcsrmv <TYPE1, TYPE2> (oh, tranA, dimN, dimN, dimNNZ, -1., descrA, (TYPE1*)matASplit, matAcolind, matArowptr, vecX, 1., vecR); // r = r-Ax (b-Ax)
-	cuozblasRdot <TYPE1, TYPE2> (oh, dimN, vecR, 1, vecR, 1, &dold); // dold = <r,r>
+	cuozblasRdot <TYPE1, TYPE2, TYPE2> (oh, dimN, vecR, 1, vecR, 1, &dold); // dold = <r,r>
 	resi = sqrt (dold); // resi = |r|
 	if (oh->verbose > 0) {
 		t2 = cutimer();
@@ -83,7 +83,7 @@ int32_t cuozblasRcg (
         oh->cg_numiter++;
 
 		cuozblasRcsrmv <TYPE1, TYPE2> (oh, tranA, dimN, dimN, dimNNZ, 1., descrA, (TYPE1*)matASplit, matAcolind, matArowptr, vecP, 0., vecQ); // q = Ap
-		cuozblasRdot <TYPE1, TYPE2> (oh, dimN, vecP, 1, vecQ, 1, &tmp); // tmp = <p,q>
+		cuozblasRdot <TYPE1, TYPE2, TYPE2> (oh, dimN, vecP, 1, vecQ, 1, &tmp); // tmp = <p,q>
         alpha = dold / tmp;
 
 		t0 = cutimer();
@@ -91,7 +91,7 @@ int32_t cuozblasRcg (
 		cuozblasRaxpy <TYPE1> (oh, dimN, -alpha, vecQ, 1, vecR, 1); // r = r-alpha*q
 		oh->t_AXPY_SCAL_total += cutimer() - t0;
 
-		cuozblasRdot <TYPE1, TYPE2> (oh, dimN, vecR, 1, vecR, 1, &dnew); // dnew = <r,r>
+		cuozblasRdot <TYPE1, TYPE2, TYPE2> (oh, dimN, vecR, 1, vecR, 1, &dnew); // dnew = <r,r>
 		resi = sqrt (dnew);
         beta = dnew / dold; // beta = dnew/dold
 		dold = dnew;

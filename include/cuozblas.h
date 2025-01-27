@@ -70,7 +70,7 @@ extern void cuozblasDestroy (cuozblasHandle_t*);
 // BLAS template
 // ================================
 
-template <typename TYPE1, typename TYPE2> int32_t cuozblasRnrm2 (cuozblasHandle_t *oh, const int32_t n, const TYPE1* devX, const int32_t incx, TYPE1* ret);
+template <typename TYPE1, typename TYPE2, typename TYPE3> int32_t cuozblasRnrm2 (cuozblasHandle_t *oh, const int32_t n, const TYPE1* devX, const int32_t incx, TYPE1* ret);
 template <typename TYPE> int32_t cuozblasRaxpy (cuozblasHandle_t *oh, const int32_t n, const TYPE alpha, const TYPE *devX, const int32_t incx, TYPE *devY, const int32_t incy);
 template <typename TYPE1, typename TYPE2, typename TYPE3> int32_t cuozblasRdot (cuozblasHandle_t *oh, const int32_t n, const TYPE1 *devA, const int32_t incx, const TYPE1 *devB, const int32_t incy, TYPE1 *ret);
 template <typename TYPE1, typename TYPE2, typename TYPE3> int32_t cuozblasRgemv (cuozblasHandle_t *oh, const char tranA, const int32_t m, const int32_t n, const TYPE1 alpha, const TYPE1 *devA, const int32_t lda, const TYPE1 *devB, const int32_t incx, const TYPE1 beta, TYPE1 *devC, const int32_t incy);

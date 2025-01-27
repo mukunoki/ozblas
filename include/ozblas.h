@@ -67,7 +67,7 @@ extern void ozblasDestroy (ozblasHandle_t*);
 // BLAS template
 // ================================
 
-template <typename TYPE1, typename TYPE2> TYPE1 ozblasRnrm2 (ozblasHandle_t *oh, const int n, const TYPE1* devX, const int incx);
+template <typename TYPE1, typename TYPE2, typename TYPE3> TYPE1 ozblasRnrm2 (ozblasHandle_t *oh, const int n, const TYPE1* devX, const int incx);
 template <typename TYPE> int32_t ozblasRaxpy (ozblasHandle_t *oh, const int32_t n, const TYPE alpha, const TYPE *devX, const int32_t incx, TYPE *devY, const int32_t incy);
 template <typename TYPE1, typename TYPE2, typename TYPE3> TYPE1 ozblasRdot (ozblasHandle_t *oh, const int32_t n, const TYPE1 *devA, const int32_t incx, const TYPE1 *devB, const int32_t incy);
 template <typename TYPE1, typename TYPE2, typename TYPE3> int32_t ozblasRgemv (ozblasHandle_t *oh, const char tranA, const int32_t m, const int32_t n, const TYPE1 alpha, const TYPE1 *devA, const int32_t lda, const TYPE1 *devB, const int32_t incx, const TYPE1 beta, TYPE1 *devC, const int32_t incy);

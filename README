@@ -1,5 +1,5 @@
-OzBLAS 1.5a04
-January 17, 2025
+OzBLAS 1.6a
+January 27, 2025
 Daichi Mukunoki (mukunoki@cc.nagoya-u.ac.jp)
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -11,10 +11,6 @@ of our implementation may depend on the compiler
 (options) and the version of the libraries used
 internally. If you want to use it in real applications,
 please contact us.
-
-As of Jan 2025, 
-Some bugs in CPU version have been found and corrected, but GPU version has not yet.
-
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 [Overview]
@@ -56,7 +52,7 @@ See examples (with _quick_test.sh) in 'testing' directory.
 - incx and incy are not supported.
 
 [History]
-v1.5a04
+v1.6a
 Bug fix on CPU version (for some specific inputs with small work memory)
 Memory reduction
 
