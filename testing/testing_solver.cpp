@@ -1,9 +1,8 @@
 #include "testing_common.h"
 #include "testing_common.cpp"
 
-int32_t
-main (int32_t argc, char **argv)
-{
+int32_t main (int32_t argc, char **argv) {
+
 // library setup ------------------------------
 	#if defined (CUOZBLAS)
 	cusparseMatDescr_t descrA;
@@ -74,6 +73,8 @@ main (int32_t argc, char **argv)
 // --------------------------------------------
 
 	print_info2 (&th);
+	if (ha.verbose == 0) 
+		printf ("#matrix\tm\tn\tnnz\titer\tsec\tgflops\tgbs\ttrueres\t(hex)\tSpMV/MM\tDOT/NRM\tAXPY/SCAL\tSum\tSpltVec\tSpltMat\tOther\n");
 
 // evaluation ---------------------------------
 	FP_TYPE *dev_A = hst_A;
@@ -97,7 +98,8 @@ main (int32_t argc, char **argv)
 	cublasSetVector (n, sizeType, hst_B, 1, dev_B, 1);
 	#endif
 
-	printf ("## %s\t%d\t%d\t%d", th.mtx_file, m, n, nnz);
+    if (th.verbose) printf ("## ");
+	printf ("%s\t%d\t%d\t%d\t", th.mtx_file, m, n, nnz);
 	double t0 = gettime ();
 	trgRcg (ha, th.tranA, n, nnz, descrA, dev_A, dev_Colind, dev_Rowptr, dev_B, dev_X, th.maxiter, th.tol);
 	double t1 = gettime () - t0;
@@ -127,96 +129,61 @@ main (int32_t argc, char **argv)
 			printf ("\n## iter\t||r_i||/||b||\t||b-Ax||/||b||\n");
 		else
 			printf ("\n## iter\t||r_i||/||b||\ttime(sec)\n");
-		for (int32_t i = 0; i <= (int32_t)ceil((float)ha.cg_numiter/ha.verbose); i++) {
+        for (int32_t i = 0; i <= (int32_t)ceil((float)ha.cg_numiter/ha.verbose); i++) {
 			FP_TYPE* ptr1 = (FP_TYPE*)ha.cg_verbose1+i;
 			if (ha.trueresFlag) {
 				FP_TYPE* ptr2 = (FP_TYPE*)ha.cg_verbose2+i;
-				#if defined (PREC_Q) && !defined (ARM)
-				char buf1[128], buf2[128];
-				quadmath_snprintf(buf1, sizeof(buf1), "%.3Qe", ptr1[0]); 
-				quadmath_snprintf(buf2, sizeof(buf2), "%.3Qe", ptr2[0]); 
-				printf ("%d\t%s\t%s\n", i*ha.verbose, buf1, buf2);
-				#else
-				printf ("%d\t%1.3e\t%1.3e\n", i*ha.verbose, toDouble(ptr1[0]), toDouble(ptr2[0]));
-				#endif
+			    printf ("%d\t%1.3e\t%1.3e\n", i*ha.verbose, toDouble(ptr1[0]), toDouble(ptr2[0]));
 			} else {
 				double* ptr2 = (double*)ha.cg_verbose2+i;
-				#if defined (PREC_Q) && !defined (ARM)
-				char buf1[128];
-				quadmath_snprintf(buf1, sizeof(buf1), "%.3Qe", ptr1[0]); 
-				printf ("%d\t%s\t%1.3e\n", i*ha.verbose, buf1, ptr2[0]);
-				#else
-				printf ("%d\t%1.3e\t%1.3e\n", i*ha.verbose, toDouble(ptr1[0]), toDouble(ptr2[0]));
-				#endif
+			    printf ("%d\t%1.3e\t%1.3e\n", i*ha.verbose, toDouble(ptr1[0]), toDouble(ptr2[0]));
 			}
 		}
 	}
+
 	// below, O(n) and O(nnz) alone are considered
 	// in while-loop, 1SpMV, 2DOT, 3AXPY, 1SCAL
 	double gflops = 1.e-9 * (2. * nnz + 12. * n) * ha.cg_numiter / t1;
 	// Flops: SpMV: 2nnz+n (note: beta==0 in while loop) + DOT: 2*2n + AXPY: 3*2n + SCAL: n
 	double gbs = 1.e-9 * (12. * nnz + 140. * n) * ha.cg_numiter / t1;
 	// B/s: SpMV: 8(nnz+2n)+4(nnz+n) + DOT: 2*8*2n + AXPY: 8*3*3n + SCAL: 8*2n
-	printf ("## total time =\t%1.3e", t1);
-	if (ha.trueresFlag) printf (" (including true residual computation)");
-	printf ("\n");
-	printf ("## total iter =\t%d\n", ha.cg_numiter);
-	printf ("## time per iter =\t%1.3e\n", t1/ha.cg_numiter);
-	printf ("## GFlops/s =\t%1.3e\n", gflops);
-	printf ("## GB/s =\t%1.3e\n", gbs);
-	FP_TYPE res = 0.;
-	if (ha.verbose > 0) {
-		FP_TYPE* ptr = (FP_TYPE*)ha.cg_verbose1 + (int32_t)ceil((float)ha.cg_numiter/ha.verbose);
-		res = ptr[0];//ha.cg_verbose1[(int32_t)ceil((float)ha.cg_numiter/ha.verbose)];
-		#if defined (PREC_Q) && !defined (ARM)
-		char buf[128];
-		quadmath_snprintf(buf, sizeof(buf), "%.3Qe", res); 
-		printf ("## ||r_i||/||b|| =\t%s\n", buf);
-		#else
-		printf ("## ||r_i||/||b|| =\t%1.3e\n", toDouble(res));
-		#endif
-	}
-
-	#if defined (PREC_Q) && !defined (ARM)
-	char buf[128];
-	quadmath_snprintf(buf, sizeof(buf), "%.3Qe", trueres); 
-	printf ("## ||b-Ax||/||b|| =\t%s\n", buf);
-	#else
-	printf ("## ||b-Ax||/||b|| =\t%1.3e\n", toDouble(trueres));
-	#endif
+   	FP_TYPE res = 0.;
+	if (!th.nodisp) {
+	    printf ("## total time =\t%1.3e", t1);
+    	if (ha.trueresFlag) printf (" (including true residual computation)");
+    	printf ("\n");
+    	printf ("## total iter =\t%d\n", ha.cg_numiter);
+    	printf ("## time per iter =\t%1.3e\n", t1/ha.cg_numiter);
+    	printf ("## GFlops/s =\t%1.3e\n", gflops);
+    	printf ("## GB/s =\t%1.3e\n", gbs);
+    	char buf[128];
+    	if (ha.verbose > 0) 
+    		printf ("## ||r_i||/||b|| =\t%1.3e\n", toDouble(res));
+    	printf ("## ||b-Ax||/||b|| =\t%1.3e\n", toDouble(trueres));
+    }
 	
-	double tloc_SpMV_SpMM_total = ha.t_SpMV_SpMM_total;
-	double tloc_DOT_NRM2_total = ha.t_DOT_NRM2_total;
-	double tloc_AXPY_SCAL_total = ha.t_AXPY_SCAL_total;
-	double tloc_Sum_total = ha.t_Sum_total;
-	double tloc_SplitVec_total = ha.t_SplitVec_total;
-	double tloc_SplitMat_total = ha.t_SplitMat_total;
-	double tloc_Other_total = t1-tloc_SpMV_SpMM_total -tloc_DOT_NRM2_total -tloc_AXPY_SCAL_total
-								-tloc_Sum_total -tloc_SplitVec_total -tloc_SplitMat_total;
-	printf ("%1.3e\t", tloc_SpMV_SpMM_total);
-	printf ("%1.3e\t", tloc_DOT_NRM2_total);
-	printf ("%1.3e\t", tloc_AXPY_SCAL_total);
-	printf ("%1.3e\t", tloc_Sum_total);
-	printf ("%1.3e\t", tloc_SplitVec_total);
-	printf ("%1.3e\t", tloc_SplitMat_total);
-	printf ("%1.3e\t#(SpMV/MM, DOT/NRM, AXPY/SCAL, Sum, SpltVec, SpltMat, Other)\n", tloc_Other_total);
-
-	#if defined (PREC_Q) && !defined (ARM)
-	char buf1[128], buf2[128], buf3[128], buf4[128];
-	quadmath_snprintf(buf1, sizeof(buf1), "%.3Qe", res);
-	quadmath_snprintf(buf2, sizeof(buf2), "%Qa", res);
-	quadmath_snprintf(buf3, sizeof(buf3), "%.3Qe", trueres);
-	quadmath_snprintf(buf4, sizeof(buf4), "%Qa", trueres);
-	if (ha.verbose > 0) 
-		printf ("%d\t%s\t(%s)\t%s\t(%s)\t%1.3e\t#(iter, res, trueres, sec)\n", ha.cg_numiter, buf1, buf2, buf3, buf4, t1);
-	else
-		printf ("%d\t%s\t(%s)\t%1.3e\t#(iter, trueres, sec)\n", ha.cg_numiter, buf3, buf4, t1);
-	#else
-	if (ha.verbose > 0) 
-		printf ("%d\t%1.3e\t(%a)\t%1.3e\t(%a)\t%1.3e\t%1.3e\t%1.3e\t#(iter, res, trueres, sec, gflops, gbs)\n", ha.cg_numiter, toDouble(res), toDouble(res), toDouble(trueres), toDouble(trueres), t1, gflops, gbs);
-	else
-		printf ("%d\t%1.3e\t(%a)\t%1.3e\t%1.3e\t%1.3e\t#(iter, trueres, sec, gflops, gbs)\n", ha.cg_numiter, toDouble(trueres), toDouble(trueres), t1, gflops, gbs);
-	#endif
+	if (ha.verbose == 0) {
+    	double tloc_SpMV_SpMM_total = ha.t_SpMV_SpMM_total;
+    	double tloc_DOT_NRM2_total = ha.t_DOT_NRM2_total;
+    	double tloc_AXPY_SCAL_total = ha.t_AXPY_SCAL_total;
+    	double tloc_Sum_total = ha.t_Sum_total;
+    	double tloc_SplitVec_total = ha.t_SplitVec_total;
+    	double tloc_SplitMat_total = ha.t_SplitMat_total;
+    	double tloc_Other_total = t1 -tloc_SpMV_SpMM_total -tloc_DOT_NRM2_total -tloc_AXPY_SCAL_total
+    								 -tloc_Sum_total -tloc_SplitVec_total -tloc_SplitMat_total;
+        printf ("%d\t", ha.cg_numiter);
+		printf ("%1.3e\t", t1);
+		printf ("%1.3e\t", gflops);
+		printf ("%1.3e\t", gbs);
+		printf ("%1.3e\t(%a)\t", toDouble(trueres), toDouble(trueres));
+    	printf ("%1.3e\t", tloc_SpMV_SpMM_total);
+    	printf ("%1.3e\t", tloc_DOT_NRM2_total);
+    	printf ("%1.3e\t", tloc_AXPY_SCAL_total);
+    	printf ("%1.3e\t", tloc_Sum_total);
+    	printf ("%1.3e\t", tloc_SplitVec_total);
+    	printf ("%1.3e\t", tloc_SplitMat_total);
+    	printf ("%1.3e\n", tloc_Other_total);
+    }
 // --------------------------------------------
 
 // shutdown -----------------------------------

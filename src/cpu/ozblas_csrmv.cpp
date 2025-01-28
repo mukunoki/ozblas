@@ -246,7 +246,8 @@ TYPE2 *ozblasRcsrmvSplitA (
 		if (nSplitAOld == nSplitAlocal) oh->splitShift = 1;
 		// do again with the optimal shift-size
 		nSplitAlocal = ozblasSplitSparse (oh, 'r', m, devA, devArowptr, devATmp, devASplit, ldas, devASpExp, ldase, devAmax);
-		printf ("\n## splitShift = %d (%d-bit), nSplitA = %d -> %d\n", oh->splitShift, (int)log2((double)oh->splitShift), nSplitAlocalOld, nSplitAlocal);
+        if (oh->verbose)
+    		printf ("\n## splitShift = %d (%d-bit), nSplitA = %d -> %d\n", oh->splitShift, (int)log2((double)oh->splitShift), nSplitAlocalOld, nSplitAlocal);
 	}
 	// ------------------------------------------------------------------------
 	oh->nSplitA_ = oh->nSplitA = nSplitAlocal;

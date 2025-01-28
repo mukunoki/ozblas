@@ -249,23 +249,23 @@ void testingCreate (
 	th->maxiter = 100;
 	th->trueresFlag = 0;
 	th->verbose = 10;
-	th->tol = 1e-6;
+	th->tol = 1e-8;
 	th->trunc = 0;
 
 	// ozblasHandle_t
 	th->nSplitMax = 0;
-	th->splitModeFlag = 1;
+	th->splitModeFlag = 0;
 	th->fastModeFlag = 0;
-	th->reproModeFlag = 1;
+	th->reproModeFlag = 0;
 	th->sumModeFlag = 0;
-	th->useBatchedGemmFlag = 1;
-	th->splitEpsModeFlag = 1;
+	th->useBatchedGemmFlag = 0;
+	th->splitEpsModeFlag = 0;
 	th->precxFlag = 0;
 
 	// dim
-	th->dim_start	= 1;
-	th->dim_stop	= 16;
-	th->dim_step	= 1;
+	th->dim_start	= 16;
+	th->dim_stop	= 128;
+	th->dim_step	= 16;
 	th->dim_m_dev = 0;
 	th->dim_n_dev = 0;
 	th->dim_k_dev = 0;
