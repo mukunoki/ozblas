@@ -167,7 +167,7 @@ main (int32_t argc, char **argv)
 		cublasSetMatrix(rda_dev, cda_dev, sizeType, hst_A, lda_hst, dev_A, lda_dev);
 		cublasSetMatrix(rdb_dev, cdb_dev, sizeType, hst_B, ldb_hst, dev_B, ldb_dev);
 		#endif
-		if (!th.nodisp) printf ("%d\t%d\t%d", th.dim_m_dev, th.dim_n_dev, th.dim_k_dev);
+		printf ("%d\t%d\t%d", th.dim_m_dev, th.dim_n_dev, th.dim_k_dev);
 		get_routine_theoretial_performance (&th);
 
 		// execution ---------------------------------
@@ -254,12 +254,11 @@ main (int32_t argc, char **argv)
 
 		#if defined (CUOZBLAS) || defined (OZBLAS)
 		print_info3 (&th, &ha);
-		#else
-		printf ("\n");
 		#endif
 
 		}
 		dim_dev_increment (&th);
+		printf ("\n");
 		if (th.dim_m_const && th.dim_n_const && th.dim_k_const) break;
 	}
 // --------------------------------------------

@@ -119,7 +119,8 @@ main (int32_t argc, char **argv)
 	// initialize (0:const, 1:drand48, 2:phi, 3:erange)
 	mublasInitMat (&th, 1, 1, 0, &alpha, 1., 0, 0, 0);
 	mublasInitMat (&th, 1, 1, 0, &beta, 0., 0, 0, 0);
-	mublasInitMat (&th, n, 1, 0, hst_X, th.phi, 1, 0, 1);
+	mublasInitMat (&th, n, 1, 0, hst_X, 1., 1, 0, 1);
+	//mublasInitMat (&th, n, 1, 0, hst_X, th.phi, 1, 0, 1);
 	mublasInitMat (&th, m, 1, 0, hst_Y, 0., 0, 0, 0);
 // --------------------------------------------
 
@@ -145,7 +146,7 @@ main (int32_t argc, char **argv)
 	cublasSetVector (m, sizeType, hst_Y, 1, dev_Y, 1);
 	#endif
 
-	printf ("%s\t%d\t%d\t%d\t", th.mtx_file, m, n, nnz);
+	printf ("%s\t%d\t%d\t%d", th.mtx_file, m, n, nnz);
 	th.dim_n_dev = n;
 	th.dim_m_dev = m;
 	th.dim_k_dev = nnz;
@@ -244,9 +245,8 @@ main (int32_t argc, char **argv)
 	#if defined (CUOZBLAS) || defined (OZBLAS)
 	ozblasDestroy (&ha);
 	print_info3 (&th, &ha);
-	#else
-	printf ("\n");
 	#endif
+	printf ("\n");
 // --------------------------------------------
 	destroy_sparse_matrix(hst_A__);
 

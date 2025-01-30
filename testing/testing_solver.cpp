@@ -72,7 +72,7 @@ int32_t main (int32_t argc, char **argv) {
 
 // --------------------------------------------
 
-	print_info2 (&th);
+	//print_info2 (&th);
 	if (ha.verbose == 0) 
 		printf ("#matrix\tm\tn\tnnz\titer\tsec\tgflops\tgbs\ttrueres\t(hex)\tSpMV/MM\tDOT/NRM\tAXPY/SCAL\tSum\tSpltVec\tSpltMat\tOther\n");
 
@@ -147,20 +147,6 @@ int32_t main (int32_t argc, char **argv) {
 	// Flops: SpMV: 2nnz+n (note: beta==0 in while loop) + DOT: 2*2n + AXPY: 3*2n + SCAL: n
 	double gbs = 1.e-9 * (12. * nnz + 140. * n) * ha.cg_numiter / t1;
 	// B/s: SpMV: 8(nnz+2n)+4(nnz+n) + DOT: 2*8*2n + AXPY: 8*3*3n + SCAL: 8*2n
-   	FP_TYPE res = 0.;
-	if (!th.nodisp) {
-	    printf ("## total time =\t%1.3e", t1);
-    	if (ha.trueresFlag) printf (" (including true residual computation)");
-    	printf ("\n");
-    	printf ("## total iter =\t%d\n", ha.cg_numiter);
-    	printf ("## time per iter =\t%1.3e\n", t1/ha.cg_numiter);
-    	printf ("## GFlops/s =\t%1.3e\n", gflops);
-    	printf ("## GB/s =\t%1.3e\n", gbs);
-    	char buf[128];
-    	if (ha.verbose > 0) 
-    		printf ("## ||r_i||/||b|| =\t%1.3e\n", toDouble(res));
-    	printf ("## ||b-Ax||/||b|| =\t%1.3e\n", toDouble(trueres));
-    }
 	
 	if (ha.verbose == 0) {
     	double tloc_SpMV_SpMM_total = ha.t_SpMV_SpMM_total;
@@ -184,6 +170,19 @@ int32_t main (int32_t argc, char **argv) {
     	printf ("%1.3e\t", tloc_SplitMat_total);
     	printf ("%1.3e\n", tloc_Other_total);
     }
+
+	if (!th.nodisp) {
+	    printf ("## total time =\t%1.3e", t1);
+    	if (ha.trueresFlag) printf (" (including true residual computation)");
+    	printf ("\n");
+    	printf ("## total iter =\t%d\n", ha.cg_numiter);
+    	printf ("## time per iter =\t%1.3e\n", t1/ha.cg_numiter);
+    	printf ("## GFlops/s =\t%1.3e\n", gflops);
+    	printf ("## GB/s =\t%1.3e\n", gbs);
+    	char buf[128];
+    	printf ("## ||b-Ax||/||b|| =\t%1.3e\n", toDouble(trueres));
+    }
+
 // --------------------------------------------
 
 // shutdown -----------------------------------

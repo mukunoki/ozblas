@@ -891,12 +891,13 @@ void mublasCheckMatrix (
 		}
     }
 	#endif
-	if (!th->nodisp) {
+//	if (!th->nodisp) {
 		if (nicnt > 0)  
-			printf("\tNan/Inf\t%zd", nicnt);
+			printf("\tNan/Inf\t%zd\t", nicnt);
 		else
-			printf("\t%1.4e\t%zd", toDouble (rerrmax), errcnt);
-	} else {
+			printf("\t%1.4e\t%zd\t", toDouble (rerrmax), errcnt);
+//	}
+    /*else {
 		printf ("%d\t%d\t%d", th->dim_m_dev, th->dim_n_dev, th->dim_k_dev);
 		if (th->sumModeFlag == 1) {
 			if (errcnt == 0 && nicnt == 0)
@@ -922,6 +923,7 @@ void mublasCheckMatrix (
 				printf ("\t%1.4e (%a)\t%zd\n", toDouble (rerrmax), toDouble (rerrmax), errcnt);
 		}
 	}
+    */
 }
 
 // print routine -------------------------------------------------
@@ -1089,12 +1091,12 @@ void print_info2 (
 		} else {
 			printf("\terr(rlt.max)\tnum-err");
 		}
-		#if defined (CUOZBLAS) || defined (OZBLAS)
-		printf("\t*t_SpltA\t*t_SpltB\t*t_Comp \t*t_Sum  \t*t_Other\t*t_Total\t*#sA\t*#sB\t*#GEMMs\t*Mem[GB]\tmbk\tnbk");
 		#endif
-		#endif
-		printf("\n");
 	}
+	#if defined (CUOZBLAS) || defined (OZBLAS)
+	printf("\t*t_SpltA\t*t_SpltB\t*t_Comp \t*t_Sum  \t*t_Other\t*t_Total\t*#sA\t*#sB\t*#GEMMs\t*Mem[GB]\tmbk\tnbk");
+	#endif
+    printf("\n");
 }
 
 #if defined (CUOZBLAS) || defined (OZBLAS)
@@ -1102,13 +1104,13 @@ void print_info3 (
 	testingHandle_t *th,
 	ozblasHandle_t *ha
 ) {
-	if (!th->nodisp) {
+//	if (!th->nodisp) {
 		double t_other = ha->t_total - ha->t_SplitA - ha->t_SplitB - ha->t_comp - ha->t_sum;
 		printf ("\t%1.2e\t%1.2e\t%1.2e\t%1.2e\t%1.2e\t%1.2e", ha->t_SplitA, ha->t_SplitB, ha->t_comp, ha->t_sum, t_other, ha->t_total);
 		printf ("\t%1.1f\t%1.1f\t%1.1f\t%1.1e", ha->nSplitA, ha->nSplitB, ha->nSplitC, ha->memAddr*1.e-9);
 		printf ("\t%d\t%d", ha->mbk, ha->nbk);
-		printf ("\n");
-	}
+	//	printf ("\n");
+//	}
 }
 #endif
 

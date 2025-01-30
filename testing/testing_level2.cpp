@@ -142,7 +142,7 @@ main (int32_t argc, char **argv)
 		// ---------------------------------------------
 		#endif
 
-		if (!th.nodisp) printf ("%d\t%d\t--", th.dim_m_dev, th.dim_n_dev);
+		printf ("%d\t%d\t--", th.dim_m_dev, th.dim_n_dev);
 		get_routine_theoretial_performance (&th);
 
 		// execution ---------------------------------
@@ -228,12 +228,11 @@ main (int32_t argc, char **argv)
 
 		#if defined (CUOZBLAS) || defined (OZBLAS)
 		print_info3 (&th, &ha);
-		#else
-		printf ("\n");
 		#endif
 
 		}
 		dim_dev_increment (&th);
+		printf ("\n");
 		if (th.dim_m_const && th.dim_n_const) break;
 	}
 // --------------------------------------------

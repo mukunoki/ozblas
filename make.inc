@@ -25,6 +25,7 @@ CUDA = yes
 
 #--- BLAS (CPU) ------------------------------
 #CPU_BLAS: OpenBLAS, MKL
+#CPU_BLAS = MKL
 CPU_BLAS = OpenBLAS
 # CSRMV & CG require MKL because OpenBLAS does not have sparse routines.
 

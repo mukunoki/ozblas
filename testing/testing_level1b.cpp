@@ -101,7 +101,7 @@ main (int32_t argc, char **argv)
 		cublasSetVector(th.dim_n_dev * th.incy, sizeType, hst_Y, 1, dev_Y, 1);
 		#endif
 
-		if (!th.nodisp) printf ("--\t%d\t--", th.dim_n_dev);
+		printf ("--\t%d\t--", th.dim_n_dev);
 		get_routine_theoretial_performance (&th);
 		// execution ---------------------------------
 		if (th.mode == 'p') {
@@ -188,12 +188,11 @@ main (int32_t argc, char **argv)
 
 		#if defined (CUOZBLAS) || defined (OZBLAS)
 		print_info3 (&th, &ha);
-		#else
-		printf ("\n");
 		#endif
 
 		}
 		dim_dev_increment (&th);
+		printf ("\n");
 		if (th.dim_m_const && th.dim_n_const && th.dim_k_const) break;
 	}
 // --------------------------------------------
