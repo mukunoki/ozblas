@@ -20,7 +20,7 @@ CXX = g++
 
 #--- CPU (OzBLAS) / CUDA (cuOzBLAS) ----------
 CPU  = yes
-CUDA = yes
+CUDA = no
 # CPU must be yes also for CUDA
 
 #--- BLAS (CPU) ------------------------------
