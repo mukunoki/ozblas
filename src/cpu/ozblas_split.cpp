@@ -439,12 +439,8 @@ int32_t ozblasSplit3 (
 			devTmpD1[addry * ldt1 + addrx] = tmp1d;
 			devTmpD2[addry * ldt2 + addrx] = tmpd;
 			devTmpD3[addry * ldt3 + addrx] = tmp3d;
-
-     //       devSplit[addry * lds + addrx] = (TYPE2)devInput[addry * ldi + addrx];
 		}
 	}
-    //int32_t s=1;
-				
 	// FindMax^(0)
 	ozblasFindMaxDevice (major, m, n, devTmpD1, ldt1, devMax);
 	// Split^(0) & FindMax^(1)

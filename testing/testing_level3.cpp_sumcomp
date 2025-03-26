@@ -193,6 +193,10 @@ main (int32_t argc, char **argv)
 			}
 			#endif
 	        double *times = new double[NLOOP];
+            // =====================
+		    #if defined (CUOZBLAS) || defined (OZBLAS)
+            ha.sumModeFlag = 0;
+		    #endif
 			for (i = 0; i < NLOOP; i++) {
 			    t0 = gettime ();
 				trgRgemm (ha, th.tranA, th.tranB, th.dim_m_dev, th.dim_n_dev, th.dim_k_dev, alpha, dev_A, lda_dev, dev_B, ldb_dev, beta, dev_C, ldc_dev);
@@ -201,8 +205,66 @@ main (int32_t argc, char **argv)
             }
 			//sec = (t1 - t0) / NLOOP;
             sec = getMin (times, NLOOP);
-	        delete[]times;
+            printf ("\t|\t");
 			printf ("\t%1.3e\t%1.3e\t%1.3e\t%d", sec, (th.routine_flops / sec) * 1.0e-9, (th.routine_bytes / sec) * 1.0e-9, NLOOP);
+		    #if defined (CUOZBLAS) || defined (OZBLAS)
+		    print_info3 (&th, &ha);
+		    #endif
+            // =====================
+		    #if defined (CUOZBLAS) || defined (OZBLAS)
+            ha.sumModeFlag = 2;
+		    #endif
+			for (i = 0; i < NLOOP; i++) {
+			    t0 = gettime ();
+				trgRgemm (ha, th.tranA, th.tranB, th.dim_m_dev, th.dim_n_dev, th.dim_k_dev, alpha, dev_A, lda_dev, dev_B, ldb_dev, beta, dev_C, ldc_dev);
+			    t1 = gettime ();
+                times[i] = t1 - t0;
+            }
+			//sec = (t1 - t0) / NLOOP;
+            sec = getMin (times, NLOOP);
+            printf ("\t|\t");
+			printf ("\t%1.3e\t%1.3e\t%1.3e\t%d", sec, (th.routine_flops / sec) * 1.0e-9, (th.routine_bytes / sec) * 1.0e-9, NLOOP);
+		    #if defined (CUOZBLAS) || defined (OZBLAS)
+		    print_info3 (&th, &ha);
+		    #endif
+            // =====================
+		    #if defined (CUOZBLAS) || defined (OZBLAS)
+            ha.sumModeFlag = 3;
+		    #endif
+			for (i = 0; i < NLOOP; i++) {
+			    t0 = gettime ();
+				trgRgemm (ha, th.tranA, th.tranB, th.dim_m_dev, th.dim_n_dev, th.dim_k_dev, alpha, dev_A, lda_dev, dev_B, ldb_dev, beta, dev_C, ldc_dev);
+			    t1 = gettime ();
+                times[i] = t1 - t0;
+            }
+			//sec = (t1 - t0) / NLOOP;
+            sec = getMin (times, NLOOP);
+            printf ("\t|\t");
+			printf ("\t%1.3e\t%1.3e\t%1.3e\t%d", sec, (th.routine_flops / sec) * 1.0e-9, (th.routine_bytes / sec) * 1.0e-9, NLOOP);
+		    #if defined (CUOZBLAS) || defined (OZBLAS)
+		    print_info3 (&th, &ha);
+		    #endif
+            // =====================
+		    #if defined (CUOZBLAS) || defined (OZBLAS)
+            ha.sumModeFlag = 30;
+		    #endif
+			for (i = 0; i < NLOOP; i++) {
+			    t0 = gettime ();
+				trgRgemm (ha, th.tranA, th.tranB, th.dim_m_dev, th.dim_n_dev, th.dim_k_dev, alpha, dev_A, lda_dev, dev_B, ldb_dev, beta, dev_C, ldc_dev);
+			    t1 = gettime ();
+                times[i] = t1 - t0;
+            }
+			//sec = (t1 - t0) / NLOOP;
+            sec = getMin (times, NLOOP);
+            printf ("\t|\t");
+			printf ("\t%1.3e\t%1.3e\t%1.3e\t%d", sec, (th.routine_flops / sec) * 1.0e-9, (th.routine_bytes / sec) * 1.0e-9, NLOOP);
+		    #if defined (CUOZBLAS) || defined (OZBLAS)
+		    print_info3 (&th, &ha);
+		    #endif
+
+
+	        delete[]times;
+
 			#if defined (POWER_API)
 			PWR_ObjAttrGetValue(obj_node, PWR_ATTR_ENERGY, &energy1_node, &tt); 
 			PWR_ObjAttrGetValue(obj_node_m, PWR_ATTR_MEASURED_ENERGY, &energy1_node_m, &tt); 
@@ -266,10 +328,6 @@ main (int32_t argc, char **argv)
 			delete[]hst_B_r;
 			delete[]hst_C_r;
 		}
-
-		#if defined (CUOZBLAS) || defined (OZBLAS)
-		print_info3 (&th, &ha);
-		#endif
 
 		}
 		dim_dev_increment (&th);

@@ -258,7 +258,7 @@ double timer () {
 }
 
 // note: this is temporal...
-#define ALIGN 8
+#define ALIGN 32
 int32_t getPitchSize (int32_t n) {
 	return ceil((float)n / ALIGN) * ALIGN;
 }
