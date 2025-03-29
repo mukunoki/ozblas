@@ -20,14 +20,14 @@ struct testingHandle_t {
 	int32_t runtimeVersion;
 	int32_t nodisp;
 	int32_t nSplitMax;
-	int32_t splitModeFlag;
-	// splitModeFlag is needed when you want to do infSplit with specified degree to save memory
-	int32_t fastModeFlag;
-	int32_t reproModeFlag;
-	int32_t sumModeFlag;
+	int32_t splitMode;
+	// splitMode is needed when you want to do infSplit with specified degree to save memory
+	int32_t fastMode;
+	int32_t reproMode;
+	int32_t sumMode;
 	int32_t useBatchedGemmFlag;
 	int32_t trueresFlag;
-	int32_t splitEpsModeFlag;
+	int32_t splitEpsMode;
 	int32_t precxFlag;
 	int32_t verbose;
 	int32_t trunc;
@@ -254,12 +254,12 @@ void testingCreate (
 
 	// ozblasHandle_t
 	th->nSplitMax = 0;
-	th->splitModeFlag = 0;
-	th->fastModeFlag = 0;
-	th->reproModeFlag = 0;
-	th->sumModeFlag = 0;
+	th->splitMode = 0;
+	th->fastMode = 0;
+	th->reproMode = 0;
+	th->sumMode = 0;
 	th->useBatchedGemmFlag = 0;
-	th->splitEpsModeFlag = 0;
+	th->splitEpsMode = 0;
 	th->precxFlag = 0;
 
 	// dim
@@ -373,10 +373,10 @@ void testingCreate (
 				exit (0);
 				break;
 			} case 'h':{
-				th->reproModeFlag = atoi(optarg);
+				th->reproMode = atoi(optarg);
 				break;
 			} case 'i':{
-				th->fastModeFlag = atoi(optarg);
+				th->fastMode = atoi(optarg);
 				break;
 			} case 'j':{
 				th->dim_start = atoi (optarg);
@@ -421,10 +421,10 @@ void testingCreate (
 				th->trunc = atoi(optarg);
 				break;
 			} case 't':{
-				th->sumModeFlag = atoi(optarg);
+				th->sumMode = atoi(optarg);
 				break;
 			} case 'u':{
-				th->splitModeFlag = atoi(optarg);
+				th->splitMode = atoi(optarg);
 				break;
 			} case 'v':{
 				th->verbose = atoi(optarg);
@@ -433,7 +433,7 @@ void testingCreate (
 				th->nodisp = atoi(optarg);
 				break;
 			} case 'x':{
-				th->splitEpsModeFlag = atoi(optarg);
+				th->splitEpsMode = atoi(optarg);
 				break;
 			} case 'y':{
 				th->precxFlag = atoi(optarg);
@@ -448,12 +448,12 @@ void testingCreate (
 
 	#if defined (CUOZBLAS) || defined (OZBLAS)
 	oh->nSplitMax = th->nSplitMax;
-	oh->splitModeFlag = th->splitModeFlag;
-	oh->fastModeFlag = th->fastModeFlag;
-	oh->reproModeFlag = th->reproModeFlag;
-	oh->sumModeFlag = th->sumModeFlag;
+	oh->splitMode = th->splitMode;
+	oh->fastMode = th->fastMode;
+	oh->reproMode = th->reproMode;
+	oh->sumMode = th->sumMode;
 	oh->useBatchedGemmFlag = th->useBatchedGemmFlag;
-	oh->splitEpsModeFlag = th->splitEpsModeFlag;
+	oh->splitEpsMode = th->splitEpsMode;
 	oh->precxFlag = th->precxFlag;
 	#endif
 }
@@ -899,7 +899,7 @@ void mublasCheckMatrix (
 //	}
     /*else {
 		printf ("%d\t%d\t%d", th->dim_m_dev, th->dim_n_dev, th->dim_k_dev);
-		if (th->sumModeFlag == 1) {
+		if (th->sumMode == 1) {
 			if (errcnt == 0 && nicnt == 0)
 				printf ("\tOK");
 			else 
@@ -1037,13 +1037,13 @@ void print_info1 (
 		printf ("# OzBLAS -----------------------------------\n");
 		printf ("#\tWork-mem size = %1.1e (bytes)\n", WORK_MEM_SIZE);
 		printf ("#\tDegree = %d\n", th->nSplitMax);
-		printf ("#\tsplitMode = %d (0:none, 1:infSplit (warn when infSplit is failed), 3:fastSplit+infSplit)\n", th->splitModeFlag);
-		// splitModeFlag is needed when you want to do infSplit with specified degree to save memory
-		printf ("#\tFastMode = %d\n", th->fastModeFlag);
-		printf ("#\tReproMode = %d\n", th->reproModeFlag);
-		printf ("#\tSumMode = %d (0:GlobalFSum, 1:GlobalNearsum, 2:LocalFsum, 3:LocalFsum3)\n", th->sumModeFlag);
+		printf ("#\tsplitMode = %d (0:none, 1:infSplit (warn when infSplit is failed), 3:fastSplit+infSplit)\n", th->splitMode);
+		// splitMode is needed when you want to do infSplit with specified degree to save memory
+		printf ("#\tFastMode = %d\n", th->fastMode);
+		printf ("#\tReproMode = %d\n", th->reproMode);
+		printf ("#\tSumMode = %d (0:GlobalFSum, 1:GlobalNearsum, 2:LocalFsum, 3:LocalFsum3)\n", th->sumMode);
 		printf ("#\tUseBatchedGemm = %d\n", th->useBatchedGemmFlag);
-		printf ("#\tSplitEpsMode = %d\n", th->splitEpsModeFlag);
+		printf ("#\tSplitEpsMode = %d\n", th->splitEpsMode);
 		printf ("#\tprecx = %d\n", th->precxFlag);
 		#endif
 		#if defined (CG)

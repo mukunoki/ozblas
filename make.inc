@@ -52,32 +52,32 @@ CC86 = no
 # PREC_X_Y: X is I/O-precision, Y is compute-precision
 # Q: FP128, D: FP64, S: FP32, H: FP16 
 PREC_Q_D = yes
-PREC_Q_S = yes
+PREC_Q_S = no
 PREC_D_D = yes
-PREC_D_S = yes
-PREC_D_H = yes
-PREC_S_S = yes
-PREC_S_H = yes
-PREC_S_D = yes
+PREC_D_S = no
+PREC_D_H = no
+PREC_S_S = no
+PREC_S_H = no
+PREC_S_D = no
 # -> D_H and S_H: GPU only
 # -> Q_D and Q_S: CPU only
 
 #--- Routine ---------------------------------
 # level-1
 DOT = yes
-NRM2 = yes
-AXPY = yes
+NRM2 = no
+AXPY = no
 
 # level-2
-GEMV = yes
-CSRMV = yes
+GEMV = no
+CSRMV = no
 # -> CSRMV requires MKL on CPUs
 
 # level-3
 GEMM = yes
 
 # solver
-CG = yes
+CG = no
 # -> CG requires CSRMV, DOT, NRM2, and AXPY
 
 ##############################################

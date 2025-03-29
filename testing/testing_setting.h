@@ -3,7 +3,7 @@
 
 // ***** SETTING ***********************************
 #define WLOOP			1 // (times)
-#define NLOOP			3 // (times)
+#define NLOOP			10 // (times)
 #define MPFR_PREC		2048 // (bits)
 #define WORK_MEM_SIZE	16.e9//16e9 // (bytes)
 

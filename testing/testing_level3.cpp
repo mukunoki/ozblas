@@ -123,7 +123,7 @@ main (int32_t argc, char **argv)
 	mublasInitMat (&th, rdc_hst, cdc_hst, ldc_hst, hst_C, 0., 0, 0, 0);
 // --------------------------------------------
 	
-	if (!th.nodisp && th.fastModeFlag && th.dim_start) 
+	if (!th.nodisp && th.fastMode && th.dim_start) 
 		printf ("### Warning: when m=n=k=1, it is computed as DOT, which ignores fastmode and batchedGemm.\n");
 	print_info2 (&th);
 

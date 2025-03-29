@@ -8,7 +8,7 @@ int32_t cuozblasRdot (
 	const TYPE1 *devB, const int32_t incy,
 	TYPE1 *ret
 ) {
-	if (oh->reproModeFlag == 0 && oh->nSplitMax == 1) {
+	if (oh->reproMode == 0 && oh->nSplitMax == 1) {
 		double t0 = cutimer();
 		if (oh->precxFlag == 1) 
 			blasRdotX (oh->ch, n, devA, devB, (TYPE1*)oh->devWorkCommon, ret);

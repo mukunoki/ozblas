@@ -7,7 +7,7 @@ TYPE1 ozblasRdot (
 	const TYPE1 *devA, const int32_t incx,
 	const TYPE1 *devB, const int32_t incy
 ) {
-	if (oh->reproModeFlag == 0 && oh->nSplitMax == 1) {
+	if (oh->reproMode == 0 && oh->nSplitMax == 1) {
 		double t0 = timer();
 		TYPE1 r;
 		if (oh->precxFlag == 1) 

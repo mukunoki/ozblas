@@ -50,11 +50,11 @@ TYPE NextPowTwo (const TYPE p) {
 
 template <typename TYPE1, typename TYPE2>
 __host__ __device__
-int32_t getRho (const int32_t dim, const int32_t splitEpsModeFlag) {
+int32_t getRho (const int32_t dim, const int32_t splitEpsMode) {
 	constexpr int32_t epse_type1 = getEpse <TYPE1> ();
 	constexpr int32_t epse_type2 = getEpse <TYPE2> ();
 	constexpr int32_t epse_type22 = getEpse2 <TYPE2> ();
-	switch (splitEpsModeFlag) {
+	switch (splitEpsMode) {
 		case 2: // Dot2
 			return ceil((epse_type1-(epse_type22-log2(1.*dim))/2)); // standard-ver with Dot2
 			break;
@@ -69,12 +69,12 @@ int32_t getRho (const int32_t dim, const int32_t splitEpsModeFlag) {
 // special treatment for half when m=n=k=1, 
 template <>
 __host__ __device__
-int32_t getRho <double, half> (const int32_t dim, const int32_t splitEpsModeFlag) {
+int32_t getRho <double, half> (const int32_t dim, const int32_t splitEpsMode) {
 	constexpr int32_t epse_type1 = getEpse <double> ();
 	constexpr int32_t epse_type2 = getEpse <half> ();
 	constexpr int32_t epse_type22 = getEpse2 <half> ();
     int32_t dim_ = (dim == 1) ? 2 : dim;
-	switch (splitEpsModeFlag) {
+	switch (splitEpsMode) {
 		case 2: // Dot2
 			return ceil((epse_type1-(epse_type22-log2(1.*dim_))/2)); // standard-ver with Dot2
 			break;
@@ -87,12 +87,12 @@ int32_t getRho <double, half> (const int32_t dim, const int32_t splitEpsModeFlag
 }
 template <>
 __host__ __device__
-int32_t getRho <float, half> (const int32_t dim, const int32_t splitEpsModeFlag) {
+int32_t getRho <float, half> (const int32_t dim, const int32_t splitEpsMode) {
 	constexpr int32_t epse_type1 = getEpse <float> ();
 	constexpr int32_t epse_type2 = getEpse <half> ();
 	constexpr int32_t epse_type22 = getEpse2 <half> ();
     int32_t dim_ = (dim == 1) ? 2 : dim;
-	switch (splitEpsModeFlag) {
+	switch (splitEpsMode) {
 		case 2: // Dot2
 			return ceil((epse_type1-(epse_type22-log2(1.*dim_))/2)); // standard-ver with Dot2
 			break;
@@ -400,13 +400,13 @@ void cuozblasSplitDevice (
 	const int32_t lds, // leading dimension of split matrix (# of cols)
 	short *devSpExp, // exponent of split matrix
 	TYPE1 *devMax,
-	int32_t splitEpsModeFlag,
+	int32_t splitEpsMode,
 	const int32_t splitShift
 ) {
 	int32_t ntx, nty, nbx, nby;
 	dim3 threads, grid;
 	const int32_t dim = (major == 'r') ? n : m;
-	const int32_t rho = getRho <TYPE1, TYPE2> (dim, splitEpsModeFlag);
+	const int32_t rho = getRho <TYPE1, TYPE2> (dim, splitEpsMode);
 
 	if ((major == 'r' && m == 1) || (major == 'c' && n == 1)) {
 		ntx = SPLIT_VEC_NTX;
@@ -463,7 +463,7 @@ int32_t cuozblasSplit (
 	TYPE1 *hst = new TYPE1[m];
 
 	// Split^(0) & FindMax^(1)
-	cuozblasSplitDevice (oh, major, m, n, devInput, ldi, devOutput, ldo, devSplit, lds, devSpExp, devMax, oh->splitEpsModeFlag, oh->splitShift);
+	cuozblasSplitDevice (oh, major, m, n, devInput, ldi, devOutput, ldo, devSplit, lds, devSpExp, devMax, oh->splitEpsMode, oh->splitShift);
 	const int32_t maxS = (oh->nSplitMax > 0) ? oh->nSplitMax : NumSplitDefaultMax;
 	int32_t s;
 	for (s = 1; s < maxS; s++) {
@@ -474,9 +474,9 @@ int32_t cuozblasSplit (
 			blasRasum (oh->ch, ((major == 'r') ? m : n), devMax, 1, &check);
 		if (check == 0.) return s;
 		// Split^(i) & FindMax^(i+1)
-		cuozblasSplitDevice (oh, major, m, n, devOutput, ldo, devOutput, ldo, &devSplit[lds*n*s], lds, &devSpExp[ldse*s], devMax, oh->splitEpsModeFlag, oh->splitShift);
+		cuozblasSplitDevice (oh, major, m, n, devOutput, ldo, devOutput, ldo, &devSplit[lds*n*s], lds, &devSpExp[ldse*s], devMax, oh->splitEpsMode, oh->splitShift);
 	}
-	if (oh->splitModeFlag > 0)
+	if (oh->splitMode > 0)
 		fprintf (OUTPUT, "OzBLAS error: infSplit is failed.\n");
 
 	delete[] hst;
@@ -556,7 +556,7 @@ void cuozblasSplitSparseNKernel (
 	TYPE *devSplit,
 	short *devSpExp, // ignored
 	TYPE *devMax,
-	const int32_t splitEpsModeFlag,
+	const int32_t splitEpsMode,
 	const int32_t splitShift
 ) {
 	const int32_t iBx = blockIdx.x;
@@ -568,7 +568,7 @@ void cuozblasSplitSparseNKernel (
 
 	if (rowid < m){
 		const int32_t dim = devRowptr[rowid+1] - devRowptr[rowid];
-		const int32_t rho = getRho <TYPE, TYPE> (dim, splitEpsModeFlag);
+		const int32_t rho = getRho <TYPE, TYPE> (dim, splitEpsMode);
 		//const TYPE sigma = CONST * scalbn (1., rho) * NextPowTwo <TYPE> (devMax[rowid]) / splitShift;
 		const short tau = ceil(log2(fabs(devMax[rowid])));
 		const TYPE sigma = CONST * scalbn (1., rho + tau) / splitShift;
@@ -603,7 +603,7 @@ void cuozblasSplitSparseNKernel (
 	TYPE2 *devSplit,
 	short *devSpExp,
 	TYPE1 *devMax,
-	const int32_t splitEpsModeFlag,
+	const int32_t splitEpsMode,
 	const int32_t splitShift
 ) {
 	const int32_t iBx = blockIdx.x;
@@ -615,7 +615,7 @@ void cuozblasSplitSparseNKernel (
 
 	if (rowid < m){
 		const int32_t dim = devRowptr[rowid+1] - devRowptr[rowid];
-		const int32_t rho = getRho <TYPE1, TYPE2> (dim, splitEpsModeFlag);
+		const int32_t rho = getRho <TYPE1, TYPE2> (dim, splitEpsMode);
 		const short tau = devSpExp[rowid] = ceil(log2(devMax[rowid]));
 		const TYPE1 sigma = CONST * scalbn (1., rho+tau) / splitShift;
 		TYPE1 max = 0.;
@@ -651,7 +651,7 @@ void cuozblasSplitSparseDevice (
 	const int32_t lds, 
 	short *devSpExp, 
 	TYPE1 *devMax,
-	int32_t splitEpsModeFlag,
+	int32_t splitEpsMode,
 	const int32_t splitShift
 ) {
 	if (major == 'r') {
@@ -659,7 +659,7 @@ void cuozblasSplitSparseDevice (
 		int32_t nbx = ceil (float(m) / (ntx/32));
 		dim3 threads = dim3 (ntx);
 		dim3 grid = dim3 (nbx);
-		cuozblasSplitSparseNKernel <<< grid, threads >>> (m, devInput, devRowptr, devOutput, devSplit, devSpExp, devMax, splitEpsModeFlag, splitShift);
+		cuozblasSplitSparseNKernel <<< grid, threads >>> (m, devInput, devRowptr, devOutput, devSplit, devSpExp, devMax, splitEpsMode, splitShift);
 	} else {
 		fprintf (OUTPUT, "OzBLAS error: SplitT is not implemented.\n");
 		exit (1);
@@ -684,7 +684,7 @@ int32_t cuozblasSplitSparse (
 	// cuozblasFindMax^(0)
 	cuozblasFindMaxSparseDevice (major, m, devInput, devRowptr, devMax);
 	// Split^(0) & cuozblasFindMax^(1)
-	cuozblasSplitSparseDevice (major, m, devInput, devRowptr, devOutput, &devSplit[0], lds, devSpExp, devMax, oh->splitEpsModeFlag, oh->splitShift);
+	cuozblasSplitSparseDevice (major, m, devInput, devRowptr, devOutput, &devSplit[0], lds, devSpExp, devMax, oh->splitEpsMode, oh->splitShift);
 	const int32_t maxS = (oh->nSplitMax > 0) ? oh->nSplitMax : NumSplitDefaultMax;
 	int32_t s;
 	for (s = 1; s < maxS; s++) {
@@ -692,9 +692,9 @@ int32_t cuozblasSplitSparse (
 		blasRasum (oh->ch, m, devMax, 1, &check);
 		if (check == 0) return s;
 		// Split^(i) & cuozblasFindMax^(i+1)
-		cuozblasSplitSparseDevice (major, m, devOutput, devRowptr, devOutput, &devSplit[lds*s], lds, &devSpExp[ldse*s], devMax, oh->splitEpsModeFlag, oh->splitShift);
+		cuozblasSplitSparseDevice (major, m, devOutput, devRowptr, devOutput, &devSplit[lds*s], lds, &devSpExp[ldse*s], devMax, oh->splitEpsMode, oh->splitShift);
 	}
-	if (oh->splitModeFlag > 0)
+	if (oh->splitMode > 0)
 		fprintf (OUTPUT, "OzBLAS error: infSplit is failed.\n");
 	return s;
 }

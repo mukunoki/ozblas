@@ -101,7 +101,7 @@ main (int32_t argc, char **argv)
 
 // --------------------------------------------
 
-	if (!th.nodisp && th.fastModeFlag && th.dim_start) 
+	if (!th.nodisp && th.fastMode && th.dim_start) 
 		printf ("### Warning: when m=n=1, it is computed as DOT, which ignores fastmode and batchedGemm.\n");
 	print_info2 (&th);
 

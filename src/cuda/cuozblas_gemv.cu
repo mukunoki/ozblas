@@ -11,7 +11,7 @@ int32_t cuozblasRgemv (
 	const TYPE1 beta,
 	TYPE1 *devC, const int32_t incy
 ) {
-	if (oh->reproModeFlag == 0 && oh->nSplitMax == 1) {
+	if (oh->reproMode == 0 && oh->nSplitMax == 1) {
 		blasRgemv (oh->ch, transA, m, n, alpha, (TYPE1*)devA, lda, (TYPE1*)devB, incx, beta, devC, incy);
 		return 0;
 	}

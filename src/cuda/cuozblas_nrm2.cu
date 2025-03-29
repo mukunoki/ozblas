@@ -8,7 +8,7 @@ int32_t cuozblasRnrm2 (
 	const int32_t incx,
 	TYPE1* ret
 ) {
-	if (oh->reproModeFlag == 0 && oh->nSplitMax == 1) {
+	if (oh->reproMode == 0 && oh->nSplitMax == 1) {
 		if (oh->precxFlag == 1) 
 			blasRnrm2X (oh->ch, n, (TYPE1*)devX, (TYPE1*)oh->devWorkCommon, ret);
 		else

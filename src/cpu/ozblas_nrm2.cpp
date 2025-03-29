@@ -7,7 +7,7 @@ TYPE1 ozblasRnrm2 (
 	const TYPE1* devX,
 	const int incx
 ) {
-	if (oh->reproModeFlag == 0 && oh->nSplitMax == 1) {
+	if (oh->reproMode == 0 && oh->nSplitMax == 1) {
 		if (oh->precxFlag == 1) 
 			return blasRnrm2X (n, (TYPE1*)devX, incx);
 		else

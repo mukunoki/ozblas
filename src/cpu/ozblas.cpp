@@ -34,12 +34,12 @@ void ozblasCreate (ozblasHandle_t *oh, uint64_t WorkSizeBytes) {
 	oh->splitShift = 1; // default 
 
 	// Flag
-	oh->splitModeFlag = 0;
-	oh->fastModeFlag = 0;
-	oh->reproModeFlag = 1;
-	oh->sumModeFlag = 0;
+	oh->splitMode = 0;
+	oh->fastMode = 0;
+	oh->reproMode = 1;
+	oh->sumMode = 0;
 	oh->useBatchedGemmFlag = 0;
-	oh->splitEpsModeFlag = 0;
+	oh->splitEpsMode = 0;
 	oh->precxFlag = 0;
 
 	#if defined (MKL)
@@ -49,7 +49,8 @@ void ozblasCreate (ozblasHandle_t *oh, uint64_t WorkSizeBytes) {
 	#endif
 
 	// work memory allocation
-	char *devWork_ = (char*) malloc (oh->workSizeBytes);
+	char *devWork_ = (char*) aligned_alloc (64, oh->workSizeBytes);
+	//char *devWork_ = (char*) malloc (oh->workSizeBytes);
 	if (devWork_ == NULL) {
 		fprintf (OUTPUT, "OzBLAS error: work memory allocation error (%1.3e Bytes requested).\n", (double)oh->workSizeBytes);
 		exit (1);

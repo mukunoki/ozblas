@@ -15,7 +15,7 @@ int32_t cuozblasRgemm (
 	const TYPE1 beta,
 	TYPE1 *devC, const int32_t ldc
 ) {
-	if (oh->reproModeFlag == 0 && oh->nSplitMax == 1) {
+	if (oh->reproMode == 0 && oh->nSplitMax == 1) {
 		blasRgemm (oh->ch, transA, transB, m, n, k, alpha, (TYPE1*)devA, lda, (TYPE1*)devB, ldb, beta, devC, ldc);
 		return 0;
 	}
@@ -25,10 +25,10 @@ int32_t cuozblasRgemm (
 	// DOT does not use batchedGEMM and fastmode as it is computed by a GEMM,
 	// Therefore, batchedGEMM and fastmode are disabled here.
 	int32_t _useBatchedGemmFlag = oh->useBatchedGemmFlag;
-	int32_t _fastModeFlag = oh->fastModeFlag;
+	int32_t _fastMode = oh->fastMode;
 	if (m == 1 && n == 1) { // DOT
 		oh->useBatchedGemmFlag = 0;
-		oh->fastModeFlag = 0;
+		oh->fastMode = 0;
 	}
 
 	TYPE1 *devTmp, *devCTmp, *devMax;
@@ -67,14 +67,14 @@ int32_t cuozblasRgemm (
 
 	int32_t memAddrTmp = oh->memAddr;
 	while (mbk > 0 && nbk > 0) { // blocking
-		int32_t sizeCn = (oh->useBatchedGemmFlag || oh->sumModeFlag < 2) ? (nbk * nSplitMaxLoc * nSplitMaxLoc) : nbk;
-		if (oh->splitEpsModeFlag == 2) sizeCn *= 2;
+		int32_t sizeCn = (oh->useBatchedGemmFlag || oh->sumMode < 2) ? (nbk * nSplitMaxLoc * nSplitMaxLoc) : nbk;
+		if (oh->splitEpsMode == 2) sizeCn *= 2;
 		cuozblasMatAddrAlloc (oh, k, mbk * nSplitMaxLoc, sizeType2, (void**)&devASplit, ldas); 
 		cuozblasMatAddrAlloc (oh, k, nbk * nSplitMaxLoc, sizeType2, (void**)&devBSplit, ldbs);
 		cuozblasMatAddrAlloc (oh, mbk, sizeCn,           sizeType3, (void**)&devCSplit, ldcs);
 		cuozblasMatAddrAlloc (oh, k, std::max(mbk,nbk),  sizeType1, (void**)&devTmp,    ldt); 
 		cuozblasMatAddrAlloc (oh, mbk, nbk,              sizeType1, (void**)&devCTmp,   ldct);
-		if (oh->sumModeFlag >= 2 && oh->useBatchedGemmFlag == 0) {
+		if (oh->sumMode >= 2 && oh->useBatchedGemmFlag == 0) {
 			cuozblasMatAddrAlloc (oh, mbk, nbk, sizeTypeT, (void**)&devCTmp1, ldct1);
 			cuozblasMatAddrAlloc (oh, mbk, nbk, sizeTypeT, (void**)&devCTmp2, ldct2);
 			cuozblasMatAddrAlloc (oh, mbk, nbk, sizeTypeT, (void**)&devCTmp3, ldct3);
@@ -135,8 +135,8 @@ int32_t cuozblasRgemm (
 			t1 = cutimer();
 			double t_sum_local = 0.;
 			int32_t ic = 0;
-			int32_t maxlevel = (oh->fastModeFlag) ? MIN (nSplitA-1, nSplitB-1) : (nSplitA-1) + (nSplitB-1);
-			if (n == 1 && m == 1 && oh->splitEpsModeFlag == 2 && oh->fastModeFlag == 0 && oh->sumModeFlag < 2) { // Dot2 (only on DOT)
+			int32_t maxlevel = (oh->fastMode) ? MIN (nSplitA-1, nSplitB-1) : (nSplitA-1) + (nSplitB-1);
+			if (n == 1 && m == 1 && oh->splitEpsMode == 2 && oh->fastMode == 0 && oh->sumMode < 2) { // Dot2 (only on DOT)
 				TYPE2 *ptrA, *ptrB;
                 TYPE3 *ptrC;
 				ptrA = devASplit;
@@ -149,7 +149,7 @@ int32_t cuozblasRgemm (
 			} else {
 				if (oh->useBatchedGemmFlag) { // with batched GEMM (for DOT, useBatchedGemmFlag is always 0)
 					int32_t numB;
-					if (n == 1 && oh->fastModeFlag == 0) { // GEMV with fast=0
+					if (n == 1 && oh->fastMode == 0) { // GEMV with fast=0
 						for (int32_t ia = 0; ia < MIN (maxlevel+1, nSplitA); ia++) {
 							numB = MIN (nSplitB, maxlevel+1 - ia);
 							batchAptrHst[ic] = devASplit+ldas*mbk_*ia;
@@ -174,14 +174,14 @@ int32_t cuozblasRgemm (
 					cudaMemcpy(batchAptr, batchAptrHst, sizeof(TYPE2*) * ic, cudaMemcpyHostToDevice);
 					cudaMemcpy(batchBptr, batchBptrHst, sizeof(TYPE2*) * ic, cudaMemcpyHostToDevice);
 					cudaMemcpy(batchCptr, batchCptrHst, sizeof(TYPE3*) * ic, cudaMemcpyHostToDevice);
-					int32_t n_ = (n == 1 && oh->fastModeFlag == 0) ? numB : nbk_;
+					int32_t n_ = (n == 1 && oh->fastMode == 0) ? numB : nbk_;
 					blasRgemmBatch (oh->ch, transA_, transB_, mbk_, n_, k, fone, (const TYPE2**)batchAptr, ldas,
 									(const TYPE2**)batchBptr, ldbs, fzero, (TYPE3**)batchCptr, ldcs, 1, ic);
 					oh->n_comp += 2. * mbk_ * nbk_ * k * ic;
 				} else { // without batchedGEMM (DOT always goes without batchedGEMM)
 					TYPE2 *ptrA, *ptrB;
                     TYPE3 *ptrC;
-					if (n == 1 && m == 1 && oh->fastModeFlag == 0 && oh->sumModeFlag < 2) { // DOT with fast=0 with sumMode=0 or 1
+					if (n == 1 && m == 1 && oh->fastMode == 0 && oh->sumMode < 2) { // DOT with fast=0 with sumMode=0 or 1
 						ptrA = devASplit;
 						ptrB = devBSplit;
 						ptrC = devCSplit;
@@ -189,7 +189,7 @@ int32_t cuozblasRgemm (
 						blasRgemmSkinny (oh, transA_, transB_, nSplitA, nSplitB, k, fone, ptrA, ldas, ptrB, ldbs, fzero, ptrC, nSplitA);
 					    oh->n_comp += 2. * nSplitA * nSplitB * k;
 						ic++;
-					} else if (n == 1 && oh->fastModeFlag == 0 && oh->sumModeFlag < 2) { // GEMV with fast=0 with sumMode=0 or 1
+					} else if (n == 1 && oh->fastMode == 0 && oh->sumMode < 2) { // GEMV with fast=0 with sumMode=0 or 1
 						for (int32_t ia = 0; ia < MIN (maxlevel+1, nSplitA); ia++) {
 							int32_t numB = MIN (nSplitB, maxlevel+1 - ia);
 							ptrA = devASplit+ldas*mbk_*ia;
@@ -216,12 +216,12 @@ int32_t cuozblasRgemm (
 									if (ik == ia + ib) {
 										ptrA = devASplit+ldas*mbk_*ia;
 										ptrB = devBSplit+ldbs*nbk_*ib;
-										ptrC = (oh->sumModeFlag < 2) ? devCSplit+ldcs*nbk*ic : devCSplit;
+										ptrC = (oh->sumMode < 2) ? devCSplit+ldcs*nbk*ic : devCSplit;
 										// Computation (GEMM) -----------------------------------
 										blasRgemm (oh->ch, transA_, transB_, mbk_, nbk_, k, fone, ptrA, ldas, ptrB, ldbs, fzero, ptrC, ldcs);
 					                     oh->n_comp += 2. * mbk_ * nbk_ * k;
 										// Summation ------------------------------------
-										if (oh->sumModeFlag == 2) {
+										if (oh->sumMode == 2) {
 											double t000 = cutimer();
 											cuozblasLocalFsum (mbk_, nbk_, &devASpExp[ldase*ia], &devBSpExp[ldbse*ib], ptrC, ldcs, devCTmp, ldct, ic);
 											t_sum_local += cutimer() - t000;
@@ -231,7 +231,7 @@ int32_t cuozblasRgemm (
 								} // EndFor (ib)
 							} // EndFor (ia)
 						} // EndFor (ik)
-						if (oh->sumModeFlag >= 2) { // copy and compute with alpha and beta
+						if (oh->sumMode >= 2) { // copy and compute with alpha and beta
 							double t000 = cutimer();
 							cuozblasAxpby (mbk_, nbk_, devCTmp, ldct, &devC[ldc*(in*nbk)+im*mbk], ldc, alpha, beta);
 							t_sum_local += cutimer() - t000;
@@ -244,19 +244,19 @@ int32_t cuozblasRgemm (
 			oh->t_sum += t_sum_local;
 
 			// Sum -----------------------------------------
-			if (oh->useBatchedGemmFlag || oh->sumModeFlag < 2) {
+			if (oh->useBatchedGemmFlag || oh->sumMode < 2) {
 				t1 = cutimer();
 				int32_t sumorder = 1;
 				if (m == 1 && n == 1) { 
-					sumorder = (oh->fastModeFlag == 0) ? 2 : 1; // DOT w/o fastmode -> 2
-					if (oh->splitEpsModeFlag == 2) maxlevel = (nSplitA-1) + (nSplitB*2-1);
-					if (cuozblasGlobalSum (oh, 1, 1, k, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB*((oh->splitEpsModeFlag==2)?2:1),
+					sumorder = (oh->fastMode == 0) ? 2 : 1; // DOT w/o fastmode -> 2
+					if (oh->splitEpsMode == 2) maxlevel = (nSplitA-1) + (nSplitB*2-1);
+					if (cuozblasGlobalSum (oh, 1, 1, k, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB*((oh->splitEpsMode==2)?2:1),
 										devCSplit, 1, 1, &devC[ldc*(in*nbk)+im*mbk], ldc, alpha, beta, maxlevel, sumorder)) {
 						fprintf (OUTPUT, "OzBLAS error: sum is failed\n");
 						exit (1);
 					}
 				} else { 
-					sumorder = (oh->fastModeFlag == 0 && nbk_ == 1) ? 3 : 1; // GEMV w/o fastmode -> 2
+					sumorder = (oh->fastMode == 0 && nbk_ == 1) ? 3 : 1; // GEMV w/o fastmode -> 2
 					if (cuozblasGlobalSum (oh, mbk_, nbk_, k, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB,
 										devCSplit, ldcs*nbk, ldcs, &devC[ldc*(in*nbk)+im*mbk], ldc, alpha, beta, maxlevel, sumorder)) {
 						fprintf (OUTPUT, "OzBLAS error: sum is failed\n");
@@ -278,7 +278,7 @@ int32_t cuozblasRgemm (
 	oh->nSplitC /= (float)block_count;
 
 	oh->useBatchedGemmFlag = _useBatchedGemmFlag;
-	oh->fastModeFlag = _fastModeFlag;
+	oh->fastMode = _fastMode;
 
 	return 0;
 }
