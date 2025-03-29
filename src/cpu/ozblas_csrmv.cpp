@@ -99,11 +99,12 @@ int32_t ozblasRcsrmv (
 
 	// Split of B -----------------------------------
 	t1 = timer();
-	int32_t split3FlagB = (oh->splitMode == 3) ? rangeCheck <TYPE1, TYPE2> (n, 1, devB, n) : 0; // on (if 1)
+//	int32_t split3FlagB = (oh->splitMode == 3) ? rangeCheck <TYPE1, TYPE2> (n, 1, devB, n) : 0; // on (if 1)
 	int32_t nSplitB;
-	if (split3FlagB) 
+//	if (split3FlagB) 
+	if (oh->splitMode == 3) 
 		nSplitB = ozblasSplit3 (oh, 'c', n, 1, devB, n, devBSplit, ldbs, devBSpExp, 1, devBmax,
-								devBTmpD1, n, devBTmpD2, n, devBTmpD3, n, devBTmpD1, n);
+								devBTmpD1, n, devBTmpD2, n, devBTmpD3, n);
 	else
 		nSplitB = ozblasSplit (oh, 'c', n, 1, devB, n, devBTmp, n, devBSplit, ldbs, devBSpExp, 1, devBmax_);
 	oh->t_SplitB += timer() - t1;
@@ -112,11 +113,12 @@ int32_t ozblasRcsrmv (
 	t1 = timer();
 	int32_t ia, ib, ic, ik;
 	int32_t maxlevel = (nSplitA-1) + (nSplitB-1);
+    maxlevel = std::max (maxlevel - oh->fastMode, std::min (nSplitA-1, nSplitB-1));
 	TYPE2 *ptrB = devBSplit;
 	TYPE2 *ptrC = devCSplit;
 	ic = 0;
-	for (ia = 0; ia < MIN (maxlevel+1, nSplitA); ia++) {
-		const int32_t numB = MIN (nSplitB, maxlevel+1 - ia);
+	for (ia = 0; ia < std::min (maxlevel+1, nSplitA); ia++) {
+		const int32_t numB = std::min (nSplitB, maxlevel+1 - ia);
 		TYPE2 *ptrA = devASplit+ldas*ia;
 		if (oh->splitEpsMode == 2) {
 			blasRcsrmm_x2 (tranA, m, numB, n, nnz, fone, descrA, ptrA, devAcolind, devArowptr, ptrB, ldbs, fzero, ptrC, ldcs);

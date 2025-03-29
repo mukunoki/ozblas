@@ -9,7 +9,7 @@ template <typename TYPE> TYPE fma1 (const TYPE x, const TYPE y, const TYPE z);
 template <typename TYPE> TYPE fabs1 (const TYPE v);
 template <typename TYPE> TYPE scalbn1 (const TYPE v, const int n);
 template <typename TYPE> TYPE log21 (const TYPE v);
-template <typename TYPE1, typename TYPE2> int32_t rangeCheck (const int32_t m, const int32_t n, const TYPE1 *mat, const int32_t ld);
+//template <typename TYPE1, typename TYPE2> int32_t rangeCheck (const int32_t m, const int32_t n, const TYPE1 *mat, const int32_t ld);
 template <typename TYPE> void ozblasCopyVec (const int32_t n, const TYPE *devIn, TYPE *devOut);
 double timer ();
 int32_t memCheck (ozblasHandle_t *oh);

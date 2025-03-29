@@ -109,17 +109,19 @@ int32_t ozblasRgemm (
 		int32_t nSplitA;
 		t1 = timer();
 		if (checkTrans (transA) == 0) {
-			split3FlagA = (oh->splitMode == 3) ? rangeCheck <TYPE1, TYPE2> (mbk_, k, devA+im*mbk, lda) : 0; // on (if 1)
+			//split3FlagA = (oh->splitMode == 3) ? rangeCheck <TYPE1, TYPE2> (mbk_, k, devA+im*mbk, lda) : 0; // on (if 1)
 			blasRomatcopy ('t', mbk_, k, devA+im*mbk, lda, devTmp1, ldt); // transpose matA for performance
 			transA_ = 't';
-			if (split3FlagA == 1) 
+			if (oh->splitMode == 3) 
+			//if (split3FlagA == 1) 
 				nSplitA = ozblasSplit3 (oh, 'c', k, mbk_, devTmp1, ldt, devASplit, ldas, devASpExp, ldase,
 										devMax2, devTmp21, ldt, devTmp22, ldt, devTmp23, ldt);
 			else 
 				nSplitA = ozblasSplit (oh, 'c', k, mbk_, devTmp1, ldt, devTmp1, ldt, devASplit, ldas, devASpExp, ldase, devMax1);
 		} else { // transposed 
-			split3FlagA = (oh->splitMode == 3) ? rangeCheck <TYPE1, TYPE2> (k, mbk_, devA+im*mbk, lda) : 0; // on (if 1)
-			if (split3FlagA == 1)
+			//split3FlagA = (oh->splitMode == 3) ? rangeCheck <TYPE1, TYPE2> (k, mbk_, devA+im*mbk, lda) : 0; // on (if 1)
+			if (oh->splitMode == 3) 
+			//if (split3FlagA == 1)
 				nSplitA = ozblasSplit3 (oh, 'c', k, mbk_, devA+im*mbk*lda, lda, devASplit, ldas, devASpExp, ldase,
 										devMax2, devTmp21, ldt, devTmp22, ldt, devTmp23, ldt);
 			else 
@@ -134,17 +136,19 @@ int32_t ozblasRgemm (
 			int32_t nSplitB;
 			t1 = timer();
 			if (checkTrans (transB) == 0) {
-				split3FlagB = (oh->splitMode == 3) ? rangeCheck <TYPE1, TYPE2> (k, nbk_, devB+in*nbk*ldb, ldb) : 0; // on (if 1)
-				if (split3FlagB == 1) 
+				//split3FlagB = (oh->splitMode == 3) ? rangeCheck <TYPE1, TYPE2> (k, nbk_, devB+in*nbk*ldb, ldb) : 0; // on (if 1)
+				if (oh->splitMode == 3) 
+				//if (split3FlagB == 1) 
 					nSplitB = ozblasSplit3 (oh, 'c', k, nbk_, devB+in*nbk*ldb, ldb, devBSplit, ldbs, devBSpExp, ldbse,
 											devMax2, devTmp21, ldt, devTmp22, ldt, devTmp23, ldt);
 				else 
 					nSplitB = ozblasSplit (oh, 'c', k, nbk_, devB+in*nbk*ldb, ldb, devTmp1, ldt, devBSplit, ldbs, devBSpExp, ldbse, devMax1);
 			} else { // transposed
-				split3FlagB = (oh->splitMode == 3) ? rangeCheck <TYPE1, TYPE2> (nbk_, k, devB+in*nbk, ldb) : 0; // on (if 1)
+				//split3FlagB = (oh->splitMode == 3) ? rangeCheck <TYPE1, TYPE2> (nbk_, k, devB+in*nbk, ldb) : 0; // on (if 1)
 				blasRomatcopy ('t', nbk_, k, devB+in*nbk, ldb, devTmp1, ldt); // transpose matB for performance
 				transB_ = 'n';
-				if (split3FlagB == 1) 
+				if (oh->splitMode == 3) 
+				//if (split3FlagB == 1) 
 					nSplitB = ozblasSplit3 (oh, 'c', k, nbk_, devTmp1, ldt, devBSplit, ldbs, devBSpExp, ldbse,
 											devMax2, devTmp21, ldt, devTmp22, ldt, devTmp23, ldt);
 				else

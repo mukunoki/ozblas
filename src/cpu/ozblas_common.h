@@ -2,7 +2,7 @@
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 #define DefaultWorkSize 5e9 // 5GB
-#define NumSplitDefaultMax 30
+#define NumSplitDefaultMax 60
 
 #define OUTPUT stdout // stderr
 

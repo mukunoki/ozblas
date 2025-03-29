@@ -54,7 +54,7 @@ CC86 = no
 PREC_Q_D = yes
 PREC_Q_S = no
 PREC_D_D = yes
-PREC_D_S = no
+PREC_D_S = yes
 PREC_D_H = no
 PREC_S_S = no
 PREC_S_H = no
@@ -65,12 +65,12 @@ PREC_S_D = no
 #--- Routine ---------------------------------
 # level-1
 DOT = yes
-NRM2 = no
-AXPY = no
+NRM2 = yes
+AXPY = yes
 
 # level-2
-GEMV = no
-CSRMV = no
+GEMV = yes
+CSRMV = yes
 # -> CSRMV requires MKL on CPUs
 
 # level-3

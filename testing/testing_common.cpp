@@ -165,7 +165,7 @@ double getMaxTime (
 	double max = times[0];
 	for (int32_t i = 1; i < nloop; i++) {
 		double tmp = times[i];
-		max = MAX (max, tmp);
+		max = std::max (max, tmp);
 	}
 	return max;
 }
@@ -706,8 +706,8 @@ void mublasInitMat (
 			for (j = 0; j < n; j++) {
 				for (int32_t i = 0; i < m; i++) {
 					double mu = 0.0, sigma = 1.0;
-					double r1 = drand48(); //rand()/((FP_TYPE)RAND_MAX+1.);
-					double r2 = drand48(); //rand()/((FP_TYPE)RAND_MAX+1.);
+					double r1 = drand48(); //rand()/((FP_TYPE)RAND_std::max+1.);
+					double r2 = drand48(); //rand()/((FP_TYPE)RAND_std::max+1.);
 					double x1 = mu + (std::sqrt (-2. * log(r1)) * sin (2. * M_PI * r2)) * sigma;
 					double val = (r1 - 0.5) * exp (phi * x1);
 					mat[j*ld+i] = (trunc > 0) ? (FP_TYPE)truncate (val, trunc) : (FP_TYPE)val; // significand truncation
@@ -729,7 +729,11 @@ void mublasInitMat (
 			//#pragma omp parallel for 
 			for (j = 0; j < n; j++) {
 				for (int32_t i = 0; i < m; i++) {
+    		        #if defined (PREC_Q) 
+					FP_TYPE valf = (drand48()*9+1) * powq(10,rand()%(int32_t)phi);
+                    #else
 					FP_TYPE valf = (drand48()*9+1) * std::pow(10,rand()%(int32_t)phi);
+                    #endif
 					valf = ((rand() % 2) ? 1.:-1.) * ((double)M_PI/f_pi) * valf;
 					mat[j*ld+i] = (FP_TYPE)((trunc > 0) ? truncate (valf, trunc) : valf); // significand truncation
 				}
@@ -760,19 +764,19 @@ void mublasInitMat (
 	}	
 	if (!th->nodisp && mode > 1) {
 		FP_TYPE amax = 0., amin = FP_MAX;
-#if !defined (PREC_DD)
-		#pragma omp parallel for reduction(max:amax) reduction(min:amin)
-#endif
+//#if !defined (PREC_DD)
+//		#pragma omp parallel for reduction(max:amax) reduction(min:amin)
+//#endif
 		for (j = 0; j < n; j++) {
 			FP_TYPE amax_local = 0.;
 			FP_TYPE amin_local = FP_MAX; 
 			for (int32_t i = 0; i < m; i++) {
 				FP_TYPE tmp = FABS (mat[j*ld+i]);
-				amax_local = MAX (amax_local, tmp);
-				amin_local = MIN (amin_local, tmp);
+				amax_local = std::max (amax_local, tmp);
+				amin_local = std::min (amin_local, tmp);
 			}
-			amax = MAX (amax_local, amax);
-			amin = MIN (amin_local, amin);
+			amax = std::max (amax_local, amax);
+			amin = std::min (amin_local, amin);
 		}
 		#if defined (PREC_Q) && !defined (ARM)
 		char buf[128];
