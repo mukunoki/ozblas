@@ -40,8 +40,7 @@ int32_t ozblasRgemm (
 	int32_t ldct1, ldct2, ldct3;
 	int32_t mbk = m;
 	int32_t nbk = n;
-	int32_t nSplitMaxLoc = (oh->nSplitMax > 1) ? oh->nSplitMax + 1 : NumSplitDefaultMax;
-    if (oh->reproMode == 1) nSplitMaxLoc++;
+	int32_t nSplitMaxLoc = (oh->nSplitMax > 0) ? oh->nSplitMax : NumSplitDefaultMax;
 	int32_t sizeType1 = sizeof (TYPE1);
 	int32_t sizeType2 = sizeof (TYPE2);
 	int32_t sizeTypeS = sizeof (short);
@@ -98,6 +97,10 @@ int32_t ozblasRgemm (
 	oh->mbk = mbk;
 	oh->nbk = nbk;
 
+    // ==========
+    oh->nSplitMax = oh->nSplitMax - 1;
+    // ==========
+
 	// main part (Split, Comp, Sum)
 	char transA_ = transA;
 	char transB_ = transB;
@@ -127,6 +130,10 @@ int32_t ozblasRgemm (
 		}
 		oh->t_SplitA += timer() - t1;
 
+        // ==========
+        nSplitA ++;
+        // ==========
+
 		for (int32_t in = 0; in < ceil((float)n/nbk); in++) {
 			int32_t nbk_ = (n-nbk*in >= nbk) ? nbk : n-nbk*in;
 			// SplitB -----------------------------------
@@ -152,12 +159,21 @@ int32_t ozblasRgemm (
 			}
 			oh->t_SplitB += timer() - t1;
 
+            // ==========
+            nSplitB ++;
+            // ==========
+
 			// Compute --------------------------------------
 			t1 = timer();
 			double t_sum_local = 0.;
 			int32_t ic = 0;
+			//int32_t maxlevel = (oh->fastMode) ? std::min (nSplitA-1, nSplitB-1) : (nSplitA-1) + (nSplitB-1);
 			int32_t maxlevel = (nSplitA-1) + (nSplitB-1);
             maxlevel = std::max (maxlevel - oh->fastMode, std::min (nSplitA-1, nSplitB-1));
+//            else if (oh->fastMode == 1) 
+//			    maxlevel = std::min (nSplitA-1, nSplitB-1);
+//            else 
+//			    maxlevel = oh->fastMode;
 
 			if (n == 1 && m == 1 && oh->splitEpsMode == 2 && oh->fastMode == 0 && (oh->sumMode < 2 || oh->sumMode == 30)) { // Dot2 (only on DOT)
 				TYPE2 *ptrA, *ptrB, *ptrC;
@@ -298,6 +314,10 @@ int32_t ozblasRgemm (
 			oh->nSplitC += ic;
 		} // EndFor (in)
 	} // EndFor (im)
+
+    // ==========
+    oh->nSplitMax = oh->nSplitMax + 1;
+    // ==========
 
 	oh->t_total = timer() - t0;
 	oh->nSplitA /= (float)block_count;

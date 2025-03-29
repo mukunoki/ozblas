@@ -402,51 +402,6 @@ void ozblasGlobalFsumKernel (
 	const int32_t split3FlagB,
 	int32_t *check
 ) {
-/*
-	#pragma omp parallel for
-	for (int32_t addry = 0; addry < n; addry++) {
-		for (int32_t addrx = 0; addrx < m; addrx+=4) {
-    		TYPE1 t1 = 0.;
-    		TYPE1 t2 = 0.;
-    		TYPE1 t3 = 0.;
-    		TYPE1 t4 = 0.;
-    		int32_t ic = 0;
-    		for (int32_t ik = 0; ik <= maxlevel; ik++) {
-    			for (int32_t ia = 0; ia < nSplitA; ia++) {
-    				short seA1 = (split3FlagA) ? 0:devASpExp[ldase*ia+addrx];
-    				short seA2 = (split3FlagA) ? 0:devASpExp[ldase*ia+addrx+1];
-    				short seA3 = (split3FlagA) ? 0:devASpExp[ldase*ia+addrx+2];
-    				short seA4 = (split3FlagA) ? 0:devASpExp[ldase*ia+addrx+3];
-    				for (int32_t ib = 0; ib < nSplitB; ib++) {
-    					if (ik == ia + ib) {
-    						int32_t it;
-    						switch (sumOrder) {
-    							case 2: it = nSplitA * ib + ia; break;
-    							case 3: it = nSplitB * ia + ib; break;
-    							default: it = ic; break;
-    						}
-    						TYPE1 c1 = (TYPE1)devCsplit[llsc * it + addry * ldsc + addrx];
-    						TYPE1 c2 = (TYPE1)devCsplit[llsc * it + addry * ldsc + addrx+1];
-    						TYPE1 c3 = (TYPE1)devCsplit[llsc * it + addry * ldsc + addrx+2];
-    						TYPE1 c4 = (TYPE1)devCsplit[llsc * it + addry * ldsc + addrx+3];
-    						short seB = (split3FlagB) ? 0:devBSpExp[ldbse*ib+addry];
-    						t1 += scalbn1 (c1, seA1+seB);
-    						t2 += scalbn1 (c2, seA2+seB);
-    						t3 += scalbn1 (c3, seA3+seB);
-    						t4 += scalbn1 (c4, seA4+seB);
-    						ic++;
-    					}
-    				}
-    			}
-            }
-    		devC[addry * ldc + addrx] = fma1 (alpha, t1, (beta * devC[addry * ldc + addrx]));
-    		devC[addry * ldc + addrx+1] = fma1 (alpha, t2, (beta * devC[addry * ldc + addrx+1]));
-    		devC[addry * ldc + addrx+2] = fma1 (alpha, t3, (beta * devC[addry * ldc + addrx+2]));
-    		devC[addry * ldc + addrx+3] = fma1 (alpha, t4, (beta * devC[addry * ldc + addrx+3]));
-		}
-	}
-*/   
-///*
 	#pragma omp parallel for
 	for (int32_t addry = 0; addry < n; addry++) {
 		for (int32_t addrx = 0; addrx < m; addrx++) {
@@ -474,7 +429,6 @@ void ozblasGlobalFsumKernel (
 			devC[addry * ldc + addrx] = fma1 (alpha, t, (beta * devC[addry * ldc + addrx]));
 		}
 	}
-//    */
 }
 
 template <typename TYPE1, typename TYPE2>
@@ -745,7 +699,6 @@ printf ("<Fsum3_no_simd>");
 	}
 	return checkGlobal;
 }
-//template int32_t ozblasLocalFsum3simd <__float128, double> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const double *devCsplit, const int32_t ldcs, __float128 *devCtmp, const int32_t ldct, double *devCtmp1, const int32_t ldct1, double *devCtmp2, const int32_t ldct2, double *devCtmp3, const int32_t ldct3, const int32_t ic, const int32_t split3FlagA, const int32_t split3FlagB);
 template int32_t ozblasLocalFsum3simd <__float128, float> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const float *devCsplit, const int32_t ldcs, __float128 *devCtmp, const int32_t ldct, float *devCtmp1, const int32_t ldct1, float *devCtmp2, const int32_t ldct2, float *devCtmp3, const int32_t ldct3, const int32_t ic, const int32_t split3FlagA, const int32_t split3FlagB);
 template int32_t ozblasLocalFsum3simd <double, double> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const double *devCsplit, const int32_t ldcs, double *devCtmp, const int32_t ldct, double *devCtmp1, const int32_t ldct1, double *devCtmp2, const int32_t ldct2, double *devCtmp3, const int32_t ldct3, const int32_t ic, const int32_t split3FlagA, const int32_t split3FlagB);
 template int32_t ozblasLocalFsum3simd <double, float> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const float *devCsplit, const int32_t ldcs, double *devCtmp, const int32_t ldct, float *devCtmp1, const int32_t ldct1, float *devCtmp2, const int32_t ldct2, float *devCtmp3, const int32_t ldct3, const int32_t ic, const int32_t split3FlagA, const int32_t split3FlagB);

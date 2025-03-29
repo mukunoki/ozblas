@@ -21,7 +21,6 @@ struct testingHandle_t {
 	int32_t nodisp;
 	int32_t nSplitMax;
 	int32_t splitMode;
-	// splitMode is needed when you want to do infSplit with specified degree to save memory
 	int32_t fastMode;
 	int32_t reproMode;
 	int32_t sumMode;
@@ -1037,11 +1036,11 @@ void print_info1 (
 		printf ("# OzBLAS -----------------------------------\n");
 		printf ("#\tWork-mem size = %1.1e (bytes)\n", WORK_MEM_SIZE);
 		printf ("#\tDegree = %d\n", th->nSplitMax);
-		printf ("#\tsplitMode = %d (0:none, 1:infSplit (warn when infSplit is failed), 3:fastSplit+infSplit)\n", th->splitMode);
+		printf ("#\tsplitMode = %d (0:none, 1:warn if still splittable, 3:Split3(FP128), 31:Split3+warn if still splittable)\n", th->splitMode);
 		// splitMode is needed when you want to do infSplit with specified degree to save memory
 		printf ("#\tFastMode = %d\n", th->fastMode);
 		printf ("#\tReproMode = %d\n", th->reproMode);
-		printf ("#\tSumMode = %d (0:GlobalFSum, 1:GlobalNearsum, 2:LocalFsum, 3:LocalFsum3)\n", th->sumMode);
+		printf ("#\tSumMode = %d (0:GlobalFSum, 1:GlobalNearsum, 2:LocalFsum, 3:LocalFsum3(FP128))\n", th->sumMode);
 		printf ("#\tUseBatchedGemm = %d\n", th->useBatchedGemmFlag);
 		printf ("#\tSplitEpsMode = %d\n", th->splitEpsMode);
 		printf ("#\tprecx = %d\n", th->precxFlag);
