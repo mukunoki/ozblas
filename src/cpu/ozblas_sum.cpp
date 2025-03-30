@@ -215,6 +215,19 @@ TYPE ozblasNearsumNpara (
 }
 */
 
+// for Sum3
+template <typename TYPE>
+__inline__ void
+TwoSum (TYPE a, TYPE b, TYPE &s, TYPE &e)
+{
+	TYPE v;
+	s = a + b;
+	v = s - a;
+	e = (a - (s - v)) + (b - v);
+}
+
+// ===============
+
 template <typename TYPE>
 void ozblasGlobalNearsumKernel (
 	const int32_t m,
@@ -419,6 +432,85 @@ void ozblasGlobalFsumKernel (
 }
 
 template <typename TYPE1, typename TYPE2>
+int32_t ozblasGlobalSum3Kernel (
+	const int32_t m,
+	const int32_t n,
+	const short *devASpExp,
+	const int32_t ldase,
+	const int32_t nSplitA,
+	const short *devBSpExp,
+	const int32_t ldbse,
+	const int32_t nSplitB,
+	const TYPE2 *devCsplit,
+	const int32_t llsc,
+	const int32_t ldsc,
+	TYPE1 *devC,
+	const int32_t ldc,
+	const TYPE1 alpha,
+	const TYPE1 beta,
+	const int32_t maxlevel,
+	const int32_t sumOrder, 
+	const int32_t split3FlagA,
+	const int32_t split3FlagB,
+	int32_t *check
+) {
+	int32_t checkGlobal = 0;
+
+	#pragma omp parallel for
+	for (int32_t addry = 0; addry < n; addry++) {
+
+		int32_t checkLocal = 0;
+		#pragma omp atomic read
+		checkLocal = checkGlobal;
+		if (checkLocal) continue;
+
+		for (int32_t addrx = 0; addrx < m; addrx++) {
+			TYPE2 e1, e2;
+            TYPE2 t1 = 0.;
+            TYPE2 t2 = 0.;
+            TYPE2 t3 = 0.;
+			int32_t ic = 0;
+			for (int32_t ik = 0; ik <= maxlevel; ik++) {
+				for (int32_t ia = 0; ia < nSplitA; ia++) {
+					short seA = (split3FlagA) ? 0:devASpExp[ldase*ia+addrx];
+					for (int32_t ib = 0; ib < nSplitB; ib++) {
+						if (ik == ia + ib) {
+							int32_t it;
+							switch (sumOrder) {
+								case 2: it = nSplitA * ib + ia; break;
+								case 3: it = nSplitB * ia + ib; break;
+								default: it = ic; break;
+							}
+							TYPE2 c = devCsplit[llsc * it + addry * ldsc + addrx];
+							short seB = (split3FlagB) ? 0:devBSpExp[ldbse*ib+addry];
+							c = scalbn1 (c, seA+seB);
+				            TwoSum (t1, c, t1, e1);
+            				TwoSum (t2, e1, t2, e2);
+				            t3 += e2;
+							ic++;
+						}
+					}
+				}
+			}
+			if (std::isinf(t1) || std::isnan(t1) || std::isinf(t2) || std::isnan(t2) || std::isinf(t3) || std::isnan(t3)) {
+                checkLocal = 1; // computation failed
+            } else {
+                TYPE1 t = (TYPE1)t1 + ((TYPE1)t2 + (TYPE1)t3);
+			    devC[addry * ldc + addrx] = fma1 (alpha, t, (beta * devC[addry * ldc + addrx]));
+            }
+		}
+
+		if (checkLocal) {
+			// here you can write re-do codes with TYPE1
+			#pragma omp atomic write
+			checkGlobal = 1;
+		}
+	}
+
+	return checkGlobal;
+}
+
+template <typename TYPE1, typename TYPE2>
 int32_t ozblasGlobalSum (
 	ozblasHandle_t *oh,
 	const int32_t m,
@@ -442,17 +534,20 @@ int32_t ozblasGlobalSum (
 	const int32_t split3FlagB
 ) {
 	int32_t check = 0;
-	if (oh->sumModeFlag == 1) { // Nearsum
+	if (oh->sumMode == 1) { // Nearsum
 //		if (m == 1 && n == 1) { // for DOT, not effective for performance...
 //			devC[0] = alpha * ozblasNearsumNpara (nSplitA*nSplitB, &devCsplit[0], llsc) + beta * devC[0];
 //		} else {
 		ozblasGlobalNearsumKernel (m, n, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB,
 								  devCsplit, llsc, ldsc, devC, ldc, alpha, beta, maxlevel, sumOrder, split3FlagA, split3FlagB, &check);
 //		}
-	} else { // Fsum
+	} else if (oh->sumMode == 30) { // Sum3
+		check = ozblasGlobalSum3Kernel (m, n, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB,
+							  devCsplit, llsc, ldsc, devC, ldc, alpha, beta, maxlevel, sumOrder, split3FlagA, split3FlagB, &check);
+	} else { // summode=0, Fsum
 		ozblasGlobalFsumKernel (m, n, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB,
 							  devCsplit, llsc, ldsc, devC, ldc, alpha, beta, maxlevel, sumOrder, split3FlagA, split3FlagB, &check);
-	}
+    }
 	return check;
 }
 template int32_t ozblasGlobalSum <__float128, double> (ozblasHandle_t *oh, const int32_t m, const int32_t n, const short *devASpExp, const int32_t ldase, const int32_t nSplitA, const short *devBSpExp, const int32_t ldbse, const int32_t nSplitB, double *devCsplit, const int32_t llsc, const int32_t ldsc, __float128 *devC, const int32_t ldc, const __float128 alpha, const __float128 beta, const int32_t maxlevel, const int32_t sumOrder, const int32_t split3FlagA, const int32_t split3FlagB);
@@ -535,15 +630,250 @@ template int32_t ozblasAxpby (const int32_t m, const int32_t n, const float *dev
 // FastSum with 3 binary64 bins
 // ==============================================
 
-template <typename TYPE>
-__inline__ void
-TwoSum (TYPE a, TYPE b, TYPE &s, TYPE &e)
-{
-	TYPE v;
-	s = a + b;
-	v = s - a;
-	e = (a - (s - v)) + (b - v);
+// ==============================================
+// ==============================================
+// ==============================================
+template <typename TYPE1, typename TYPE2>
+int32_t ozblasLocalFsum3simd (
+	const int32_t m,
+	const int32_t n,
+	const short *devASpExp,
+	const short *devBSpExp,
+	const TYPE2 *devCsplit,
+	const int32_t ldcs,
+	TYPE1 *devCtmp,
+	const int32_t ldct,
+	TYPE2 *devCtmp1,
+	const int32_t ldct1,
+	TYPE2 *devCtmp2,
+	const int32_t ldct2,
+	TYPE2 *devCtmp3,
+	const int32_t ldct3,
+	const int32_t ic,
+	const int32_t split3FlagA,
+	const int32_t split3FlagB
+) {
+printf ("<Fsum3_no_simd>");
+	int32_t checkGlobal = 0;
+	#pragma omp parallel for
+	for (int32_t addry = 0; addry < n; addry++) {
+		int32_t checkLocal = 0;
+		#pragma omp atomic read
+		checkLocal = checkGlobal;
+		if (checkLocal) continue;
+
+		short seB = (split3FlagB) ? 0:devBSpExp[addry];
+		for (int32_t addrx = 0; addrx < m; addrx++) {
+			TYPE2 c = devCsplit[addry * ldcs + addrx]; 
+			short seA = (split3FlagA) ? 0:devASpExp[addrx];
+			c = scalbn1 (c, seA+seB); // here, TYPE2
+			if (ic == 0) { // fisrt
+				devCtmp1[addry * ldct1 + addrx] = c;
+				devCtmp2[addry * ldct2 + addrx] = 0.;
+				devCtmp3[addry * ldct3 + addrx] = 0.;
+			} else {
+				TYPE2 e1, e2, t1, t2, t3;
+				t1 = devCtmp1[addry * ldct1 + addrx];
+				t2 = devCtmp2[addry * ldct2 + addrx];
+				t3 = devCtmp3[addry * ldct3 + addrx];
+				TwoSum (t1, c, t1, e1);
+				TwoSum (t2, e1, t2, e2);
+				t3 += e2;
+				if (ic == -1) { // last
+					// check overflow (this check should be done on TYPE2)
+					if (std::isinf(t1) || std::isnan(t1) || std::isinf(t2) || std::isnan(t2) || std::isinf(t3) || std::isnan(t3)) checkLocal = 1; // computation failed
+					else devCtmp[addry * ldct + addrx] = (TYPE1)t1 + ((TYPE1)t2 + (TYPE1)t3);
+				} else {
+					devCtmp1[addry * ldct1 + addrx] = t1;
+					devCtmp2[addry * ldct2 + addrx] = t2;
+					devCtmp3[addry * ldct3 + addrx] = t3;
+				}
+			}
+		}
+
+		if (checkLocal) {
+			// here you can write re-do codes with TYPE1
+			#pragma omp atomic write
+			checkGlobal = 1;
+		}
+	}
+	return checkGlobal;
 }
+template int32_t ozblasLocalFsum3simd <__float128, float> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const float *devCsplit, const int32_t ldcs, __float128 *devCtmp, const int32_t ldct, float *devCtmp1, const int32_t ldct1, float *devCtmp2, const int32_t ldct2, float *devCtmp3, const int32_t ldct3, const int32_t ic, const int32_t split3FlagA, const int32_t split3FlagB);
+template int32_t ozblasLocalFsum3simd <double, double> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const double *devCsplit, const int32_t ldcs, double *devCtmp, const int32_t ldct, double *devCtmp1, const int32_t ldct1, double *devCtmp2, const int32_t ldct2, double *devCtmp3, const int32_t ldct3, const int32_t ic, const int32_t split3FlagA, const int32_t split3FlagB);
+template int32_t ozblasLocalFsum3simd <double, float> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const float *devCsplit, const int32_t ldcs, double *devCtmp, const int32_t ldct, float *devCtmp1, const int32_t ldct1, float *devCtmp2, const int32_t ldct2, float *devCtmp3, const int32_t ldct3, const int32_t ic, const int32_t split3FlagA, const int32_t split3FlagB);
+template int32_t ozblasLocalFsum3simd <float, double> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const double *devCsplit, const int32_t ldcs, float *devCtmp, const int32_t ldct, double *devCtmp1, const int32_t ldct1, double *devCtmp2, const int32_t ldct2, double *devCtmp3, const int32_t ldct3, const int32_t ic, const int32_t split3FlagA, const int32_t split3FlagB);
+template int32_t ozblasLocalFsum3simd <float, float> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const float *devCsplit, const int32_t ldcs, float *devCtmp, const int32_t ldct, float *devCtmp1, const int32_t ldct1, float *devCtmp2, const int32_t ldct2, float *devCtmp3, const int32_t ldct3, const int32_t ic, const int32_t split3FlagA, const int32_t split3FlagB);
+
+// ==============================================
+// ==============================================
+// ==============================================
+
+#include "eft.h"
+
+bool is_aligned_32(const void* ptr) {
+    return reinterpret_cast<uintptr_t>(ptr) % 32 == 0;
+}
+
+template <>
+int32_t ozblasLocalFsum3simd (
+	const int32_t m,
+	const int32_t n,
+	const short *devASpExp,
+	const short *devBSpExp,
+	const double *devCsplit,
+	const int32_t ldcs,
+	__float128 *devCtmp,
+	const int32_t ldct,
+	double *devCtmp1,
+	const int32_t ldct1,
+	double *devCtmp2,
+	const int32_t ldct2,
+	double *devCtmp3,
+	const int32_t ldct3,
+	const int32_t ic,
+	const int32_t split3FlagA,
+	const int32_t split3FlagB
+) {
+	int32_t checkGlobal = 0;
+	#pragma omp parallel for
+	for (int32_t addry = 0; addry < n; addry++) {
+		int32_t checkLocal = 0;
+		#pragma omp atomic read
+		checkLocal = checkGlobal;
+		if (checkLocal) continue;
+
+		short seB = (split3FlagB) ? 0:devBSpExp[addry];
+        /*
+     // === AVX512 ===
+		for (int32_t addrx = 0; addrx < m; addrx+=8) {
+			__m512d c4 = _mm512_load_pd (&devCsplit[addry * ldcs + addrx]);
+			short seA = (split3FlagA) ? 0:devASpExp[addrx];
+			short seA1 = (split3FlagA) ? 0:devASpExp[addrx+1];
+			short seA2 = (split3FlagA) ? 0:devASpExp[addrx+2];
+			short seA3 = (split3FlagA) ? 0:devASpExp[addrx+3];
+			short seA4 = (split3FlagA) ? 0:devASpExp[addrx+4];
+			short seA5 = (split3FlagA) ? 0:devASpExp[addrx+5];
+			short seA6 = (split3FlagA) ? 0:devASpExp[addrx+6];
+			short seA7 = (split3FlagA) ? 0:devASpExp[addrx+7];
+            alignas(64) double c4d[8];
+            _mm512_store_pd (c4d, c4);
+			c4d[0] = scalbn1 (c4d[0], seA+seB); // here, TYPE2
+			c4d[1] = scalbn1 (c4d[1], seA1+seB); // here, TYPE2
+			c4d[2] = scalbn1 (c4d[2], seA2+seB); // here, TYPE2
+			c4d[3] = scalbn1 (c4d[3], seA3+seB); // here, TYPE2
+			c4d[4] = scalbn1 (c4d[4], seA4+seB); // here, TYPE2
+			c4d[5] = scalbn1 (c4d[5], seA5+seB); // here, TYPE2
+			c4d[6] = scalbn1 (c4d[6], seA6+seB); // here, TYPE2
+			c4d[7] = scalbn1 (c4d[7], seA7+seB); // here, TYPE2
+            c4 = _mm512_load_pd(c4d);
+			if (ic == 0) { // fisrt
+				_mm512_store_pd (&devCtmp1[addry * ldct1 + addrx], c4);
+				_mm512_store_pd (&devCtmp2[addry * ldct2 + addrx], _mm512_set_pd(0.,0.,0.,0.,0.,0.,0.,0.));
+				_mm512_store_pd (&devCtmp3[addry * ldct3 + addrx], _mm512_set_pd(0.,0.,0.,0.,0.,0.,0.,0.));
+			} else {
+			    __m512d t14 = _mm512_load_pd (&devCtmp1[addry * ldct1 + addrx]);
+			    __m512d t24 = _mm512_load_pd (&devCtmp2[addry * ldct2 + addrx]);
+			    __m512d t34 = _mm512_load_pd (&devCtmp3[addry * ldct3 + addrx]);
+                __m512d e14, e24;
+				TwoSum_avx512 (t14, c4, t14, e14);
+				TwoSum_avx512 (t24, e14, t24, e24);
+                t34 = _mm512_add_pd (t34, e24);
+				if (ic == -1) { // last
+					// check overflow (this check should be done on TYPE2)
+					//if (std::isinf(t1) || std::isnan(t1) || std::isinf(t2) || std::isnan(t2) || std::isinf(t3) || std::isnan(t3)) checkLocal = 1; // computation failed
+					//else devCtmp[addry * ldct + addrx] = (__float128)t1 + ((__float128)t2 + (__float128)t3);
+                    alignas(64) double t14d[8];
+                    alignas(64) double t24d[8];
+                    alignas(64) double e14d[8];
+                    alignas(64) double e24d[8];
+                    alignas(64) double t34d[8];
+                    _mm512_store_pd (e14d, e14);
+                    _mm512_store_pd (t14d, t14);
+                    _mm512_store_pd (t24d, t24);
+                    _mm512_store_pd (t34d, t34);
+					devCtmp[addry * ldct + addrx]   = (__float128)t14d[0] + ((__float128)t24d[0] + (__float128)t34d[0]);
+					devCtmp[addry * ldct + addrx+1] = (__float128)t14d[1] + ((__float128)t24d[1] + (__float128)t34d[1]);
+					devCtmp[addry * ldct + addrx+2] = (__float128)t14d[2] + ((__float128)t24d[2] + (__float128)t34d[2]);
+					devCtmp[addry * ldct + addrx+3] = (__float128)t14d[3] + ((__float128)t24d[3] + (__float128)t34d[3]);
+					devCtmp[addry * ldct + addrx+4] = (__float128)t14d[4] + ((__float128)t24d[4] + (__float128)t34d[4]);
+					devCtmp[addry * ldct + addrx+5] = (__float128)t14d[5] + ((__float128)t24d[5] + (__float128)t34d[5]);
+					devCtmp[addry * ldct + addrx+6] = (__float128)t14d[6] + ((__float128)t24d[6] + (__float128)t34d[6]);
+					devCtmp[addry * ldct + addrx+7] = (__float128)t14d[7] + ((__float128)t24d[7] + (__float128)t34d[7]);
+				} else {
+				    _mm512_storeu_pd (&devCtmp1[addry * ldct1 + addrx], t14);
+				    _mm512_storeu_pd (&devCtmp2[addry * ldct2 + addrx], t24);
+				    _mm512_storeu_pd (&devCtmp3[addry * ldct3 + addrx], t34);
+				}
+			}
+            */
+
+///*
+        // === AVX2 ===
+		for (int32_t addrx = 0; addrx < m; addrx+=4) {
+			__m256d c4 = _mm256_load_pd (&devCsplit[addry * ldcs + addrx]);
+			short seA = (split3FlagA) ? 0:devASpExp[addrx];
+			short seA1 = (split3FlagA) ? 0:devASpExp[addrx+1];
+			short seA2 = (split3FlagA) ? 0:devASpExp[addrx+2];
+			short seA3 = (split3FlagA) ? 0:devASpExp[addrx+3];
+            alignas(32) double c4d[4];
+            _mm256_store_pd (c4d, c4);
+			c4d[0] = scalbn1 (c4d[0], seA+seB); // here, TYPE2
+			c4d[1] = scalbn1 (c4d[1], seA1+seB); // here, TYPE2
+			c4d[2] = scalbn1 (c4d[2], seA2+seB); // here, TYPE2
+			c4d[3] = scalbn1 (c4d[3], seA3+seB); // here, TYPE2
+            c4 = _mm256_load_pd(c4d);
+			if (ic == 0) { // fisrt
+				_mm256_store_pd (&devCtmp1[addry * ldct1 + addrx], c4);
+				_mm256_store_pd (&devCtmp2[addry * ldct2 + addrx], _mm256_set_pd(0.,0.,0.,0.));
+				_mm256_store_pd (&devCtmp3[addry * ldct3 + addrx], _mm256_set_pd(0.,0.,0.,0.));
+			} else {
+			    __m256d t14 = _mm256_load_pd (&devCtmp1[addry * ldct1 + addrx]);
+			    __m256d t24 = _mm256_load_pd (&devCtmp2[addry * ldct2 + addrx]);
+			    __m256d t34 = _mm256_load_pd (&devCtmp3[addry * ldct3 + addrx]);
+                __m256d e14, e24;
+				TwoSum_avx256 (t14, c4, t14, e14);
+				TwoSum_avx256 (t24, e14, t24, e24);
+                t34 = _mm256_add_pd (t34, e24);
+				if (ic == -1) { // last
+					// check overflow (this check should be done on TYPE2)
+					//if (std::isinf(t1) || std::isnan(t1) || std::isinf(t2) || std::isnan(t2) || std::isinf(t3) || std::isnan(t3)) checkLocal = 1; // computation failed
+					//else devCtmp[addry * ldct + addrx] = (__float128)t1 + ((__float128)t2 + (__float128)t3);
+                    alignas(32) double t14d[4];
+                    alignas(32) double t24d[4];
+                    alignas(32) double e14d[4];
+                    alignas(32) double e24d[4];
+                    alignas(32) double t34d[4];
+                    _mm256_store_pd (e14d, e14);
+                    _mm256_store_pd (t14d, t14);
+                    _mm256_store_pd (t24d, t24);
+                    _mm256_store_pd (t34d, t34);
+					devCtmp[addry * ldct + addrx]   = (__float128)t14d[0] + ((__float128)t24d[0] + (__float128)t34d[0]);
+					devCtmp[addry * ldct + addrx+1] = (__float128)t14d[1] + ((__float128)t24d[1] + (__float128)t34d[1]);
+					devCtmp[addry * ldct + addrx+2] = (__float128)t14d[2] + ((__float128)t24d[2] + (__float128)t34d[2]);
+					devCtmp[addry * ldct + addrx+3] = (__float128)t14d[3] + ((__float128)t24d[3] + (__float128)t34d[3]);
+				} else {
+				    _mm256_storeu_pd (&devCtmp1[addry * ldct1 + addrx], t14);
+				    _mm256_storeu_pd (&devCtmp2[addry * ldct2 + addrx], t24);
+				    _mm256_storeu_pd (&devCtmp3[addry * ldct3 + addrx], t34);
+				}
+			}
+       // */
+
+		}
+
+		if (checkLocal) {
+			// here you can write re-do codes with TYPE1
+			#pragma omp atomic write
+			checkGlobal = 1;
+		}
+	}
+	return checkGlobal;
+}
+
+// ==============================================
+// ==============================================
+// ==============================================
 
 template <typename TYPE1, typename TYPE2>
 int32_t ozblasLocalFsum3 (
@@ -617,6 +947,7 @@ template int32_t ozblasLocalFsum3 <double, float> (const int32_t m, const int32_
 template int32_t ozblasLocalFsum3 <float, double> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const double *devCsplit, const int32_t ldcs, float *devCtmp, const int32_t ldct, double *devCtmp1, const int32_t ldct1, double *devCtmp2, const int32_t ldct2, double *devCtmp3, const int32_t ldct3, const int32_t ic, const int32_t split3FlagA, const int32_t split3FlagB);
 template int32_t ozblasLocalFsum3 <float, float> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const float *devCsplit, const int32_t ldcs, float *devCtmp, const int32_t ldct, float *devCtmp1, const int32_t ldct1, float *devCtmp2, const int32_t ldct2, float *devCtmp3, const int32_t ldct3, const int32_t ic, const int32_t split3FlagA, const int32_t split3FlagB);
 
+
 template <typename TYPE1, typename TYPE15, typename TYPE2>
 int32_t ozblasLocalFsum3 (
 	const int32_t m,
@@ -685,4 +1016,31 @@ int32_t ozblasLocalFsum3 (
 template int32_t ozblasLocalFsum3 <__float128, float, double> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const float *devCsplit, const int32_t ldcs, __float128 *devCtmp, const int32_t ldct, double *devCtmp1, const int32_t ldct1, double *devCtmp2, const int32_t ldct2, double *devCtmp3, const int32_t ldct3, const int32_t ic, const int32_t split3FlagA, const int32_t split3FlagB);
 template int32_t ozblasLocalFsum3 <double, float, double> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const float *devCsplit, const int32_t ldcs, double *devCtmp, const int32_t ldct, double *devCtmp1, const int32_t ldct1, double *devCtmp2, const int32_t ldct2, double *devCtmp3, const int32_t ldct3, const int32_t ic, const int32_t split3FlagA, const int32_t split3FlagB);
 template int32_t ozblasLocalFsum3 <float, float, double> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const float *devCsplit, const int32_t ldcs, float *devCtmp, const int32_t ldct, double *devCtmp1, const int32_t ldct1, double *devCtmp2, const int32_t ldct2, double *devCtmp3, const int32_t ldct3, const int32_t ic, const int32_t split3FlagA, const int32_t split3FlagB);
+
+template <typename TYPE1, typename TYPE15, typename TYPE2>
+int32_t ozblasLocalFsum3simd (
+	const int32_t m,
+	const int32_t n,
+	const short *devASpExp,
+	const short *devBSpExp,
+	const TYPE15 *devCsplit,
+	const int32_t ldcs,
+	TYPE1 *devCtmp,
+	const int32_t ldct,
+	TYPE2 *devCtmp1,
+	const int32_t ldct1,
+	TYPE2 *devCtmp2,
+	const int32_t ldct2,
+	TYPE2 *devCtmp3,
+	const int32_t ldct3,
+	const int32_t ic,
+	const int32_t split3FlagA,
+	const int32_t split3FlagB
+) {
+    printf("ozblasLocalFsum3 is not implemented");
+	return 0;
+}
+template int32_t ozblasLocalFsum3simd <__float128, float, double> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const float *devCsplit, const int32_t ldcs, __float128 *devCtmp, const int32_t ldct, double *devCtmp1, const int32_t ldct1, double *devCtmp2, const int32_t ldct2, double *devCtmp3, const int32_t ldct3, const int32_t ic, const int32_t split3FlagA, const int32_t split3FlagB);
+template int32_t ozblasLocalFsum3simd <double, float, double> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const float *devCsplit, const int32_t ldcs, double *devCtmp, const int32_t ldct, double *devCtmp1, const int32_t ldct1, double *devCtmp2, const int32_t ldct2, double *devCtmp3, const int32_t ldct3, const int32_t ic, const int32_t split3FlagA, const int32_t split3FlagB);
+template int32_t ozblasLocalFsum3simd <float, float, double> (const int32_t m, const int32_t n, const short *devASpExp, const short *devBSpExp, const float *devCsplit, const int32_t ldcs, float *devCtmp, const int32_t ldct, double *devCtmp1, const int32_t ldct1, double *devCtmp2, const int32_t ldct2, double *devCtmp3, const int32_t ldct3, const int32_t ic, const int32_t split3FlagA, const int32_t split3FlagB);
 

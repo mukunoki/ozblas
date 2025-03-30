@@ -19,12 +19,12 @@ typedef struct {
 	int32_t initialized;
 
 	// option flags
-	int32_t splitModeFlag;
-	int32_t fastModeFlag;
-	int32_t reproModeFlag;
-	int32_t sumModeFlag;
+	int32_t splitMode;
+	int32_t fastMode;
+	int32_t reproMode;
+	int32_t sumMode;
 	int32_t useBatchedGemmFlag;
-	int32_t splitEpsModeFlag;
+	int32_t splitEpsMode;
 	int32_t precxFlag;
 
 	// exec info

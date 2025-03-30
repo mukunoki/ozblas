@@ -35,12 +35,12 @@ void cuozblasCreate (cuozblasHandle_t *oh, uint64_t WorkSizeBytes) {
 	oh->splitShift = 1; // default 
 
 	// Flag
-	oh->splitModeFlag = 0;
-	oh->fastModeFlag = 0;
-	oh->reproModeFlag = 1;
-	oh->sumModeFlag = 0;
+	oh->splitMode = 0;
+	oh->fastMode = 0;
+	oh->reproMode = 1;
+	oh->sumMode = 0;
 	oh->useBatchedGemmFlag = 1;
-	oh->splitEpsModeFlag = 0;
+	oh->splitEpsMode = 0;
 
 	// work memory allocation
 	cudaMalloc ((void **) &oh->devWorkCommon, sizeof(double)*512);// for DOT and NRM2, and vecSplit, '512' = SPLIT_VEC_NTX in cuozblas_split.cu

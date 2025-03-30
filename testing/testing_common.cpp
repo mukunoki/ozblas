@@ -20,14 +20,13 @@ struct testingHandle_t {
 	int32_t runtimeVersion;
 	int32_t nodisp;
 	int32_t nSplitMax;
-	int32_t splitModeFlag;
-	// splitModeFlag is needed when you want to do infSplit with specified degree to save memory
-	int32_t fastModeFlag;
-	int32_t reproModeFlag;
-	int32_t sumModeFlag;
+	int32_t splitMode;
+	int32_t fastMode;
+	int32_t reproMode;
+	int32_t sumMode;
 	int32_t useBatchedGemmFlag;
 	int32_t trueresFlag;
-	int32_t splitEpsModeFlag;
+	int32_t splitEpsMode;
 	int32_t precxFlag;
 	int32_t verbose;
 	int32_t trunc;
@@ -166,7 +165,7 @@ double getMaxTime (
 	double max = times[0];
 	for (int32_t i = 1; i < nloop; i++) {
 		double tmp = times[i];
-		max = MAX (max, tmp);
+		max = std::max (max, tmp);
 	}
 	return max;
 }
@@ -254,12 +253,12 @@ void testingCreate (
 
 	// ozblasHandle_t
 	th->nSplitMax = 0;
-	th->splitModeFlag = 0;
-	th->fastModeFlag = 0;
-	th->reproModeFlag = 0;
-	th->sumModeFlag = 0;
+	th->splitMode = 0;
+	th->fastMode = 0;
+	th->reproMode = 0;
+	th->sumMode = 0;
 	th->useBatchedGemmFlag = 0;
-	th->splitEpsModeFlag = 0;
+	th->splitEpsMode = 0;
 	th->precxFlag = 0;
 
 	// dim
@@ -373,10 +372,10 @@ void testingCreate (
 				exit (0);
 				break;
 			} case 'h':{
-				th->reproModeFlag = atoi(optarg);
+				th->reproMode = atoi(optarg);
 				break;
 			} case 'i':{
-				th->fastModeFlag = atoi(optarg);
+				th->fastMode = atoi(optarg);
 				break;
 			} case 'j':{
 				th->dim_start = atoi (optarg);
@@ -421,10 +420,10 @@ void testingCreate (
 				th->trunc = atoi(optarg);
 				break;
 			} case 't':{
-				th->sumModeFlag = atoi(optarg);
+				th->sumMode = atoi(optarg);
 				break;
 			} case 'u':{
-				th->splitModeFlag = atoi(optarg);
+				th->splitMode = atoi(optarg);
 				break;
 			} case 'v':{
 				th->verbose = atoi(optarg);
@@ -433,7 +432,7 @@ void testingCreate (
 				th->nodisp = atoi(optarg);
 				break;
 			} case 'x':{
-				th->splitEpsModeFlag = atoi(optarg);
+				th->splitEpsMode = atoi(optarg);
 				break;
 			} case 'y':{
 				th->precxFlag = atoi(optarg);
@@ -448,12 +447,12 @@ void testingCreate (
 
 	#if defined (CUOZBLAS) || defined (OZBLAS)
 	oh->nSplitMax = th->nSplitMax;
-	oh->splitModeFlag = th->splitModeFlag;
-	oh->fastModeFlag = th->fastModeFlag;
-	oh->reproModeFlag = th->reproModeFlag;
-	oh->sumModeFlag = th->sumModeFlag;
+	oh->splitMode = th->splitMode;
+	oh->fastMode = th->fastMode;
+	oh->reproMode = th->reproMode;
+	oh->sumMode = th->sumMode;
 	oh->useBatchedGemmFlag = th->useBatchedGemmFlag;
-	oh->splitEpsModeFlag = th->splitEpsModeFlag;
+	oh->splitEpsMode = th->splitEpsMode;
 	oh->precxFlag = th->precxFlag;
 	#endif
 }
@@ -707,8 +706,8 @@ void mublasInitMat (
 			for (j = 0; j < n; j++) {
 				for (int32_t i = 0; i < m; i++) {
 					double mu = 0.0, sigma = 1.0;
-					double r1 = drand48(); //rand()/((FP_TYPE)RAND_MAX+1.);
-					double r2 = drand48(); //rand()/((FP_TYPE)RAND_MAX+1.);
+					double r1 = drand48(); //rand()/((FP_TYPE)RAND_std::max+1.);
+					double r2 = drand48(); //rand()/((FP_TYPE)RAND_std::max+1.);
 					double x1 = mu + (std::sqrt (-2. * log(r1)) * sin (2. * M_PI * r2)) * sigma;
 					double val = (r1 - 0.5) * exp (phi * x1);
 					mat[j*ld+i] = (trunc > 0) ? (FP_TYPE)truncate (val, trunc) : (FP_TYPE)val; // significand truncation
@@ -730,7 +729,11 @@ void mublasInitMat (
 			//#pragma omp parallel for 
 			for (j = 0; j < n; j++) {
 				for (int32_t i = 0; i < m; i++) {
+    		        #if defined (PREC_Q) 
+					FP_TYPE valf = (drand48()*9+1) * powq(10,rand()%(int32_t)phi);
+                    #else
 					FP_TYPE valf = (drand48()*9+1) * std::pow(10,rand()%(int32_t)phi);
+                    #endif
 					valf = ((rand() % 2) ? 1.:-1.) * ((double)M_PI/f_pi) * valf;
 					mat[j*ld+i] = (FP_TYPE)((trunc > 0) ? truncate (valf, trunc) : valf); // significand truncation
 				}
@@ -761,19 +764,19 @@ void mublasInitMat (
 	}	
 	if (!th->nodisp && mode > 1) {
 		FP_TYPE amax = 0., amin = FP_MAX;
-#if !defined (PREC_DD)
-		#pragma omp parallel for reduction(max:amax) reduction(min:amin)
-#endif
+//#if !defined (PREC_DD)
+//		#pragma omp parallel for reduction(max:amax) reduction(min:amin)
+//#endif
 		for (j = 0; j < n; j++) {
 			FP_TYPE amax_local = 0.;
 			FP_TYPE amin_local = FP_MAX; 
 			for (int32_t i = 0; i < m; i++) {
 				FP_TYPE tmp = FABS (mat[j*ld+i]);
-				amax_local = MAX (amax_local, tmp);
-				amin_local = MIN (amin_local, tmp);
+				amax_local = std::max (amax_local, tmp);
+				amin_local = std::min (amin_local, tmp);
 			}
-			amax = MAX (amax_local, amax);
-			amin = MIN (amin_local, amin);
+			amax = std::max (amax_local, amax);
+			amin = std::min (amin_local, amin);
 		}
 		#if defined (PREC_Q) && !defined (ARM)
 		char buf[128];
@@ -899,7 +902,7 @@ void mublasCheckMatrix (
 //	}
     /*else {
 		printf ("%d\t%d\t%d", th->dim_m_dev, th->dim_n_dev, th->dim_k_dev);
-		if (th->sumModeFlag == 1) {
+		if (th->sumMode == 1) {
 			if (errcnt == 0 && nicnt == 0)
 				printf ("\tOK");
 			else 
@@ -1037,13 +1040,13 @@ void print_info1 (
 		printf ("# OzBLAS -----------------------------------\n");
 		printf ("#\tWork-mem size = %1.1e (bytes)\n", WORK_MEM_SIZE);
 		printf ("#\tDegree = %d\n", th->nSplitMax);
-		printf ("#\tsplitMode = %d (0:none, 1:infSplit (warn when infSplit is failed), 3:fastSplit+infSplit)\n", th->splitModeFlag);
-		// splitModeFlag is needed when you want to do infSplit with specified degree to save memory
-		printf ("#\tFastMode = %d\n", th->fastModeFlag);
-		printf ("#\tReproMode = %d\n", th->reproModeFlag);
-		printf ("#\tSumMode = %d (0:GlobalFSum, 1:GlobalNearsum, 2:LocalFsum, 3:LocalFsum3)\n", th->sumModeFlag);
+		printf ("#\tsplitMode = %d (0:none, 1:warn if still splittable, 3:Split3(FP128), 31:Split3+warn if still splittable)\n", th->splitMode);
+		// splitMode is needed when you want to do infSplit with specified degree to save memory
+		printf ("#\tFastMode = %d\n", th->fastMode);
+		printf ("#\tReproMode = %d\n", th->reproMode);
+		printf ("#\tSumMode = %d (0:GlobalFSum, 1:GlobalNearsum, 2:LocalFsum, 3:LocalFsum3(FP128))\n", th->sumMode);
 		printf ("#\tUseBatchedGemm = %d\n", th->useBatchedGemmFlag);
-		printf ("#\tSplitEpsMode = %d\n", th->splitEpsModeFlag);
+		printf ("#\tSplitEpsMode = %d\n", th->splitEpsMode);
 		printf ("#\tprecx = %d\n", th->precxFlag);
 		#endif
 		#if defined (CG)

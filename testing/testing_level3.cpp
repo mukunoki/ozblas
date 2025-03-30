@@ -3,6 +3,16 @@
 #include "testing_common.h"
 #include "testing_common.cpp"
 
+double
+getMin (double* times, int32_t iter)
+{
+    double min = DBL_MAX;
+    for (int32_t i = 0; i < iter; i++) {
+        min = std::min (min, times[i]);
+    }
+    return min;
+}
+
 int32_t
 main (int32_t argc, char **argv)
 {
@@ -113,7 +123,7 @@ main (int32_t argc, char **argv)
 	mublasInitMat (&th, rdc_hst, cdc_hst, ldc_hst, hst_C, 0., 0, 0, 0);
 // --------------------------------------------
 	
-	if (!th.nodisp && th.fastModeFlag && th.dim_start) 
+	if (!th.nodisp && th.fastMode && th.dim_start) 
 		printf ("### Warning: when m=n=k=1, it is computed as DOT, which ignores fastmode and batchedGemm.\n");
 	print_info2 (&th);
 
@@ -182,11 +192,16 @@ main (int32_t argc, char **argv)
 				PWR_ObjAttrGetValue(obj_mem[i], PWR_ATTR_ENERGY, &energy0_mem[i], &tt); 
 			}
 			#endif
-			t0 = gettime ();
-			for (i = 0; i < NLOOP; i++) 
+	        double *times = new double[NLOOP];
+			for (i = 0; i < NLOOP; i++) {
+			    t0 = gettime ();
 				trgRgemm (ha, th.tranA, th.tranB, th.dim_m_dev, th.dim_n_dev, th.dim_k_dev, alpha, dev_A, lda_dev, dev_B, ldb_dev, beta, dev_C, ldc_dev);
-			t1 = gettime ();
-			sec = (t1 - t0) / NLOOP;
+			    t1 = gettime ();
+                times[i] = t1 - t0;
+            }
+			//sec = (t1 - t0) / NLOOP;
+            sec = getMin (times, NLOOP);
+	        delete[]times;
 			printf ("\t%1.3e\t%1.3e\t%1.3e\t%d", sec, (th.routine_flops / sec) * 1.0e-9, (th.routine_bytes / sec) * 1.0e-9, NLOOP);
 			#if defined (POWER_API)
 			PWR_ObjAttrGetValue(obj_node, PWR_ATTR_ENERGY, &energy1_node, &tt); 

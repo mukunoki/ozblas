@@ -16,7 +16,7 @@ int32_t ozblasRcsrmv (
 	const TYPE1 beta,
 	TYPE1 *devC
 ) {
-	if (oh->reproModeFlag == 0 && oh->nSplitMax == 1) {
+	if (oh->reproMode == 0 && oh->nSplitMax == 1) {
 		double t0 = timer();
 		if (oh->precxFlag == 1) 
 			blasRcsrmvX (tranA, m, n, nnz, alpha, descrA, devA, devAcolind, devArowptr, devB, beta, devC);
@@ -45,6 +45,7 @@ int32_t ozblasRcsrmv (
 	int32_t sizeType2 = sizeof (TYPE2);
 	int32_t sizeTypeS = sizeof (short);
 	int32_t nSplitMaxLoc = (oh->nSplitMax > 0) ? oh->nSplitMax : NumSplitDefaultMax;
+    if (oh->reproMode == 1) nSplitMaxLoc++;
 
 	if (oh->memMaskSplitA != 0) oh->memAddr = 0;
 	// --- here is preserved ---
@@ -56,10 +57,10 @@ int32_t ozblasRcsrmv (
 	if (oh->memMaskSplitA != 0) oh->memMaskSplitA = oh->memAddr;
 
 	ozblasMatAddrAlloc (oh, n, nSplitMaxLoc, sizeType2, (void**)&devBSplit, ldbs);
-	ozblasMatAddrAlloc (oh, m, nSplitMaxLoc * nSplitMaxLoc * ((oh->splitEpsModeFlag == 2)?2:1), sizeType2, (void**)&devCSplit, ldcs);
+	ozblasMatAddrAlloc (oh, m, nSplitMaxLoc * nSplitMaxLoc * ((oh->splitEpsMode == 2)?2:1), sizeType2, (void**)&devCSplit, ldcs);
 	ozblasVecAddrAlloc (oh, n, sizeType1, (void**)&devBTmp);
 	ozblasVecAddrAlloc (oh, m, sizeType1, (void**)&devCTmp);
-	if (oh->sumModeFlag == 3) {
+	if (oh->sumMode == 3) {
 		ozblasVecAddrAlloc (oh, m, sizeTypeT, (void**)&devCTmp1);
 		ozblasVecAddrAlloc (oh, m, sizeTypeT, (void**)&devCTmp2);
 		ozblasVecAddrAlloc (oh, m, sizeTypeT, (void**)&devCTmp3);
@@ -68,8 +69,8 @@ int32_t ozblasRcsrmv (
 	ozblasVecAddrAlloc (oh, nSplitMaxLoc, sizeTypeS, (void**)&devBSpExp);
 	// Splitting
 	ozblasVecAddrAlloc (oh, 1, sizeType1, (void**)&devBmax_);
-	// above must be allocated even if splitModeFlag is 3 as they may be used if Split3 is not used
-	if (oh->splitModeFlag == 3) {
+	// above must be allocated even if splitMode is 3 as they may be used if Split3 is not used
+	if (oh->splitMode == 3) {
 		// Currently, split3 is only for B
 		ozblasVecAddrAlloc (oh, 1, sizeType2, (void**)&devBmax);
 		ozblasVecAddrAlloc (oh, n, sizeType2, (void**)&devBTmpD1);
@@ -84,7 +85,7 @@ int32_t ozblasRcsrmv (
 
 	// Split of A -----------------------------------
 	t1 = timer();
-	if (oh->splitModeFlag == 3) {
+	if (oh->splitMode == 3) {
 		fprintf (OUTPUT, "OzBLAS warning: split3 for sparse matrix is not implemented.\n");
 		exit (1);
 	}
@@ -99,11 +100,12 @@ int32_t ozblasRcsrmv (
 
 	// Split of B -----------------------------------
 	t1 = timer();
-	int32_t split3FlagB = (oh->splitModeFlag == 3) ? rangeCheck <TYPE1, TYPE2> (n, 1, devB, n) : 0; // on (if 1)
+//	int32_t split3FlagB = (oh->splitMode == 3) ? rangeCheck <TYPE1, TYPE2> (n, 1, devB, n) : 0; // on (if 1)
 	int32_t nSplitB;
-	if (split3FlagB) 
+//	if (split3FlagB) 
+	if (oh->splitMode == 3) 
 		nSplitB = ozblasSplit3 (oh, 'c', n, 1, devB, n, devBSplit, ldbs, devBSpExp, 1, devBmax,
-								devBTmpD1, n, devBTmpD2, n, devBTmpD3, n, devBTmpD1, n);
+								devBTmpD1, n, devBTmpD2, n, devBTmpD3, n);
 	else
 		nSplitB = ozblasSplit (oh, 'c', n, 1, devB, n, devBTmp, n, devBSplit, ldbs, devBSpExp, 1, devBmax_);
 	oh->t_SplitB += timer() - t1;
@@ -112,13 +114,14 @@ int32_t ozblasRcsrmv (
 	t1 = timer();
 	int32_t ia, ib, ic, ik;
 	int32_t maxlevel = (nSplitA-1) + (nSplitB-1);
+    maxlevel = std::max (maxlevel - oh->fastMode, std::min (nSplitA-1, nSplitB-1));
 	TYPE2 *ptrB = devBSplit;
 	TYPE2 *ptrC = devCSplit;
 	ic = 0;
-	for (ia = 0; ia < MIN (maxlevel+1, nSplitA); ia++) {
-		const int32_t numB = MIN (nSplitB, maxlevel+1 - ia);
+	for (ia = 0; ia < std::min (maxlevel+1, nSplitA); ia++) {
+		const int32_t numB = std::min (nSplitB, maxlevel+1 - ia);
 		TYPE2 *ptrA = devASplit+ldas*ia;
-		if (oh->splitEpsModeFlag == 2) {
+		if (oh->splitEpsMode == 2) {
 			blasRcsrmm_x2 (tranA, m, numB, n, nnz, fone, descrA, ptrA, devAcolind, devArowptr, ptrB, ldbs, fzero, ptrC, ldcs);
 			ptrC += ldcs*numB*2;
 		} else {
@@ -136,7 +139,7 @@ int32_t ozblasRcsrmv (
 	// Sum -----------------------------------------
 	t1 = timer();
 	ic = 0;
-	if (oh->sumModeFlag == 3) {
+	if (oh->sumMode == 3) {
 		for (ik = 0; ik <= maxlevel; ik++) {
 			for (ia = 0; ia < nSplitA; ia++) {
 				for (ib = 0; ib < nSplitB; ib++) {
@@ -154,9 +157,9 @@ int32_t ozblasRcsrmv (
 		} // EndFor (ik)
 		ozblasAxpby (m, 1, devCTmp, 1, devC, 1, alpha, beta);
 	} else { // sumMode < 3
-		if (oh->splitEpsModeFlag == 2) maxlevel = (nSplitA-1) + (nSplitB*2-1);
+		if (oh->splitEpsMode == 2) maxlevel = (nSplitA-1) + (nSplitB*2-1);
 		if (ozblasGlobalSum (oh, m, 1, devASpExp, ldase, nSplitA,
-							devBSpExp, 1, nSplitB*((oh->splitEpsModeFlag == 2)?2:1), devCSplit, ldcs, ldcs, devC, 1, alpha, beta, maxlevel, 3, 0, 0)) {
+							devBSpExp, 1, nSplitB*((oh->splitEpsMode == 2)?2:1), devCSplit, ldcs, ldcs, devC, 1, alpha, beta, maxlevel, 3, 0, 0)) {
 			fprintf (OUTPUT, "OzBLAS error: sum is failed\n");
 			exit (1);
 		}
@@ -196,7 +199,7 @@ TYPE2 *ozblasRcsrmvSplitA (
 	const TYPE1 *devA,
 	const int32_t *devArowptr
 ) {
-	if (oh->reproModeFlag == 0 && oh->nSplitMax == 1) {
+	if (oh->reproMode == 0 && oh->nSplitMax == 1) {
 		return (TYPE2*)devA;
 	}
 	if (tranA == 't' || tranA == 'T') {
@@ -211,6 +214,7 @@ TYPE2 *ozblasRcsrmvSplitA (
 	int32_t sizeType2 = sizeof (TYPE2);
 	int32_t ldas, ldase;
 	int32_t nSplitMaxLoc = (oh->nSplitMax > 0) ? oh->nSplitMax : NumSplitDefaultMax;
+    if (oh->reproMode == 1) nSplitMaxLoc++;
 	// --- here is preserved ---
 	ozblasMatAddrAlloc (oh, nnz, nSplitMaxLoc, sizeType2, (void**)&devASplit, ldas);
 	ozblasVecAddrAlloc (oh, nnz, sizeType1, (void**)&devATmp);
@@ -225,7 +229,7 @@ TYPE2 *ozblasRcsrmvSplitA (
 
 	double t1 = timer();
 	// Split of A -----------------------------------
-	if (oh->splitModeFlag == 3) {
+	if (oh->splitMode == 3) {
 		fprintf (OUTPUT, "OzBLAS error: split3 for sparse matrix is not implemented.\n");
 		exit (1);
 	}

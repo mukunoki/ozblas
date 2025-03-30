@@ -40,8 +40,7 @@ int32_t ozblasRgemm (
 	int32_t ldct1, ldct2, ldct3;
 	int32_t mbk = m;
 	int32_t nbk = n;
-	int32_t nSplitMaxLoc = (oh->nSplitMax > 1) ? oh->nSplitMax + 1 : NumSplitDefaultMax;
-    if (oh->reproMode == 1) nSplitMaxLoc++;
+	int32_t nSplitMaxLoc = (oh->nSplitMax > 0) ? oh->nSplitMax : NumSplitDefaultMax;
 	int32_t sizeType1 = sizeof (TYPE1);
 	int32_t sizeType2 = sizeof (TYPE2);
 	int32_t sizeTypeS = sizeof (short);
@@ -98,6 +97,10 @@ int32_t ozblasRgemm (
 	oh->mbk = mbk;
 	oh->nbk = nbk;
 
+    // ==========
+    oh->nSplitMax = oh->nSplitMax - 1;
+    // ==========
+
 	// main part (Split, Comp, Sum)
 	char transA_ = transA;
 	char transB_ = transB;
@@ -109,25 +112,27 @@ int32_t ozblasRgemm (
 		int32_t nSplitA;
 		t1 = timer();
 		if (checkTrans (transA) == 0) {
-			//split3FlagA = (oh->splitMode == 3) ? rangeCheck <TYPE1, TYPE2> (mbk_, k, devA+im*mbk, lda) : 0; // on (if 1)
+			split3FlagA = (oh->splitMode == 3) ? rangeCheck <TYPE1, TYPE2> (mbk_, k, devA+im*mbk, lda) : 0; // on (if 1)
 			blasRomatcopy ('t', mbk_, k, devA+im*mbk, lda, devTmp1, ldt); // transpose matA for performance
 			transA_ = 't';
-			if (oh->splitMode == 3) 
-			//if (split3FlagA == 1) 
+			if (split3FlagA == 1) 
 				nSplitA = ozblasSplit3 (oh, 'c', k, mbk_, devTmp1, ldt, devASplit, ldas, devASpExp, ldase,
 										devMax2, devTmp21, ldt, devTmp22, ldt, devTmp23, ldt);
 			else 
 				nSplitA = ozblasSplit (oh, 'c', k, mbk_, devTmp1, ldt, devTmp1, ldt, devASplit, ldas, devASpExp, ldase, devMax1);
 		} else { // transposed 
-			//split3FlagA = (oh->splitMode == 3) ? rangeCheck <TYPE1, TYPE2> (k, mbk_, devA+im*mbk, lda) : 0; // on (if 1)
-			if (oh->splitMode == 3) 
-			//if (split3FlagA == 1)
+			split3FlagA = (oh->splitMode == 3) ? rangeCheck <TYPE1, TYPE2> (k, mbk_, devA+im*mbk, lda) : 0; // on (if 1)
+			if (split3FlagA == 1)
 				nSplitA = ozblasSplit3 (oh, 'c', k, mbk_, devA+im*mbk*lda, lda, devASplit, ldas, devASpExp, ldase,
 										devMax2, devTmp21, ldt, devTmp22, ldt, devTmp23, ldt);
 			else 
 				nSplitA = ozblasSplit (oh, 'c', k, mbk_, devA+im*mbk*lda, lda, devTmp1, ldt, devASplit, ldas, devASpExp, ldase, devMax1);
 		}
 		oh->t_SplitA += timer() - t1;
+
+        // ==========
+        nSplitA ++;
+        // ==========
 
 		for (int32_t in = 0; in < ceil((float)n/nbk); in++) {
 			int32_t nbk_ = (n-nbk*in >= nbk) ? nbk : n-nbk*in;
@@ -136,19 +141,17 @@ int32_t ozblasRgemm (
 			int32_t nSplitB;
 			t1 = timer();
 			if (checkTrans (transB) == 0) {
-				//split3FlagB = (oh->splitMode == 3) ? rangeCheck <TYPE1, TYPE2> (k, nbk_, devB+in*nbk*ldb, ldb) : 0; // on (if 1)
-				if (oh->splitMode == 3) 
-				//if (split3FlagB == 1) 
+				split3FlagB = (oh->splitMode == 3) ? rangeCheck <TYPE1, TYPE2> (k, nbk_, devB+in*nbk*ldb, ldb) : 0; // on (if 1)
+				if (split3FlagB == 1) 
 					nSplitB = ozblasSplit3 (oh, 'c', k, nbk_, devB+in*nbk*ldb, ldb, devBSplit, ldbs, devBSpExp, ldbse,
 											devMax2, devTmp21, ldt, devTmp22, ldt, devTmp23, ldt);
 				else 
 					nSplitB = ozblasSplit (oh, 'c', k, nbk_, devB+in*nbk*ldb, ldb, devTmp1, ldt, devBSplit, ldbs, devBSpExp, ldbse, devMax1);
 			} else { // transposed
-				//split3FlagB = (oh->splitMode == 3) ? rangeCheck <TYPE1, TYPE2> (nbk_, k, devB+in*nbk, ldb) : 0; // on (if 1)
+				split3FlagB = (oh->splitMode == 3) ? rangeCheck <TYPE1, TYPE2> (nbk_, k, devB+in*nbk, ldb) : 0; // on (if 1)
 				blasRomatcopy ('t', nbk_, k, devB+in*nbk, ldb, devTmp1, ldt); // transpose matB for performance
 				transB_ = 'n';
-				if (oh->splitMode == 3) 
-				//if (split3FlagB == 1) 
+				if (split3FlagB == 1) 
 					nSplitB = ozblasSplit3 (oh, 'c', k, nbk_, devTmp1, ldt, devBSplit, ldbs, devBSpExp, ldbse,
 											devMax2, devTmp21, ldt, devTmp22, ldt, devTmp23, ldt);
 				else
@@ -156,12 +159,21 @@ int32_t ozblasRgemm (
 			}
 			oh->t_SplitB += timer() - t1;
 
+            // ==========
+            nSplitB ++;
+            // ==========
+
 			// Compute --------------------------------------
 			t1 = timer();
 			double t_sum_local = 0.;
 			int32_t ic = 0;
+			//int32_t maxlevel = (oh->fastMode) ? std::min (nSplitA-1, nSplitB-1) : (nSplitA-1) + (nSplitB-1);
 			int32_t maxlevel = (nSplitA-1) + (nSplitB-1);
             maxlevel = std::max (maxlevel - oh->fastMode, std::min (nSplitA-1, nSplitB-1));
+//            else if (oh->fastMode == 1) 
+//			    maxlevel = std::min (nSplitA-1, nSplitB-1);
+//            else 
+//			    maxlevel = oh->fastMode;
 
 			if (n == 1 && m == 1 && oh->splitEpsMode == 2 && oh->fastMode == 0 && (oh->sumMode < 2 || oh->sumMode == 30)) { // Dot2 (only on DOT)
 				TYPE2 *ptrA, *ptrB, *ptrC;
@@ -302,6 +314,10 @@ int32_t ozblasRgemm (
 			oh->nSplitC += ic;
 		} // EndFor (in)
 	} // EndFor (im)
+
+    // ==========
+    oh->nSplitMax = oh->nSplitMax + 1;
+    // ==========
 
 	oh->t_total = timer() - t0;
 	oh->nSplitA /= (float)block_count;

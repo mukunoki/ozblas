@@ -16,7 +16,7 @@ int32_t cuozblasRcsrmv (
 	const TYPE1 beta,
 	TYPE1 *devC
 ) {
-	if (oh->reproModeFlag == 0 && oh->nSplitMax == 1) {
+	if (oh->reproMode == 0 && oh->nSplitMax == 1) {
 		printf ("here\n");
 		double t0 = cutimer();
 		if (oh->precxFlag == 1) 
@@ -54,7 +54,7 @@ int32_t cuozblasRcsrmv (
 	if (oh->memMaskSplitA != 0) oh->memMaskSplitA = oh->memAddr;
 
 	cuozblasMatAddrAlloc (oh, n, nSplitMaxLoc, sizeType2, (void**)&devBSplit, ldbs);
-	cuozblasMatAddrAlloc (oh, m, nSplitMaxLoc * nSplitMaxLoc * ((oh->splitEpsModeFlag == 2)?2:1), sizeType2, (void**)&devCSplit, ldcs);
+	cuozblasMatAddrAlloc (oh, m, nSplitMaxLoc * nSplitMaxLoc * ((oh->splitEpsMode == 2)?2:1), sizeType2, (void**)&devCSplit, ldcs);
 	cuozblasVecAddrAlloc (oh, n, sizeType1, (void**)&devBTmp);
 	// Exp
 	cuozblasVecAddrAlloc (oh, nSplitMaxLoc, sizeTypeS, (void**)&devBSpExp);
@@ -92,7 +92,7 @@ int32_t cuozblasRcsrmv (
 	for (ia = 0; ia < MIN (maxlevel+1, nSplitA); ia++) {
 		const int32_t numB = MIN (nSplitB, maxlevel+1 - ia);
 		TYPE2 *ptrA = devASplit+ldas*ia;
-		if (oh->splitEpsModeFlag == 2) {
+		if (oh->splitEpsMode == 2) {
 			blasRcsrmm_x2 (oh->csh, tranA, m, numB, n, nnz, fone, descrA, ptrA, devAcolind, devArowptr, ptrB, ldbs, fzero, ptrC, ldcs);
 			ptrC += ldcs*numB*2;
 		} else {
@@ -110,9 +110,9 @@ int32_t cuozblasRcsrmv (
 	// Sum -----------------------------------------
 	t1 = cutimer();
 	ic = 0;
-	if (oh->splitEpsModeFlag == 2) maxlevel = (nSplitA-1) + (nSplitB*2-1);
+	if (oh->splitEpsMode == 2) maxlevel = (nSplitA-1) + (nSplitB*2-1);
 	if (cuozblasGlobalSum (oh, m, 1, 1, devASpExp, ldase, nSplitA,
-						devBSpExp, 1, nSplitB*((oh->splitEpsModeFlag == 2)?2:1), devCSplit, ldcs, ldcs, devC, 1, alpha, beta, maxlevel, 3)) {
+						devBSpExp, 1, nSplitB*((oh->splitEpsMode == 2)?2:1), devCSplit, ldcs, ldcs, devC, 1, alpha, beta, maxlevel, 3)) {
 		fprintf (OUTPUT, "OzBLAS error: sum is failed\n");
 		exit (1);
 	}
@@ -149,7 +149,7 @@ TYPE2 *cuozblasRcsrmvSplitA (
 	const TYPE1 *devA,
 	const int32_t *devArowptr
 ) {
-	if (oh->reproModeFlag == 0 && oh->nSplitMax == 1) {
+	if (oh->reproMode == 0 && oh->nSplitMax == 1) {
 		return (TYPE2*)devA;
 	}
 	if (tranA == 't' || tranA == 'T') {

@@ -82,7 +82,7 @@ main (int32_t argc, char **argv)
 	mublasInitMat (&th, th.dim_n_hst*th.incy, 1, 0, hst_Y, th.phi, 3, th.trunc, 2); 
 // --------------------------------------------
 
-	if (!th.nodisp && th.fastModeFlag) printf ("### Warning: fastmode is ignored on DOT because DOT is computed by a GEMM.\n");
+	if (!th.nodisp && th.fastMode) printf ("### Warning: fastmode is ignored on DOT because DOT is computed by a GEMM.\n");
 	if (!th.nodisp && th.useBatchedGemmFlag) printf ("### Warning: batchedGemm is ignored on DOT because DOT is computed by a GEMM.\n");
 	print_info2 (&th);
 

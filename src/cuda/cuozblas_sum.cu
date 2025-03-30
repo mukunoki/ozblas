@@ -364,7 +364,7 @@ int32_t cuozblasGlobalSum (
 	grid = dim3 (nbx, nby);
 	
 	int32_t check = 0;
-	if (oh->sumModeFlag == 1) { // Nearsum
+	if (oh->sumMode == 1) { // Nearsum
 		if (typeid(TYPE1) != typeid(TYPE3)) {
 			fprintf (OUTPUT, "OzBLAS error: Nearsum is not supported when TYPE1 != TYPE3.\n");
 			exit (1);

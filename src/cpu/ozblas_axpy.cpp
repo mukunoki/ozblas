@@ -10,7 +10,7 @@ int32_t ozblasRaxpy (
 	TYPE *devY,
 	const int32_t incy
 ) {
-	if (oh->reproModeFlag == 0) {
+	if (oh->reproMode == 0) {
 		blasRaxpy (n, alpha, (TYPE*)devX, incx, (TYPE*)devY, incy);
 		return 0;
 	}

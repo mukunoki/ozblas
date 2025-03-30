@@ -53,6 +53,7 @@ int32_t checkTrans (const char tran) {
 }
 
 // check if matrix elements (on TYPE1) fit in the range of TYPE2
+/*
 template <typename TYPE1, typename TYPE2>
 int32_t rangeCheck (
 	const int32_t m,
@@ -62,8 +63,8 @@ int32_t rangeCheck (
 ) {
 	int32_t checkGlobal = 1; // OK
 	int32_t addry;
-	constexpr TYPE2 type2Max = getTypeMax <TYPE2> ();
-	constexpr TYPE2 type2Min = getTypeMin <TYPE2> ();
+	constexpr TYPE1 type2Max = getTypeMax <TYPE2> ();
+	constexpr TYPE1 type2Min = getTypeMin <TYPE2> ();
 	TYPE1 type1MaxAbs = (TYPE1)fabs1(type2Max);
 	TYPE1 type1MinAbs = (TYPE1)fabs1(type2Min);
 	#pragma omp parallel for
@@ -80,6 +81,7 @@ int32_t rangeCheck (
 			checkGlobal = 0; // NG
 		}
 	}
+    if (checkGlobal==0) printf ("rangeout\n");
 	return checkGlobal; // 0:NG (out of range), 1:OK (within range)
 }
 template int32_t rangeCheck <__float128, double> (const int32_t m, const int32_t n, const __float128 *mat, const int32_t ld);
@@ -88,6 +90,7 @@ template int32_t rangeCheck <double, float> (const int32_t m, const int32_t n, c
 template int32_t rangeCheck <double, double> (const int32_t m, const int32_t n, const double *mat, const int32_t ld);
 template int32_t rangeCheck <float, double> (const int32_t m, const int32_t n, const float *mat, const int32_t ld);
 template int32_t rangeCheck <float, float> (const int32_t m, const int32_t n, const float *mat, const int32_t ld);
+*/
 
 // =========================================
 // Print floating-point value with bit representation
