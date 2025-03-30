@@ -119,8 +119,8 @@ main (int32_t argc, char **argv)
 	// initialize (0:const, 1:drand48, 2:phi, 3:erange)
 	mublasInitMat (&th, 1, 1, 0, &alpha, 1., 0, 0, 0);
 	mublasInitMat (&th, 1, 1, 0, &beta, 0., 0, 0, 0);
-	mublasInitMat (&th, n, 1, 0, hst_X, 1., 1, 0, 1);
-	//mublasInitMat (&th, n, 1, 0, hst_X, th.phi, 1, 0, 1);
+	//mublasInitMat (&th, n, 1, 0, hst_X, 1., 1, 0, 1);
+	mublasInitMat (&th, n, 1, 0, hst_X, th.phi, 3, 0, 1);
 	mublasInitMat (&th, m, 1, 0, hst_Y, 0., 0, 0, 0);
 // --------------------------------------------
 

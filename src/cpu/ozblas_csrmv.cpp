@@ -45,6 +45,7 @@ int32_t ozblasRcsrmv (
 	int32_t sizeType2 = sizeof (TYPE2);
 	int32_t sizeTypeS = sizeof (short);
 	int32_t nSplitMaxLoc = (oh->nSplitMax > 0) ? oh->nSplitMax : NumSplitDefaultMax;
+    if (oh->reproMode == 1) nSplitMaxLoc++;
 
 	if (oh->memMaskSplitA != 0) oh->memAddr = 0;
 	// --- here is preserved ---
@@ -213,6 +214,7 @@ TYPE2 *ozblasRcsrmvSplitA (
 	int32_t sizeType2 = sizeof (TYPE2);
 	int32_t ldas, ldase;
 	int32_t nSplitMaxLoc = (oh->nSplitMax > 0) ? oh->nSplitMax : NumSplitDefaultMax;
+    if (oh->reproMode == 1) nSplitMaxLoc++;
 	// --- here is preserved ---
 	ozblasMatAddrAlloc (oh, nnz, nSplitMaxLoc, sizeType2, (void**)&devASplit, ldas);
 	ozblasVecAddrAlloc (oh, nnz, sizeType1, (void**)&devATmp);
