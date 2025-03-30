@@ -709,6 +709,7 @@ template int32_t ozblasLocalFsum3simd <float, float> (const int32_t m, const int
 // ==============================================
 // ==============================================
 
+/*
 #include "eft.h"
 
 bool is_aligned_32(const void* ptr) {
@@ -716,7 +717,7 @@ bool is_aligned_32(const void* ptr) {
 }
 
 template <>
-int32_t ozblasLocalFsum3simd (
+int32_t ozblasLocalFsum3avx2 (
 	const int32_t m,
 	const int32_t n,
 	const short *devASpExp,
@@ -744,7 +745,96 @@ int32_t ozblasLocalFsum3simd (
 		if (checkLocal) continue;
 
 		short seB = (split3FlagB) ? 0:devBSpExp[addry];
-        /*
+        // === AVX2 ===
+		for (int32_t addrx = 0; addrx < m; addrx+=4) {
+			__m256d c4 = _mm256_load_pd (&devCsplit[addry * ldcs + addrx]);
+			short seA = (split3FlagA) ? 0:devASpExp[addrx];
+			short seA1 = (split3FlagA) ? 0:devASpExp[addrx+1];
+			short seA2 = (split3FlagA) ? 0:devASpExp[addrx+2];
+			short seA3 = (split3FlagA) ? 0:devASpExp[addrx+3];
+            alignas(32) double c4d[4];
+            _mm256_store_pd (c4d, c4);
+			c4d[0] = scalbn1 (c4d[0], seA+seB); // here, TYPE2
+			c4d[1] = scalbn1 (c4d[1], seA1+seB); // here, TYPE2
+			c4d[2] = scalbn1 (c4d[2], seA2+seB); // here, TYPE2
+			c4d[3] = scalbn1 (c4d[3], seA3+seB); // here, TYPE2
+            c4 = _mm256_load_pd(c4d);
+			if (ic == 0) { // fisrt
+				_mm256_store_pd (&devCtmp1[addry * ldct1 + addrx], c4);
+				_mm256_store_pd (&devCtmp2[addry * ldct2 + addrx], _mm256_set_pd(0.,0.,0.,0.));
+				_mm256_store_pd (&devCtmp3[addry * ldct3 + addrx], _mm256_set_pd(0.,0.,0.,0.));
+			} else {
+			    __m256d t14 = _mm256_load_pd (&devCtmp1[addry * ldct1 + addrx]);
+			    __m256d t24 = _mm256_load_pd (&devCtmp2[addry * ldct2 + addrx]);
+			    __m256d t34 = _mm256_load_pd (&devCtmp3[addry * ldct3 + addrx]);
+                __m256d e14, e24;
+				TwoSum_avx256 (t14, c4, t14, e14);
+				TwoSum_avx256 (t24, e14, t24, e24);
+                t34 = _mm256_add_pd (t34, e24);
+				if (ic == -1) { // last
+					// check overflow (this check should be done on TYPE2)
+					//if (std::isinf(t1) || std::isnan(t1) || std::isinf(t2) || std::isnan(t2) || std::isinf(t3) || std::isnan(t3)) checkLocal = 1; // computation failed
+					//else devCtmp[addry * ldct + addrx] = (__float128)t1 + ((__float128)t2 + (__float128)t3);
+                    alignas(32) double t14d[4];
+                    alignas(32) double t24d[4];
+                    alignas(32) double e14d[4];
+                    alignas(32) double e24d[4];
+                    alignas(32) double t34d[4];
+                    _mm256_store_pd (e14d, e14);
+                    _mm256_store_pd (t14d, t14);
+                    _mm256_store_pd (t24d, t24);
+                    _mm256_store_pd (t34d, t34);
+					devCtmp[addry * ldct + addrx]   = (__float128)t14d[0] + ((__float128)t24d[0] + (__float128)t34d[0]);
+					devCtmp[addry * ldct + addrx+1] = (__float128)t14d[1] + ((__float128)t24d[1] + (__float128)t34d[1]);
+					devCtmp[addry * ldct + addrx+2] = (__float128)t14d[2] + ((__float128)t24d[2] + (__float128)t34d[2]);
+					devCtmp[addry * ldct + addrx+3] = (__float128)t14d[3] + ((__float128)t24d[3] + (__float128)t34d[3]);
+				} else {
+				    _mm256_storeu_pd (&devCtmp1[addry * ldct1 + addrx], t14);
+				    _mm256_storeu_pd (&devCtmp2[addry * ldct2 + addrx], t24);
+				    _mm256_storeu_pd (&devCtmp3[addry * ldct3 + addrx], t34);
+				}
+			}
+
+		}
+
+		if (checkLocal) {
+			// here you can write re-do codes with TYPE1
+			#pragma omp atomic write
+			checkGlobal = 1;
+		}
+	}
+	return checkGlobal;
+}
+
+template <>
+int32_t ozblasLocalFsum3avx512 (
+	const int32_t m,
+	const int32_t n,
+	const short *devASpExp,
+	const short *devBSpExp,
+	const double *devCsplit,
+	const int32_t ldcs,
+	__float128 *devCtmp,
+	const int32_t ldct,
+	double *devCtmp1,
+	const int32_t ldct1,
+	double *devCtmp2,
+	const int32_t ldct2,
+	double *devCtmp3,
+	const int32_t ldct3,
+	const int32_t ic,
+	const int32_t split3FlagA,
+	const int32_t split3FlagB
+) {
+	int32_t checkGlobal = 0;
+	#pragma omp parallel for
+	for (int32_t addry = 0; addry < n; addry++) {
+		int32_t checkLocal = 0;
+		#pragma omp atomic read
+		checkLocal = checkGlobal;
+		if (checkLocal) continue;
+
+		short seB = (split3FlagB) ? 0:devBSpExp[addry];
      // === AVX512 ===
 		for (int32_t addrx = 0; addrx < m; addrx+=8) {
 			__m512d c4 = _mm512_load_pd (&devCsplit[addry * ldcs + addrx]);
@@ -806,60 +896,6 @@ int32_t ozblasLocalFsum3simd (
 				    _mm512_storeu_pd (&devCtmp3[addry * ldct3 + addrx], t34);
 				}
 			}
-            */
-
-///*
-        // === AVX2 ===
-		for (int32_t addrx = 0; addrx < m; addrx+=4) {
-			__m256d c4 = _mm256_load_pd (&devCsplit[addry * ldcs + addrx]);
-			short seA = (split3FlagA) ? 0:devASpExp[addrx];
-			short seA1 = (split3FlagA) ? 0:devASpExp[addrx+1];
-			short seA2 = (split3FlagA) ? 0:devASpExp[addrx+2];
-			short seA3 = (split3FlagA) ? 0:devASpExp[addrx+3];
-            alignas(32) double c4d[4];
-            _mm256_store_pd (c4d, c4);
-			c4d[0] = scalbn1 (c4d[0], seA+seB); // here, TYPE2
-			c4d[1] = scalbn1 (c4d[1], seA1+seB); // here, TYPE2
-			c4d[2] = scalbn1 (c4d[2], seA2+seB); // here, TYPE2
-			c4d[3] = scalbn1 (c4d[3], seA3+seB); // here, TYPE2
-            c4 = _mm256_load_pd(c4d);
-			if (ic == 0) { // fisrt
-				_mm256_store_pd (&devCtmp1[addry * ldct1 + addrx], c4);
-				_mm256_store_pd (&devCtmp2[addry * ldct2 + addrx], _mm256_set_pd(0.,0.,0.,0.));
-				_mm256_store_pd (&devCtmp3[addry * ldct3 + addrx], _mm256_set_pd(0.,0.,0.,0.));
-			} else {
-			    __m256d t14 = _mm256_load_pd (&devCtmp1[addry * ldct1 + addrx]);
-			    __m256d t24 = _mm256_load_pd (&devCtmp2[addry * ldct2 + addrx]);
-			    __m256d t34 = _mm256_load_pd (&devCtmp3[addry * ldct3 + addrx]);
-                __m256d e14, e24;
-				TwoSum_avx256 (t14, c4, t14, e14);
-				TwoSum_avx256 (t24, e14, t24, e24);
-                t34 = _mm256_add_pd (t34, e24);
-				if (ic == -1) { // last
-					// check overflow (this check should be done on TYPE2)
-					//if (std::isinf(t1) || std::isnan(t1) || std::isinf(t2) || std::isnan(t2) || std::isinf(t3) || std::isnan(t3)) checkLocal = 1; // computation failed
-					//else devCtmp[addry * ldct + addrx] = (__float128)t1 + ((__float128)t2 + (__float128)t3);
-                    alignas(32) double t14d[4];
-                    alignas(32) double t24d[4];
-                    alignas(32) double e14d[4];
-                    alignas(32) double e24d[4];
-                    alignas(32) double t34d[4];
-                    _mm256_store_pd (e14d, e14);
-                    _mm256_store_pd (t14d, t14);
-                    _mm256_store_pd (t24d, t24);
-                    _mm256_store_pd (t34d, t34);
-					devCtmp[addry * ldct + addrx]   = (__float128)t14d[0] + ((__float128)t24d[0] + (__float128)t34d[0]);
-					devCtmp[addry * ldct + addrx+1] = (__float128)t14d[1] + ((__float128)t24d[1] + (__float128)t34d[1]);
-					devCtmp[addry * ldct + addrx+2] = (__float128)t14d[2] + ((__float128)t24d[2] + (__float128)t34d[2]);
-					devCtmp[addry * ldct + addrx+3] = (__float128)t14d[3] + ((__float128)t24d[3] + (__float128)t34d[3]);
-				} else {
-				    _mm256_storeu_pd (&devCtmp1[addry * ldct1 + addrx], t14);
-				    _mm256_storeu_pd (&devCtmp2[addry * ldct2 + addrx], t24);
-				    _mm256_storeu_pd (&devCtmp3[addry * ldct3 + addrx], t34);
-				}
-			}
-       // */
-
 		}
 
 		if (checkLocal) {
@@ -870,6 +906,7 @@ int32_t ozblasLocalFsum3simd (
 	}
 	return checkGlobal;
 }
+*/
 
 // ==============================================
 // ==============================================
