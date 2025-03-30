@@ -267,7 +267,7 @@ int32_t ozblasSplit (
 	const int32_t ldse,
 	TYPE1 *devMax
 ) {
-	int32_t s = 0;
+	int32_t s;
 	// FindMax^(0)
 	ozblasFindMaxDevice (major, m, n, devInput, ldi, devMax);
 	// Split^(0) & FindMax^(1)
@@ -276,10 +276,15 @@ int32_t ozblasSplit (
     if constexpr (std::is_same<TYPE1, TYPE2>::value) 
         if (oh->reproMode == 0) maxS--;
 	// Split^(s) & FindMax^(s+1)
-	for (s = 1; s < maxS; s++) 
-		if (ozblasSplitDevice (major, m, n, devOutput, ldo, devOutput, ldo, &devSplit[lds*n*s], lds, &devSpExp[ldse*s], devMax, oh->splitEpsMode, oh->splitShift) == 0.) return s;
+	for (s = 1; s < maxS; s++) {
+		if (ozblasSplitDevice (major, m, n, devOutput, ldo, devOutput, ldo, &devSplit[lds*n*s], lds, &devSpExp[ldse*s], devMax, oh->splitEpsMode, oh->splitShift) == 0.) {
+            s++;
+            break;
+        }
+    }
 	if (oh->splitMode == 1) fprintf (OUTPUT, "OzBLAS error: still splittable.\n");
-    if (oh->nSplitMax == 0 && oh->reproMode == 0) s--;
+    if constexpr (std::is_same<TYPE1, TYPE2>::value) 
+        if (oh->reproMode == 0) s++;
 	return s;
 }
 template int32_t ozblasSplit <__float128, double> (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const __float128 *devInput, const int32_t ldi, __float128 *devOutput, const int32_t ldo, double *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, __float128 *devMax);
@@ -423,7 +428,7 @@ int32_t ozblasSplit3 (
 			devTmpD3[addry * ldt3 + addrx] = tmp3d;
 		}
 	}
-	int32_t s = 0;
+	int32_t s;
 	// FindMax^(0)
 	ozblasFindMaxDevice (major, m, n, devTmpD1, ldt1, devMax);
 	// Split^(0) & FindMax^(1)
@@ -431,10 +436,14 @@ int32_t ozblasSplit3 (
 	int32_t maxS = (oh->nSplitMax > 0) ? oh->nSplitMax : NumSplitDefaultMax;
     if (oh->reproMode == 0) maxS--;
 	// Split^(s) & FindMax^(s+1)
-	for (s = 1; s < maxS; s++) 
-		if (ozblasSplitDevice3 (major, m, n, devTmpD1, ldt1, devTmpD2, ldt2, devTmpD3, ldt3, &devSplit[lds*n*s], lds, &devSpExp[ldse*s], devMax, oh->splitEpsMode, oh->splitShift) == 0.) return s;
+	for (s = 1; s < maxS; s++) {
+		if (ozblasSplitDevice3 (major, m, n, devTmpD1, ldt1, devTmpD2, ldt2, devTmpD3, ldt3, &devSplit[lds*n*s], lds, &devSpExp[ldse*s], devMax, oh->splitEpsMode, oh->splitShift) == 0.) {
+            s++;
+            return s;
+        }
+    }
 	if (oh->splitMode == 1 || oh->splitMode == 31) fprintf (OUTPUT, "OzBLAS error: still splittable.\n");
-    if (oh->nSplitMax == 0 && oh->reproMode == 0) s--;
+    if (oh->reproMode == 0) s++;
 	return s;
 }
 template int32_t ozblasSplit3 (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const __float128 *devInput, const int32_t ldi, double *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax, double *devTmpD1, const int32_t ldt1, double *devTmpD2, const int32_t ldt2, double *devTmpD3, const int32_t ldt3);
@@ -898,19 +907,23 @@ int32_t ozblasSplitSparse (
 	const int32_t ldse,
 	TYPE1 *devMax
 ) {
-	// ozblasFindMax^(0)
-	int32_t s = 0;
+	int32_t s;
+	// FindMax^(0)
 	ozblasFindMaxSparseDevice (major, m, devInput, devRowptr, devMax);
-	// Split^(0) & ozblasFindMax^(1)
+	// Split^(0) & FindMax^(1)
 	ozblasSplitSparseDevice (major, m, devInput, devRowptr, devOutput, &devSplit[0], lds, devSpExp, devMax, oh->splitEpsMode, oh->splitShift);
 	int32_t maxS = (oh->nSplitMax > 0) ? oh->nSplitMax : NumSplitDefaultMax;
     if constexpr (std::is_same<TYPE1, TYPE2>::value) 
         if (oh->reproMode == 0) maxS--;
-	// Split^(s) & ozblasFindMax^(s+1)
+	// Split^(s) & FindMax^(s+1)
 	for (s = 1; s < maxS; s++) 
-		if (ozblasSplitSparseDevice (major, m, devOutput, devRowptr, devOutput, &devSplit[lds*s], lds, &devSpExp[ldse*s], devMax, oh->splitEpsMode, oh->splitShift) == 0.) break;
+		if (ozblasSplitSparseDevice (major, m, devOutput, devRowptr, devOutput, &devSplit[lds*s], lds, &devSpExp[ldse*s], devMax, oh->splitEpsMode, oh->splitShift) == 0.) {
+            s++;
+            return s;
+        }
 	if (oh->splitMode == 1) fprintf (OUTPUT, "OzBLAS error: still splittable.\n");
-    if (oh->nSplitMax == 0 && oh->reproMode == 0) s--;
+    if constexpr (std::is_same<TYPE1, TYPE2>::value) 
+        if (oh->reproMode == 0) s++;
 	return s;
 }
 template int32_t ozblasSplitSparse <__float128, double> (ozblasHandle_t *oh, const char major, const int32_t m, const __float128 *devInput, const int32_t *devRowptr, __float128 *devOutput, double *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, __float128 *devMax);
