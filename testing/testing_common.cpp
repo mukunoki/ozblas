@@ -878,7 +878,7 @@ void mublasCheckMatrix (
 			trgf = target[j*ldt+i];
 			dif = trgf - ref;
 			rerr = (ref == 0.) ? 0. : FABS (dif / ref);
-			//if (rerr != 0.)	printf("[%ld,%ld] trg=%1.16e ref=%1.16e diff=%1.3e (%1.3e)\n", j, i, (double)trgf, (double)ref, (double)dif, (double)rerr);
+			//if (trgf != 0.)	printf("[%ld,%ld] trg=%1.16e ref=%1.16e diff=%1.3e (%1.3e)\n", j, i, (double)trgf, (double)ref, (double)dif, (double)rerr);
 			if (rerrmax < rerr) rerrmax = rerr;
 			#if defined (PREC_DD)
 			if (isinf1(trgf.x[0]) || isnan1(trgf.x[0])) {

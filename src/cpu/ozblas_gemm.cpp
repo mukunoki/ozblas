@@ -29,7 +29,7 @@ int32_t ozblasRgemm (
 	
 	TYPE1 *devTmp1, *devCTmp, *devMax1;
 	TYPE2 *devMax2, *devTmp21, *devTmp22, *devTmp23;
-	TYPE2 *devASplit, *devBSplit, *devCSplit;
+	TYPE2 *devASplit, *devBSplit, *devCSplit, *devTmpS;
 	TYPE2 fone = 1., fzero = 0.;
 	short *devASpExp, *devBSpExp;
 	// for QSGEMM, double is used, not TYPE2
@@ -61,6 +61,7 @@ int32_t ozblasRgemm (
 		if (oh->splitEpsMode == 2) sizeCn *= 2;
 		ozblasMatAddrAlloc (oh, k, mbk * nSplitMaxLoc, sizeType2, (void**)&devASplit, ldas); // Note: A is transposed!! o ldas is k-based
 		ozblasMatAddrAlloc (oh, k, nbk * nSplitMaxLoc, sizeType2, (void**)&devBSplit, ldbs);
+		if (oh->reproMode == 0 && oh->nSplitMax == 0) ozblasMatAddrAlloc (oh, k, std::max(mbk,nbk),  sizeType2, (void**)&devTmpS,   ldt); // TRANSPOSE
 		ozblasMatAddrAlloc (oh, mbk, sizeCn,           sizeType2, (void**)&devCSplit, ldcs);
 		ozblasMatAddrAlloc (oh, k, std::max(mbk,nbk),  sizeType1, (void**)&devTmp1,   ldt); // TRANSPOSE
 		ozblasMatAddrAlloc (oh, mbk, nbk,              sizeType1, (void**)&devCTmp,   ldct);
@@ -117,7 +118,7 @@ int32_t ozblasRgemm (
 				nSplitA = ozblasSplit3 (oh, 'c', k, mbk_, devTmp1, ldt, devASplit, ldas, devASpExp, ldase,
 										devMax2, devTmp21, ldt, devTmp22, ldt, devTmp23, ldt);
 			else 
-				nSplitA = ozblasSplit (oh, 'c', k, mbk_, devTmp1, ldt, devTmp1, ldt, devASplit, ldas, devASpExp, ldase, devMax1);
+				nSplitA = ozblasSplit (oh, 'c', k, mbk_, devTmp1, ldt, devTmp1, ldt, devASplit, ldas, devASpExp, ldase, devMax1, devTmpS, ldt);
 		} else { // transposed 
 			//split3FlagA = (oh->splitMode == 3) ? rangeCheck <TYPE1, TYPE2> (k, mbk_, devA+im*mbk, lda) : 0; // on (if 1)
 			if (oh->splitMode == 3) 
@@ -125,7 +126,7 @@ int32_t ozblasRgemm (
 				nSplitA = ozblasSplit3 (oh, 'c', k, mbk_, devA+im*mbk*lda, lda, devASplit, ldas, devASpExp, ldase,
 										devMax2, devTmp21, ldt, devTmp22, ldt, devTmp23, ldt);
 			else 
-				nSplitA = ozblasSplit (oh, 'c', k, mbk_, devA+im*mbk*lda, lda, devTmp1, ldt, devASplit, ldas, devASpExp, ldase, devMax1);
+				nSplitA = ozblasSplit (oh, 'c', k, mbk_, devA+im*mbk*lda, lda, devTmp1, ldt, devASplit, ldas, devASpExp, ldase, devMax1, devTmpS, ldt);
 		}
 		oh->t_SplitA += timer() - t1;
 
@@ -142,7 +143,7 @@ int32_t ozblasRgemm (
 					nSplitB = ozblasSplit3 (oh, 'c', k, nbk_, devB+in*nbk*ldb, ldb, devBSplit, ldbs, devBSpExp, ldbse,
 											devMax2, devTmp21, ldt, devTmp22, ldt, devTmp23, ldt);
 				else 
-					nSplitB = ozblasSplit (oh, 'c', k, nbk_, devB+in*nbk*ldb, ldb, devTmp1, ldt, devBSplit, ldbs, devBSpExp, ldbse, devMax1);
+					nSplitB = ozblasSplit (oh, 'c', k, nbk_, devB+in*nbk*ldb, ldb, devTmp1, ldt, devBSplit, ldbs, devBSpExp, ldbse, devMax1, devTmpS, ldt);
 			} else { // transposed
 				//split3FlagB = (oh->splitMode == 3) ? rangeCheck <TYPE1, TYPE2> (nbk_, k, devB+in*nbk, ldb) : 0; // on (if 1)
 				blasRomatcopy ('t', nbk_, k, devB+in*nbk, ldb, devTmp1, ldt); // transpose matB for performance
@@ -152,7 +153,7 @@ int32_t ozblasRgemm (
 					nSplitB = ozblasSplit3 (oh, 'c', k, nbk_, devTmp1, ldt, devBSplit, ldbs, devBSpExp, ldbse,
 											devMax2, devTmp21, ldt, devTmp22, ldt, devTmp23, ldt);
 				else
-					nSplitB = ozblasSplit (oh, 'c', k, nbk_, devTmp1, ldt, devTmp1, ldt, devBSplit, ldbs, devBSpExp, ldbse, devMax1);
+					nSplitB = ozblasSplit (oh, 'c', k, nbk_, devTmp1, ldt, devTmp1, ldt, devBSplit, ldbs, devBSpExp, ldbse, devMax1, devTmpS, ldt);
 			}
 			oh->t_SplitB += timer() - t1;
 
@@ -160,8 +161,7 @@ int32_t ozblasRgemm (
 			t1 = timer();
 			double t_sum_local = 0.;
 			int32_t ic = 0;
-			int32_t maxlevel = (nSplitA-1) + (nSplitB-1);
-            maxlevel = std::max (maxlevel - oh->fastMode, std::min (nSplitA-1, nSplitB-1));
+			int32_t maxlevel = std::max (2, std::max ((nSplitA + nSplitB) - oh->fastMode, std::min (nSplitA, nSplitB)));
 
 			if (n == 1 && m == 1 && oh->splitEpsMode == 2 && oh->fastMode == 0 && (oh->sumMode < 2 || oh->sumMode == 30)) { // Dot2 (only on DOT)
 				TYPE2 *ptrA, *ptrB, *ptrC;
@@ -175,15 +175,15 @@ int32_t ozblasRgemm (
 				if (oh->useBatchedGemmFlag) { // with batched GEMM (for DOT, useBatchedGemmFlag is always 0)
 					int32_t numB;
 					if (n == 1 && oh->fastMode == 0) { // GEMV with fast=0
-						for (int32_t ia = 0; ia < std::min (maxlevel+1, nSplitA); ia++) {
-							numB = std::min (nSplitB, maxlevel+1 - ia);
+						for (int32_t ia = 0; ia < std::min (maxlevel, nSplitA); ia++) {
+							numB = std::min (nSplitB, maxlevel - ia);
 							batchAptr[ic] = devASplit+ldas*mbk_*ia;
 							batchBptr[ic] = devBSplit;
 							batchCptr[ic] = devCSplit+ldcs*numB*ic; // as nbk=1
 							ic++;
 						}
 					} else {
-						for (int32_t ik = 0; ik <= maxlevel; ik++) {
+						for (int32_t ik = 0; ik < maxlevel; ik++) {
 							for (int32_t ia = 0; ia < nSplitA; ia++) {
 								for (int32_t ib = 0; ib < nSplitB; ib++) {
 									if (ik == ia + ib) {
@@ -214,8 +214,8 @@ int32_t ozblasRgemm (
 						blasRgemm (transA_, transB_, nSplitA, nSplitB, k, fone, ptrA, ldas, ptrB, ldbs, fzero, ptrC, nSplitA);
 						ic++;
 					} else if (n == 1 && oh->fastMode == 0 && (oh->sumMode < 2 || oh->sumMode == 30)) { // GEMV with fast=0 with sumMode=0 or 1
-						for (int32_t ia = 0; ia < std::min (maxlevel+1, nSplitA); ia++) {
-							int32_t numB = std::min (nSplitB, maxlevel+1 - ia);
+						for (int32_t ia = 0; ia < std::min (maxlevel, nSplitA); ia++) {
+							int32_t numB = std::min (nSplitB, maxlevel - ia);
 							ptrA = devASplit+ldas*mbk_*ia;
 							ptrB = devBSplit;
 							ptrC = devCSplit+ldcs*numB*ic;
@@ -228,13 +228,13 @@ int32_t ozblasRgemm (
 						ic = 0;
 						for (int32_t ia = 0; ia < nSplitA; ia++) {
 							for (int32_t ib = 0; ib < nSplitB; ib++) {
-								if (ia + ib <= maxlevel) 
+								if (ia + ib < maxlevel) 
 									ic++;
 							}
 						}
 						int32_t nSplitC = ic;
 						ic = 0;
-						for (int32_t ik = 0; ik <= maxlevel; ik++) {
+						for (int32_t ik = 0; ik < maxlevel; ik++) {
 							for (int32_t ia = 0; ia < nSplitA; ia++) {
 								for (int32_t ib = 0; ib < nSplitB; ib++) {
 									if (ik == ia + ib) {
@@ -280,7 +280,7 @@ int32_t ozblasRgemm (
 				int32_t sumorder = 1;
 				if (m == 1 && n == 1) { 
 					sumorder = (oh->fastMode == 0) ? 2 : 1; // DOT w/o fastmode -> 2
-					if (oh->splitEpsMode == 2) maxlevel = (nSplitA-1) + (nSplitB*2-1);
+					if (oh->splitEpsMode == 2) maxlevel = nSplitA + nSplitB*2;
 					if (ozblasGlobalSum (oh, 1, 1, devASpExp, ldase, nSplitA, devBSpExp, ldbse, nSplitB*((oh->splitEpsMode==2)?2:1),
 										devCSplit, 1, 1, &devC[ldc*(in*nbk)+im*mbk], ldc, alpha, beta, maxlevel, sumorder, split3FlagA, split3FlagB)) {
 						fprintf (OUTPUT, "OzBLAS error: sum is failed\n");
@@ -319,3 +319,4 @@ template int32_t ozblasRgemm <double, double, double> (ozblasHandle_t *oh,	const
 template int32_t ozblasRgemm <double, float, float> (ozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const double alpha, const double *devA, const int32_t lda, const double *devB, const int32_t ldb, const double beta, double *devC, const int32_t ldc);
 template int32_t ozblasRgemm <float, float, float> (ozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const float alpha, const float *devA, const int32_t lda, const float *devB, const int32_t ldb, const float beta, float *devC, const int32_t ldc); 
 template int32_t ozblasRgemm <float, double, double> (ozblasHandle_t *oh,	const char transA, const char transB, const int32_t m, const int32_t n, const int32_t k, const float alpha, const float *devA, const int32_t lda, const float *devB, const int32_t ldb, const float beta, float *devC, const int32_t ldc); 
+

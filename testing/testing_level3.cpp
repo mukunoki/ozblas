@@ -118,6 +118,7 @@ main (int32_t argc, char **argv)
 	mublasInitMat (&th, 1, 1, 0, &beta, 0., 0, 0, 0);
 	if (th.trunc != 0)  // for reduced-precision performance evaluation
 		printf ("### !!! Truncated inputs !!!\n");
+	//mublasInitMat (&th, rda_hst, cda_hst, lda_hst, hst_A, 1., 0, th.trunc, 1);
 	mublasInitMat (&th, rda_hst, cda_hst, lda_hst, hst_A, th.phi, 3, th.trunc, 1);
 	mublasInitMat (&th, rdb_hst, cdb_hst, ldb_hst, hst_B, th.phi, 3, th.trunc, 2);
 	mublasInitMat (&th, rdc_hst, cdc_hst, ldc_hst, hst_C, 0., 0, 0, 0);

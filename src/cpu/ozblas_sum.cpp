@@ -172,9 +172,8 @@ void ozblasTransformKNpara (
 ) { 
 	TYPE tmp = 0., tau1, tau2;
 	ozblasTransformNpara (n, vec, ld, rho, tau1, tau2);
-	int32_t i;
 	#pragma omp parallel for reduction(+:tmp)
-	for (i = 0; i < n; i++) {
+	for (int32_t i = 0; i < n; i++) {
 		tmp += vec[i*ld];
 	}
 	res = tau1 + (tau2 + tmp);
@@ -256,7 +255,7 @@ void ozblasGlobalNearsumKernel (
 		for (int32_t addrx = 0; addrx < m; addrx++) {
 			TYPE t = 0.;
 			int32_t ic = 0;
-			for (int32_t ik = 0; ik <= maxlevel; ik++) {
+			for (int32_t ik = 0; ik < maxlevel; ik++) {
 				for (int32_t ia = 0; ia < nSplitA; ia++) {
 					for (int32_t ib = 0; ib < nSplitB; ib++) {
 						if (ik == ia + ib) 
@@ -301,7 +300,7 @@ void ozblasGlobalNearsumKernel (
 		for (int32_t addrx = 0; addrx < m; addrx++) {
 			TYPE1 t = 0.;
 			int32_t ic = 0;
-			for (int32_t ik = 0; ik <= maxlevel; ik++) {
+			for (int32_t ik = 0; ik < maxlevel; ik++) {
 				for (int32_t ia = 0; ia < nSplitA; ia++) {
 					short seA = devASpExp[ldase*ia+addrx];
 					for (int32_t ib = 0; ib < nSplitB; ib++) {
@@ -356,7 +355,7 @@ void ozblasGlobalFsumKernel (
 		for (int32_t addrx = 0; addrx < m; addrx++) {
 			TYPE t = 0.;
 			int32_t ic = 0;
-			for (int32_t ik = 0; ik <= maxlevel; ik++) {
+			for (int32_t ik = 0; ik < maxlevel; ik++) {
 				for (int32_t ia = 0; ia < nSplitA; ia++) {
 					for (int32_t ib = 0; ib < nSplitB; ib++) {
 						if (ik == ia + ib) {
@@ -407,7 +406,7 @@ void ozblasGlobalFsumKernel (
 		for (int32_t addrx = 0; addrx < m; addrx++) {
 			TYPE1 t = 0.;
 			int32_t ic = 0;
-			for (int32_t ik = 0; ik <= maxlevel; ik++) {
+			for (int32_t ik = 0; ik < maxlevel; ik++) {
 				for (int32_t ia = 0; ia < nSplitA; ia++) {
 					short seA = (split3FlagA) ? 0:devASpExp[ldase*ia+addrx];
 					for (int32_t ib = 0; ib < nSplitB; ib++) {
@@ -470,7 +469,7 @@ int32_t ozblasGlobalSum3Kernel (
             TYPE2 t2 = 0.;
             TYPE2 t3 = 0.;
 			int32_t ic = 0;
-			for (int32_t ik = 0; ik <= maxlevel; ik++) {
+			for (int32_t ik = 0; ik < maxlevel; ik++) {
 				for (int32_t ia = 0; ia < nSplitA; ia++) {
 					short seA = (split3FlagA) ? 0:devASpExp[ldase*ia+addrx];
 					for (int32_t ib = 0; ib < nSplitB; ib++) {
@@ -709,6 +708,7 @@ template int32_t ozblasLocalFsum3simd <float, float> (const int32_t m, const int
 // ==============================================
 // ==============================================
 
+/*
 #include "eft.h"
 
 bool is_aligned_32(const void* ptr) {
@@ -744,8 +744,8 @@ int32_t ozblasLocalFsum3simd (
 		if (checkLocal) continue;
 
 		short seB = (split3FlagB) ? 0:devBSpExp[addry];
-        /*
-     // === AVX512 ===
+
+      === AVX512 ===
 		for (int32_t addrx = 0; addrx < m; addrx+=8) {
 			__m512d c4 = _mm512_load_pd (&devCsplit[addry * ldcs + addrx]);
 			short seA = (split3FlagA) ? 0:devASpExp[addrx];
@@ -806,10 +806,8 @@ int32_t ozblasLocalFsum3simd (
 				    _mm512_storeu_pd (&devCtmp3[addry * ldct3 + addrx], t34);
 				}
 			}
-            */
 
-///*
-        // === AVX2 ===
+        === AVX2 ===
 		for (int32_t addrx = 0; addrx < m; addrx+=4) {
 			__m256d c4 = _mm256_load_pd (&devCsplit[addry * ldcs + addrx]);
 			short seA = (split3FlagA) ? 0:devASpExp[addrx];
@@ -858,8 +856,6 @@ int32_t ozblasLocalFsum3simd (
 				    _mm256_storeu_pd (&devCtmp3[addry * ldct3 + addrx], t34);
 				}
 			}
-       // */
-
 		}
 
 		if (checkLocal) {
@@ -870,6 +866,7 @@ int32_t ozblasLocalFsum3simd (
 	}
 	return checkGlobal;
 }
+*/
 
 // ==============================================
 // ==============================================
