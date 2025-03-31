@@ -4,11 +4,7 @@ include ../../make.inc
 AR		= ar
 LIB		:= ../../lib/libozblas.a
 ifneq ($(CXX),FCC)
-<<<<<<< HEAD
-FLAGS	:= -Wall -Wno-maybe-uninitialized #-mavx512f
-=======
 FLAGS	:= -Wall -Wno-maybe-uninitialized 
->>>>>>> edad4759ff70e414d152734c3444503c49ed1a2a
 endif
 FLAGS   += -MD -O3 -fPIC -I$(INC_PATH) 
 

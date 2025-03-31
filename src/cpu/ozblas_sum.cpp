@@ -896,8 +896,6 @@ int32_t ozblasLocalFsum3avx512 (
 				    _mm512_storeu_pd (&devCtmp3[addry * ldct3 + addrx], t34);
 				}
 			}
-<<<<<<< HEAD
-
         // === AVX2 ===
 		for (int32_t addrx = 0; addrx < m; addrx+=4) {
 			__m256d c4 = _mm256_load_pd (&devCsplit[addry * ldcs + addrx]);
@@ -949,7 +947,6 @@ int32_t ozblasLocalFsum3avx512 (
 			}
 
 =======
->>>>>>> edad4759ff70e414d152734c3444503c49ed1a2a
 		}
 
 		if (checkLocal) {
