@@ -1,6 +1,6 @@
 #include "ozblas_common.h"
 #include "eft.h"
-#include <immintrin.h>
+//#include <immintrin.h>
 
 //#define AVX256 // use AVX256 for both GEMM and CSRMV/M
 #define MKL_CSR // if MKL's CSRMV is available
