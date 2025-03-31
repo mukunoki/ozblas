@@ -4,7 +4,7 @@ include ../../make.inc
 AR		= ar
 LIB		:= ../../lib/libozblas.a
 ifneq ($(CXX),FCC)
-FLAGS	:= -Wall -Wno-maybe-uninitialized -mavx512f
+FLAGS	:= -Wall -Wno-maybe-uninitialized #-mavx512f
 endif
 FLAGS   += -MD -O3 -fPIC -I$(INC_PATH) 
 

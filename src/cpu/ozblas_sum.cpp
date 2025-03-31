@@ -709,6 +709,7 @@ template int32_t ozblasLocalFsum3simd <float, float> (const int32_t m, const int
 // ==============================================
 // ==============================================
 
+/*
 #include "eft.h"
 
 bool is_aligned_32(const void* ptr) {
@@ -744,7 +745,6 @@ int32_t ozblasLocalFsum3simd (
 		if (checkLocal) continue;
 
 		short seB = (split3FlagB) ? 0:devBSpExp[addry];
-        /*
      // === AVX512 ===
 		for (int32_t addrx = 0; addrx < m; addrx+=8) {
 			__m512d c4 = _mm512_load_pd (&devCsplit[addry * ldcs + addrx]);
@@ -806,9 +806,7 @@ int32_t ozblasLocalFsum3simd (
 				    _mm512_storeu_pd (&devCtmp3[addry * ldct3 + addrx], t34);
 				}
 			}
-            */
 
-///*
         // === AVX2 ===
 		for (int32_t addrx = 0; addrx < m; addrx+=4) {
 			__m256d c4 = _mm256_load_pd (&devCsplit[addry * ldcs + addrx]);
@@ -858,7 +856,6 @@ int32_t ozblasLocalFsum3simd (
 				    _mm256_storeu_pd (&devCtmp3[addry * ldct3 + addrx], t34);
 				}
 			}
-       // */
 
 		}
 
@@ -870,6 +867,7 @@ int32_t ozblasLocalFsum3simd (
 	}
 	return checkGlobal;
 }
+*/
 
 // ==============================================
 // ==============================================
