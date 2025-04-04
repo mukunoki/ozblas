@@ -29,7 +29,7 @@ int32_t ozblasRgemm (
 	
 	TYPE1 *devTmp1, *devCTmp, *devMax1;
 	TYPE2 *devMax2, *devTmp21, *devTmp22, *devTmp23;
-	TYPE2 *devASplit, *devBSplit, *devCSplit, *devTmpS;
+	TYPE2 *devASplit, *devBSplit, *devCSplit;
 	TYPE2 fone = 1., fzero = 0.;
 	short *devASpExp, *devBSpExp;
 	// for QSGEMM, double is used, not TYPE2
@@ -40,8 +40,9 @@ int32_t ozblasRgemm (
 	int32_t ldct1, ldct2, ldct3;
 	int32_t mbk = m;
 	int32_t nbk = n;
-	int32_t nSplitMaxLoc = (oh->nSplitMax > 1) ? oh->nSplitMax + 1 : NumSplitDefaultMax;
-    if (oh->reproMode == 1) nSplitMaxLoc++;
+	int32_t nSplitMaxLoc = ((oh->nSplitMax > 0) ? oh->nSplitMax + 1 : NumSplitDefaultMax);
+	if (oh->reproMode == 0)
+		nSplitMaxLoc = std::max(oh->nSplitMax + 1, NumSplitDefaultMax);
 	int32_t sizeType1 = sizeof (TYPE1);
 	int32_t sizeType2 = sizeof (TYPE2);
 	int32_t sizeTypeS = sizeof (short);
@@ -61,7 +62,6 @@ int32_t ozblasRgemm (
 		if (oh->splitEpsMode == 2) sizeCn *= 2;
 		ozblasMatAddrAlloc (oh, k, mbk * nSplitMaxLoc, sizeType2, (void**)&devASplit, ldas); // Note: A is transposed!! o ldas is k-based
 		ozblasMatAddrAlloc (oh, k, nbk * nSplitMaxLoc, sizeType2, (void**)&devBSplit, ldbs);
-		if (oh->reproMode == 0 && oh->nSplitMax == 0) ozblasMatAddrAlloc (oh, k, std::max(mbk,nbk),  sizeType2, (void**)&devTmpS,   ldt); // TRANSPOSE
 		ozblasMatAddrAlloc (oh, mbk, sizeCn,           sizeType2, (void**)&devCSplit, ldcs);
 		ozblasMatAddrAlloc (oh, k, std::max(mbk,nbk),  sizeType1, (void**)&devTmp1,   ldt); // TRANSPOSE
 		ozblasMatAddrAlloc (oh, mbk, nbk,              sizeType1, (void**)&devCTmp,   ldct);
@@ -82,19 +82,19 @@ int32_t ozblasRgemm (
 			ozblasMatAddrAlloc (oh, k, std::max(mbk,nbk), sizeType2, (void**)&devTmp22, ldt); 
 			ozblasMatAddrAlloc (oh, k, std::max(mbk,nbk), sizeType2, (void**)&devTmp23, ldt); 
 		} 
-        ldt = getPitchSize (k);
+		ldt = getPitchSize (k);
 		if (!memCheck (oh)) break; // check if work-memory is enough or not
 		oh->memAddr = memAddrTmp;
-        if (mbk == 1 && nbk == 1 && !memCheck (oh)) {
-            fprintf (OUTPUT, "OzBLAS error: out of memory\n");
-            exit (1);
-        }
-        if (mbk != 1 || nbk != 1) {
-            if (mbk >= nbk) 
-		        mbk = ceil (mbk / 2.);
-            else 
-		        nbk = ceil (nbk / 2.);
-        }
+		if (mbk == 1 && nbk == 1 && !memCheck (oh)) {
+			fprintf (OUTPUT, "OzBLAS error: out of memory\n");
+			exit (1);
+		}
+		if (mbk != 1 || nbk != 1) {
+			if (mbk >= nbk) 
+				mbk = ceil (mbk / 2.);
+			else 
+				nbk = ceil (nbk / 2.);
+		}
 	}
 	oh->mbk = mbk;
 	oh->nbk = nbk;
@@ -118,7 +118,7 @@ int32_t ozblasRgemm (
 				nSplitA = ozblasSplit3 (oh, 'c', k, mbk_, devTmp1, ldt, devASplit, ldas, devASpExp, ldase,
 										devMax2, devTmp21, ldt, devTmp22, ldt, devTmp23, ldt);
 			else 
-				nSplitA = ozblasSplit (oh, 'c', k, mbk_, devTmp1, ldt, devTmp1, ldt, devASplit, ldas, devASpExp, ldase, devMax1, devTmpS, ldt);
+				nSplitA = ozblasSplit (oh, 'c', k, mbk_, devTmp1, ldt, devTmp1, ldt, devASplit, ldas, devASpExp, ldase, devMax1);
 		} else { // transposed 
 			//split3FlagA = (oh->splitMode == 3) ? rangeCheck <TYPE1, TYPE2> (k, mbk_, devA+im*mbk, lda) : 0; // on (if 1)
 			if (oh->splitMode == 3) 
@@ -126,7 +126,7 @@ int32_t ozblasRgemm (
 				nSplitA = ozblasSplit3 (oh, 'c', k, mbk_, devA+im*mbk*lda, lda, devASplit, ldas, devASpExp, ldase,
 										devMax2, devTmp21, ldt, devTmp22, ldt, devTmp23, ldt);
 			else 
-				nSplitA = ozblasSplit (oh, 'c', k, mbk_, devA+im*mbk*lda, lda, devTmp1, ldt, devASplit, ldas, devASpExp, ldase, devMax1, devTmpS, ldt);
+				nSplitA = ozblasSplit (oh, 'c', k, mbk_, devA+im*mbk*lda, lda, devTmp1, ldt, devASplit, ldas, devASpExp, ldase, devMax1);
 		}
 		oh->t_SplitA += timer() - t1;
 
@@ -143,7 +143,7 @@ int32_t ozblasRgemm (
 					nSplitB = ozblasSplit3 (oh, 'c', k, nbk_, devB+in*nbk*ldb, ldb, devBSplit, ldbs, devBSpExp, ldbse,
 											devMax2, devTmp21, ldt, devTmp22, ldt, devTmp23, ldt);
 				else 
-					nSplitB = ozblasSplit (oh, 'c', k, nbk_, devB+in*nbk*ldb, ldb, devTmp1, ldt, devBSplit, ldbs, devBSpExp, ldbse, devMax1, devTmpS, ldt);
+					nSplitB = ozblasSplit (oh, 'c', k, nbk_, devB+in*nbk*ldb, ldb, devTmp1, ldt, devBSplit, ldbs, devBSpExp, ldbse, devMax1);
 			} else { // transposed
 				//split3FlagB = (oh->splitMode == 3) ? rangeCheck <TYPE1, TYPE2> (nbk_, k, devB+in*nbk, ldb) : 0; // on (if 1)
 				blasRomatcopy ('t', nbk_, k, devB+in*nbk, ldb, devTmp1, ldt); // transpose matB for performance
@@ -153,7 +153,7 @@ int32_t ozblasRgemm (
 					nSplitB = ozblasSplit3 (oh, 'c', k, nbk_, devTmp1, ldt, devBSplit, ldbs, devBSpExp, ldbse,
 											devMax2, devTmp21, ldt, devTmp22, ldt, devTmp23, ldt);
 				else
-					nSplitB = ozblasSplit (oh, 'c', k, nbk_, devTmp1, ldt, devTmp1, ldt, devBSplit, ldbs, devBSpExp, ldbse, devMax1, devTmpS, ldt);
+					nSplitB = ozblasSplit (oh, 'c', k, nbk_, devTmp1, ldt, devTmp1, ldt, devBSplit, ldbs, devBSpExp, ldbse, devMax1);
 			}
 			oh->t_SplitB += timer() - t1;
 

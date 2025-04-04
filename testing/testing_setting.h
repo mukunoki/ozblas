@@ -5,7 +5,7 @@
 #define WLOOP			1 // (times)
 #define NLOOP			10 // (times)
 #define MPFR_PREC		2048 // (bits)
-#define WORK_MEM_SIZE	16.e9//16e9 // (bytes)
+#define WORK_MEM_SIZE	8.e9//16e9 // (bytes)
 
 #define NUM_CMG			1 // (for Power evaluation on Fugaku)
 // ***** SETTING ***********************************

@@ -10,8 +10,8 @@ LINKAGE = static
 
 #--- PATH ------------------------------------
 CUDA_PATH	= /usr/local/cuda
-LIB_PATH	= $(HOME)/local/lib
-INC_PATH	= $(HOME)/local/include
+LIB_PATH	= $(HOME)/local_cx/lib
+INC_PATH	= $(HOME)/local_cx/include
 # -> installation path of external libraries
 
 #--- Compiler --------------------------------

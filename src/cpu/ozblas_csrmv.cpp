@@ -33,7 +33,7 @@ int32_t ozblasRcsrmv (
 	double t1, t0 = timer();
 	short *devASpExp, *devBSpExp;
 	TYPE2 fone = 1., fzero = 0.;
-	TYPE2 *devASplit, *devBSplit, *devCSplit, *devATmpS, *devBTmpS;
+	TYPE2 *devASplit, *devBSplit, *devCSplit;
 	TYPE1 *devATmp, *devBTmp, *devCTmp;
 	TYPE1 *devAmax_, *devBmax_;
 	TYPE2 *devBmax, *devBTmpD1, *devBTmpD2, *devBTmpD3;
@@ -57,8 +57,6 @@ int32_t ozblasRcsrmv (
 	if (oh->memMaskSplitA != 0) oh->memMaskSplitA = oh->memAddr;
 
 	ozblasMatAddrAlloc (oh, n, nSplitMaxLoc, sizeType2, (void**)&devBSplit, ldbs);
-	if (oh->reproMode == 0 && oh->nSplitMax == 0) ozblasVecAddrAlloc (oh, nnz, sizeType2, (void**)&devATmpS); 
-	if (oh->reproMode == 0 && oh->nSplitMax == 0) ozblasVecAddrAlloc (oh, n, sizeType2, (void**)&devBTmpS); 
 	ozblasMatAddrAlloc (oh, m, nSplitMaxLoc * nSplitMaxLoc * ((oh->splitEpsMode == 2)?2:1), sizeType2, (void**)&devCSplit, ldcs);
 	ozblasVecAddrAlloc (oh, n, sizeType1, (void**)&devBTmp);
 	ozblasVecAddrAlloc (oh, m, sizeType1, (void**)&devCTmp);
@@ -93,7 +91,7 @@ int32_t ozblasRcsrmv (
 	}
 	int32_t nSplitA;
 	if (oh->memMaskSplitA == 0) {
-		nSplitA = ozblasSplitSparse (oh, 'r', m, devA, devArowptr, devATmp, devASplit, ldas, devASpExp, ldase, devAmax_, devATmpS);
+		nSplitA = ozblasSplitSparse (oh, 'r', m, devA, devArowptr, devATmp, devASplit, ldas, devASpExp, ldase, devAmax_);
 	} else {
 		devASplit = (TYPE2*)devA;
 		nSplitA = oh->nSplitA_;
@@ -109,7 +107,7 @@ int32_t ozblasRcsrmv (
 		nSplitB = ozblasSplit3 (oh, 'c', n, 1, devB, n, devBSplit, ldbs, devBSpExp, 1, devBmax,
 								devBTmpD1, n, devBTmpD2, n, devBTmpD3, n);
 	else
-		nSplitB = ozblasSplit (oh, 'c', n, 1, devB, n, devBTmp, n, devBSplit, ldbs, devBSpExp, 1, devBmax_, devBTmpS, n);
+		nSplitB = ozblasSplit (oh, 'c', n, 1, devB, n, devBTmp, n, devBSplit, ldbs, devBSpExp, 1, devBmax_);
 	oh->t_SplitB += timer() - t1;
 
 	// Compute --------------------------------------
@@ -210,7 +208,7 @@ TYPE2 *ozblasRcsrmvSplitA (
 	counterInit (oh);
 	short *devASpExp;
 	TYPE1 *devAmax, *devATmp;
-	TYPE2 *devASplit, *devATmpS;
+	TYPE2 *devASplit;
 	int32_t sizeType1 = sizeof (TYPE1);
 	int32_t sizeType2 = sizeof (TYPE2);
 	int32_t ldas, ldase;
@@ -218,7 +216,6 @@ TYPE2 *ozblasRcsrmvSplitA (
     if (oh->reproMode == 1) nSplitMaxLoc++;
 	// --- here is preserved ---
 	ozblasMatAddrAlloc (oh, nnz, nSplitMaxLoc, sizeType2, (void**)&devASplit, ldas);
-	if (oh->reproMode == 0 && oh->nSplitMax == 0) ozblasVecAddrAlloc (oh, nnz, sizeType2, (void**)&devATmpS); 
 	ozblasVecAddrAlloc (oh, nnz, sizeType1, (void**)&devATmp);
 	ozblasVecAddrAlloc (oh, m, sizeType1, (void**)&devAmax);
 	ozblasMatAddrAlloc (oh, m, nSplitMaxLoc, sizeof(short), (void**)&devASpExp, ldase);
@@ -235,7 +232,7 @@ TYPE2 *ozblasRcsrmvSplitA (
 		fprintf (OUTPUT, "OzBLAS error: split3 for sparse matrix is not implemented.\n");
 		exit (1);
 	}
-	int32_t nSplitAlocal = ozblasSplitSparse (oh, 'r', m, devA, devArowptr, devATmp, devASplit, ldas, devASpExp, ldase, devAmax, devATmpS);
+	int32_t nSplitAlocal = ozblasSplitSparse (oh, 'r', m, devA, devArowptr, devATmp, devASplit, ldas, devASpExp, ldase, devAmax);
 	int32_t nSplitAlocalOld = nSplitAlocal;
 	// shiftSize-tuning
 	// ------------------------------------------------------------------------
@@ -246,12 +243,12 @@ TYPE2 *ozblasRcsrmvSplitA (
 		do {
 			nSplitAOld = nSplitAlocal;
 			oh->splitShift *= 2;
-			nSplitAlocal = ozblasSplitSparse (oh, 'r', m, devA, devArowptr, devATmp, devASplit, ldas, devASpExp, ldase, devAmax, devATmpS);
+			nSplitAlocal = ozblasSplitSparse (oh, 'r', m, devA, devArowptr, devATmp, devASplit, ldas, devASpExp, ldase, devAmax);
 			//printf ("... try splitShift = %d -> nSplitA = %d\n", oh->splitShift, nSplitAlocal);
 		} while (nSplitAOld == nSplitAlocal && oh->splitShift < 512); // 512 (9bit) is max
 		if (nSplitAOld == nSplitAlocal) oh->splitShift = 1;
 		// do again with the optimal shift-size
-		nSplitAlocal = ozblasSplitSparse (oh, 'r', m, devA, devArowptr, devATmp, devASplit, ldas, devASpExp, ldase, devAmax, devATmpS);
+		nSplitAlocal = ozblasSplitSparse (oh, 'r', m, devA, devArowptr, devATmp, devASplit, ldas, devASpExp, ldase, devAmax);
         if (oh->verbose)
     		printf ("\n## splitShift = %d (%d-bit), nSplitA = %d -> %d\n", oh->splitShift, (int)log2((double)oh->splitShift), nSplitAlocalOld, nSplitAlocal);
 	}
