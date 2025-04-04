@@ -440,7 +440,7 @@ int32_t ozblasSplit3 (
 	TYPE2 *devTmpD3,
 	const int32_t ldt3
 ) {
-//	#pragma omp parallel for
+	#pragma omp parallel for
 	for (int32_t addry = 0; addry < n; addry++) {
 		for (int32_t addrx = 0; addrx < m; addrx++) {
 			TYPE1 tmp1q = devInput[addry * ldi + addrx];
