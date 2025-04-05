@@ -161,7 +161,7 @@ int32_t ozblasRgemm (
 			t1 = timer();
 			double t_sum_local = 0.;
 			int32_t ic = 0;
-			int32_t maxlevel = std::max (2, std::max ((nSplitA + nSplitB) - oh->fastMode, std::min (nSplitA, nSplitB)));
+			int32_t maxlevel = std::max (2, std::max ((nSplitA + nSplitB) - oh->fastMode - 1, std::min (nSplitA, nSplitB)));
 
 			if (n == 1 && m == 1 && oh->splitEpsMode == 2 && oh->fastMode == 0 && (oh->sumMode < 2 || oh->sumMode == 30)) { // Dot2 (only on DOT)
 				TYPE2 *ptrA, *ptrB, *ptrC;
