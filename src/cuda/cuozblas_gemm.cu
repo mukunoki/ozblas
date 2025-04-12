@@ -135,7 +135,7 @@ int32_t cuozblasRgemm (
 			t1 = cutimer();
 			double t_sum_local = 0.;
 			int32_t ic = 0;
-			int32_t maxlevel = (oh->fastMode) ? MIN (nSplitA-1, nSplitB-1) : (nSplitA-1) + (nSplitB-1);
+			int32_t maxlevel = (oh->fastMode) ? std::min (nSplitA-1, nSplitB-1) : (nSplitA-1) + (nSplitB-1);
 			if (n == 1 && m == 1 && oh->splitEpsMode == 2 && oh->fastMode == 0 && oh->sumMode < 2) { // Dot2 (only on DOT)
 				TYPE2 *ptrA, *ptrB;
                 TYPE3 *ptrC;
@@ -150,8 +150,8 @@ int32_t cuozblasRgemm (
 				if (oh->useBatchedGemmFlag) { // with batched GEMM (for DOT, useBatchedGemmFlag is always 0)
 					int32_t numB;
 					if (n == 1 && oh->fastMode == 0) { // GEMV with fast=0
-						for (int32_t ia = 0; ia < MIN (maxlevel+1, nSplitA); ia++) {
-							numB = MIN (nSplitB, maxlevel+1 - ia);
+						for (int32_t ia = 0; ia < std::min (maxlevel+1, nSplitA); ia++) {
+							numB = std::min (nSplitB, maxlevel+1 - ia);
 							batchAptrHst[ic] = devASplit+ldas*mbk_*ia;
 							batchBptrHst[ic] = devBSplit;
 							batchCptrHst[ic] = devCSplit+ldcs*numB*ic; // as nbk=1
@@ -190,8 +190,8 @@ int32_t cuozblasRgemm (
 					    oh->n_comp += 2. * nSplitA * nSplitB * k;
 						ic++;
 					} else if (n == 1 && oh->fastMode == 0 && oh->sumMode < 2) { // GEMV with fast=0 with sumMode=0 or 1
-						for (int32_t ia = 0; ia < MIN (maxlevel+1, nSplitA); ia++) {
-							int32_t numB = MIN (nSplitB, maxlevel+1 - ia);
+						for (int32_t ia = 0; ia < std::min (maxlevel+1, nSplitA); ia++) {
+							int32_t numB = std::min (nSplitB, maxlevel+1 - ia);
 							ptrA = devASplit+ldas*mbk_*ia;
 							ptrB = devBSplit;
 							ptrC = devCSplit+ldcs*numB*ic;
@@ -216,7 +216,7 @@ int32_t cuozblasRgemm (
 									if (ik == ia + ib) {
 										ptrA = devASplit+ldas*mbk_*ia;
 										ptrB = devBSplit+ldbs*nbk_*ib;
-										ptrC = (oh->sumMode < 2) ? devCSplit+ldcs*nbk*ic : devCSplit;
+										ptrC = (oh->sumMode < 2) ? devCSplit+ldcs*nbk_*ic : devCSplit;
 										// Computation (GEMM) -----------------------------------
 										blasRgemm (oh->ch, transA_, transB_, mbk_, nbk_, k, fone, ptrA, ldas, ptrB, ldbs, fzero, ptrC, ldcs);
 					                     oh->n_comp += 2. * mbk_ * nbk_ * k;

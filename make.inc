@@ -9,7 +9,7 @@ CPU_ARCH =
 LINKAGE = static
 
 #--- PATH ------------------------------------
-CUDA_PATH	= /usr/local/cuda
+CUDA_PATH	= /home/center/opt/x86_64/cores/cuda/11.8.0
 LIB_PATH	= $(HOME)/local_cx/lib
 INC_PATH	= $(HOME)/local_cx/include
 # -> installation path of external libraries
@@ -20,7 +20,7 @@ CXX = g++
 
 #--- CPU (OzBLAS) / CUDA (cuOzBLAS) ----------
 CPU  = yes
-CUDA = no
+CUDA = yes
 # CPU must be yes also for CUDA
 
 #--- BLAS (CPU) ------------------------------
@@ -42,9 +42,9 @@ CC53 = no
 CC60 = no
 CC61 = no
 CC62 = no
-CC70 = no
+CC70 = yes
 CC75 = no
-CC80 = yes
+CC80 = no
 CC86 = no
 # -> Tested only on GPUs with CC70, CC75, and CC86
 
@@ -55,9 +55,9 @@ PREC_Q_D = yes
 PREC_Q_S = no
 PREC_D_D = yes
 PREC_D_S = yes
-PREC_D_H = no
-PREC_S_S = no
-PREC_S_H = no
+PREC_D_H = yes
+PREC_S_S = yes
+PREC_S_H = yes
 PREC_S_D = no
 # -> D_H and S_H: GPU only
 # -> Q_D and Q_S: CPU only

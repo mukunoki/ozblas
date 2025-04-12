@@ -217,6 +217,7 @@ void cuozblasGlobalNearsumKernel (
 // Floating-point summation (FSum)
 // =========================================
 
+/*
 template <typename TYPE>
 __global__
 void cuozblasGlobalFsumKernel (
@@ -272,6 +273,7 @@ void cuozblasGlobalFsumKernel (
 		devC[addry * ldc + addrx] = fma (alpha, t, (beta * devC[addry * ldc + addrx]));
 	}
 }
+*/
 
 template <typename TYPE1, typename TYPE3>
 __global__
