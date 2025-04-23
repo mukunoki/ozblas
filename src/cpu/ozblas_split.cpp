@@ -56,9 +56,8 @@ void copyMat (
 ) {
 	#pragma omp parallel for
 	for (int32_t addry = 0; addry < n; addry++) {
-		for (int32_t addrx = 0; addrx < m; addrx++) {
+		for (int32_t addrx = 0; addrx < m; addrx++) 
             devSplit[addry * lds + addrx] = devTmp[addry * ldt + addrx];
-        }
     }
 }
 
@@ -107,6 +106,7 @@ TYPE ozblasSplitVecKernel (
 	const TYPE *devInput,
 	TYPE *devOutput,
 	TYPE *devSplit,
+	TYPE *devSplit2,
 	short *devSpExp,
 	TYPE *devMax,
 	const int32_t splitShift,
@@ -119,7 +119,7 @@ TYPE ozblasSplitVecKernel (
 	#pragma omp parallel for reduction(max:max_)
 	for (int32_t i = 0; i < n; i++) {
 		TYPE input = devInput[i];
-		if (reproflag == 0) devSplit[n] = input;
+		if (reproflag == 0) devSplit2[n] = input;
 		const TYPE split = (input + sigma) - sigma;
 		input = input - split;
 		devSplit[i] = split;
@@ -137,6 +137,7 @@ TYPE1 ozblasSplitVecKernel (
 	const TYPE1 *devInput,
 	TYPE1 *devOutput,
 	TYPE2 *devSplit,
+	TYPE2 *devSplit2,
 	short *devSpExp,
 	TYPE1 *devMax,
 	const int32_t splitShift,
@@ -170,6 +171,7 @@ TYPE ozblasSplitCKernel (
 	TYPE *devOutput,
 	const int32_t ldo,
 	TYPE *devSplit,
+	TYPE *devSplit2,
 	const int32_t lds,
 	short *devSpExp,
 	TYPE *devMax,
@@ -185,7 +187,7 @@ TYPE ozblasSplitCKernel (
 		TYPE max = 0.;
 		for (int32_t addrx = 0; addrx < m; addrx++) {
 			TYPE input = devInput[addry * ldi + addrx];
-			if (reproflag == 0) devSplit[addry * lds + addrx + lds * n] = input;
+			if (reproflag == 0) devSplit2[addry * lds + addrx] = input;
 			const TYPE split = (input + sigma) - sigma;
 			input = input - split;
 			devSplit[addry * lds + addrx] = split;
@@ -211,6 +213,7 @@ TYPE1 ozblasSplitCKernel (
 	TYPE1 *devOutput,
 	const int32_t ldo,
 	TYPE2 *devSplit,
+	TYPE2 *devSplit2,
 	const int32_t lds,
 	short *devSpExp,
 	TYPE1 *devMax,
@@ -250,7 +253,8 @@ TYPE1 ozblasSplitDevice (
 	const int32_t ldi, // leading dimension of input matrix
 	TYPE1 *devOutput, // output matrix (devAwrk)
 	const int32_t ldo,
-	TYPE2 *devSplit, // split matrices (output): this includes NumSplitMax matrices
+	TYPE2 *devSplit, // split matrices (output)
+	TYPE2 *devSplit2, // split matrices (output) (but still splittable)
 	const int32_t lds, // leading dimension of split matrix (# of cols)
 	short *devSpExp, // exponent of split matrix
 	TYPE1 *devMax,
@@ -264,9 +268,9 @@ TYPE1 ozblasSplitDevice (
 		fprintf (OUTPUT, "OzBLAS error: ozblasSplitRKernel is not available.\n");
 	} else {
 		if (n == 1) 
-			return ozblasSplitVecKernel (m, rho, devInput, devOutput, devSplit, devSpExp, devMax, splitShift, reproflag);
+			return ozblasSplitVecKernel (m, rho, devInput, devOutput, devSplit, devSplit2, devSpExp, devMax, splitShift, reproflag);
 		else 
-			return ozblasSplitCKernel (m, n, rho, devInput, ldi, devOutput, ldo, devSplit, lds, devSpExp, devMax, splitShift, reproflag);
+			return ozblasSplitCKernel (m, n, rho, devInput, ldi, devOutput, ldo, devSplit, devSplit2, lds, devSpExp, devMax, splitShift, reproflag);
 	}
 	return 0;
 }
@@ -282,6 +286,7 @@ int32_t ozblasSplit (
 	TYPE1 *devOutput,
 	const int32_t ldo,
 	TYPE2 *devSplit,
+	TYPE2 *devSplit2,
 	const int32_t lds,
 	short *devSpExp, 
 	const int32_t ldse,
@@ -291,33 +296,28 @@ int32_t ozblasSplit (
 	// FindMax^(0)
 	ozblasFindMaxDevice (major, m, n, devInput, ldi, devMax);
 	// Split^(0) & FindMax^(1)
-	if (ozblasSplitDevice (major, m, n, devInput, ldi, devOutput, ldo, devSplit, lds, devSpExp, devMax, oh->splitEpsMode, oh->splitShift, oh->reproMode) == 0.) return s;
+	if (ozblasSplitDevice (major, m, n, devInput, ldi, devOutput, ldo, devSplit, devSplit2, lds, devSpExp, devMax, oh->splitEpsMode, oh->splitShift, oh->reproMode) == 0.) return s;
 	int32_t maxS = (oh->nSplitMax > 0) ? oh->nSplitMax : NumSplitDefaultMax;
 	// Split^(s) & FindMax^(s+1)
 	for (s = 1; s < maxS; s++) {
-		if (ozblasSplitDevice (major, m, n, devOutput, ldo, devOutput, ldo, &devSplit[lds*n*s], lds, &devSpExp[ldse*s], devMax, oh->splitEpsMode, oh->splitShift, oh->reproMode) == 0.) break;
+		if (ozblasSplitDevice (major, m, n, devOutput, ldo, devOutput, ldo, &devSplit[lds*n*s], &devSplit2[lds*n*s], lds, &devSpExp[ldse*s], devMax, oh->splitEpsMode, oh->splitShift, oh->reproMode) == 0.) break;
 	}
 	if constexpr (std::is_same<TYPE1, TYPE2>::value) {
 		if (oh->reproMode == 0) {
-			if (s == maxS && oh->nSplitMax > 0) 
-				copyMat (m, n, &devSplit[lds*n*(s-1)], lds, &devSplit[lds*n*(s)], lds);
-			if (oh->nSplitMax == 0) 
-				copyMat (m, n, &devSplit[lds*n*(s)], lds, &devSplit[lds*n*(s+1)], lds);
+			copyMat (m, n, &devSplit[lds*n*(s-1)], lds, &devSplit2[lds*n*(s-1)], lds);
 			return s;
 		}
-		if (s == maxS && oh->nSplitMax > 0) 
-			return s;
 	}
-	s++;
+	if (oh->nSplitMax < maxS || s < maxS) s++;
 	if (oh->splitMode == 1) fprintf (OUTPUT, "OzBLAS error: still splittable.\n");
 	return s;
 }
-template int32_t ozblasSplit <__float128, double> (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const __float128 *devInput, const int32_t ldi, __float128 *devOutput, const int32_t ldo, double *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, __float128 *devMax);
-template int32_t ozblasSplit <__float128, float> (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const __float128 *devInput, const int32_t ldi, __float128 *devOutput, const int32_t ldo, float *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, __float128 *devMax);
-template int32_t ozblasSplit <double, double> (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const double *devInput, const int32_t ldi, double *devOutput, const int32_t ldo, double *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax);
-template int32_t ozblasSplit <double, float> (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const double *devInput, const int32_t ldi, double *devOutput, const int32_t ldo, float *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax);
-template int32_t ozblasSplit <float, float> (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const float *devInput, const int32_t ldi, float *devOutput, const int32_t ldo, float *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, float *devMax);
-template int32_t ozblasSplit <float, double> (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const float *devInput, const int32_t ldi, float *devOutput, const int32_t ldo, double *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, float *devMax);
+template int32_t ozblasSplit <__float128, double> (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const __float128 *devInput, const int32_t ldi, __float128 *devOutput, const int32_t ldo, double *devSplit, double *devSplit2, const int32_t lds, short *devSpExp, const int32_t ldse, __float128 *devMax);
+template int32_t ozblasSplit <__float128, float> (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const __float128 *devInput, const int32_t ldi, __float128 *devOutput, const int32_t ldo, float *devSplit, float *devSplit2, const int32_t lds, short *devSpExp, const int32_t ldse, __float128 *devMax);
+template int32_t ozblasSplit <double, double> (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const double *devInput, const int32_t ldi, double *devOutput, const int32_t ldo, double *devSplit, double *devSplit2, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax);
+template int32_t ozblasSplit <double, float> (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const double *devInput, const int32_t ldi, double *devOutput, const int32_t ldo, float *devSplit, float *devSplit2, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax);
+template int32_t ozblasSplit <float, float> (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const float *devInput, const int32_t ldi, float *devOutput, const int32_t ldo, float *devSplit, float *devSplit2, const int32_t lds, short *devSpExp, const int32_t ldse, float *devMax);
+template int32_t ozblasSplit <float, double> (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const float *devInput, const int32_t ldi, float *devOutput, const int32_t ldo, double *devSplit, double *devSplit2, const int32_t lds, short *devSpExp, const int32_t ldse, float *devMax);
 
 //=================================================
 // for binary128
@@ -349,6 +349,7 @@ TYPE ozblasSplitCKernel3 (
 	TYPE *devTmpD3,
 	const int32_t ldt3,
 	TYPE *devSplit,
+	TYPE *devSplit2,
 	const int32_t lds,
 	short *devSpExp,
 	TYPE *devMax,
@@ -364,7 +365,7 @@ TYPE ozblasSplitCKernel3 (
 		TYPE max = 0.;
 		for (int32_t addrx = 0; addrx < m; addrx++) {
 			TYPE input = devTmpD1[addry * ldt1 + addrx];
-			if (reproflag == 0) devSplit[addry * lds + addrx + lds * n] = input;
+			if (reproflag == 0) devSplit2[addry * lds + addrx] = input;
 			const TYPE split = (input + sigma) - sigma;
 			devSplit[addry * lds + addrx] = split;
 			input = input - split;
@@ -399,6 +400,7 @@ TYPE ozblasSplitDevice3 (
 	TYPE *devTmpD3,
 	const int32_t ldt3,
 	TYPE *devSplit, 
+	TYPE *devSplit2,
 	const int32_t lds, 
 	short *devSpExp, 
 	TYPE *devMax,
@@ -409,7 +411,7 @@ TYPE ozblasSplitDevice3 (
 	const int32_t dim = ((major == 'r') && n > 1) ? n : m;
 	const int32_t rho = getRho <TYPE, TYPE> (dim, splitEpsMode);
 	if (major == 'c') {
-		return ozblasSplitCKernel3 (m, n, rho, devTmpD1, ldt1, devTmpD2, ldt2, devTmpD3, ldt3, devSplit, lds, devSpExp, devMax, splitShift, reproflag);
+		return ozblasSplitCKernel3 (m, n, rho, devTmpD1, ldt1, devTmpD2, ldt2, devTmpD3, ldt3, devSplit, devSplit2, lds, devSpExp, devMax, splitShift, reproflag);
 	} else {
 		fprintf (OUTPUT, "OzBLAS error: R-major is not supported in Split.\n");
 		exit (1);
@@ -426,6 +428,7 @@ int32_t ozblasSplit3 (
 	const TYPE1 *devInput,
 	const int32_t ldi,
 	TYPE2 *devSplit,
+	TYPE2 *devSplit2,
 	const int32_t lds,
 	short *devSpExp,
 	const int32_t ldse,
@@ -454,31 +457,26 @@ int32_t ozblasSplit3 (
 	// FindMax^(0)
 	ozblasFindMaxDevice (major, m, n, devTmpD1, ldt1, devMax);
 	// Split^(0) & FindMax^(1)
-	if (ozblasSplitDevice3 (major, m, n, devTmpD1, ldt1, devTmpD2, ldt2, devTmpD3, ldt3, devSplit, lds, devSpExp, devMax, oh->splitEpsMode, oh->splitShift, oh->reproMode) == 0.) return s;
+	if (ozblasSplitDevice3 (major, m, n, devTmpD1, ldt1, devTmpD2, ldt2, devTmpD3, ldt3, devSplit, devSplit2, lds, devSpExp, devMax, oh->splitEpsMode, oh->splitShift, oh->reproMode) == 0.) return s;
 	int32_t maxS = (oh->nSplitMax > 0) ? oh->nSplitMax : NumSplitDefaultMax;
 	// Split^(s) & FindMax^(s+1)
 	for (s = 1; s < maxS; s++) {
-		if (ozblasSplitDevice3 (major, m, n, devTmpD1, ldt1, devTmpD2, ldt2, devTmpD3, ldt3, &devSplit[lds*n*s], lds, &devSpExp[ldse*s], devMax, oh->splitEpsMode, oh->splitShift, oh->reproMode) == 0.) break;
+		if (ozblasSplitDevice3 (major, m, n, devTmpD1, ldt1, devTmpD2, ldt2, devTmpD3, ldt3, &devSplit[lds*n*s], &devSplit2[lds*n*s], lds, &devSpExp[ldse*s], devMax, oh->splitEpsMode, oh->splitShift, oh->reproMode) == 0.) break;
 	}
 	if (oh->reproMode == 0) {
-		if (s == maxS && oh->nSplitMax > 0) 
-			copyMat (m, n, &devSplit[lds*n*(s-1)], lds, &devSplit[lds*n*(s)], lds);
-		if (oh->nSplitMax == 0) 
-			copyMat (m, n, &devSplit[lds*n*(s)], lds, &devSplit[lds*n*(s+1)], lds);
+		copyMat (m, n, &devSplit[lds*n*(s-1)], lds, &devSplit2[lds*n*(s-1)], lds);
 		return s;
 	}
-	if (s == maxS && oh->nSplitMax > 0) 
-		return s;
-	s++;
+	if (oh->nSplitMax < maxS || s < maxS) s++;
 	if (oh->splitMode == 1 || oh->splitMode == 31) fprintf (OUTPUT, "OzBLAS error: still splittable.\n");
 	return s;
 }
-template int32_t ozblasSplit3 (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const __float128 *devInput, const int32_t ldi, double *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax, double *devTmpD1, const int32_t ldt1, double *devTmpD2, const int32_t ldt2, double *devTmpD3, const int32_t ldt3);
-template int32_t ozblasSplit3 (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const __float128 *devInput, const int32_t ldi, float *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, float *devMax, float *devTmpD1, const int32_t ldt1, float *devTmpD2, const int32_t ldt2, float *devTmpD3, const int32_t ldt3);
-template int32_t ozblasSplit3 (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const double *devInput, const int32_t ldi, double *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax, double *devTmpD1, const int32_t ldt1, double *devTmpD2, const int32_t ldt2, double *devTmpD3, const int32_t ldt3);
-template int32_t ozblasSplit3 (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const float *devInput, const int32_t ldi, double *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax, double *devTmpD1, const int32_t ldt1, double *devTmpD2, const int32_t ldt2, double *devTmpD3, const int32_t ldt3);
-template int32_t ozblasSplit3 (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const double *devInput, const int32_t ldi, float *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, float *devMax, float *devTmpD1, const int32_t ldt1, float *devTmpD2, const int32_t ldt2, float *devTmpD3, const int32_t ldt3);
-template int32_t ozblasSplit3 (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const float *devInput, const int32_t ldi, float *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, float *devMax, float *devTmpD1, const int32_t ldt1, float *devTmpD2, const int32_t ldt2, float *devTmpD3, const int32_t ldt3);
+template int32_t ozblasSplit3 (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const __float128 *devInput, const int32_t ldi, double *devSplit, double *devSplit2, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax, double *devTmpD1, const int32_t ldt1, double *devTmpD2, const int32_t ldt2, double *devTmpD3, const int32_t ldt3);
+template int32_t ozblasSplit3 (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const __float128 *devInput, const int32_t ldi, float *devSplit, float *devSplit2, const int32_t lds, short *devSpExp, const int32_t ldse, float *devMax, float *devTmpD1, const int32_t ldt1, float *devTmpD2, const int32_t ldt2, float *devTmpD3, const int32_t ldt3);
+template int32_t ozblasSplit3 (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const double *devInput, const int32_t ldi, double *devSplit, double *devSplit2, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax, double *devTmpD1, const int32_t ldt1, double *devTmpD2, const int32_t ldt2, double *devTmpD3, const int32_t ldt3);
+template int32_t ozblasSplit3 (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const float *devInput, const int32_t ldi, double *devSplit, double *devSplit2, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax, double *devTmpD1, const int32_t ldt1, double *devTmpD2, const int32_t ldt2, double *devTmpD3, const int32_t ldt3);
+template int32_t ozblasSplit3 (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const double *devInput, const int32_t ldi, float *devSplit, float *devSplit2, const int32_t lds, short *devSpExp, const int32_t ldse, float *devMax, float *devTmpD1, const int32_t ldt1, float *devTmpD2, const int32_t ldt2, float *devTmpD3, const int32_t ldt3);
+template int32_t ozblasSplit3 (ozblasHandle_t *oh, const char major, const int32_t m, const int32_t n, const float *devInput, const int32_t ldi, float *devSplit, float *devSplit2, const int32_t lds, short *devSpExp, const int32_t ldse, float *devMax, float *devTmpD1, const int32_t ldt1, float *devTmpD2, const int32_t ldt2, float *devTmpD3, const int32_t ldt3);
 
 //=================================================
 // determination of the num of split matrices
@@ -811,6 +809,7 @@ TYPE ozblasSplitSparseNKernel (
 	const int32_t *devRowptr,
 	TYPE *devOutput,
 	TYPE *devSplit,
+	TYPE *devSplit2,
 	const int32_t lds, 
 	short *devSpExp,
 	TYPE *devMax,
@@ -829,7 +828,7 @@ TYPE ozblasSplitSparseNKernel (
 		TYPE max = 0.;
 		for (int32_t i = devRowptr[addrx]; i < devRowptr[addrx+1]; i++) {
 			TYPE input = devInput[i];
-			if (reproflag == 0) devSplit[m] = input;
+			if (reproflag == 0) devSplit2[m] = input;
 			const TYPE split = (input + sigma) - sigma;
 			input = input - split;
 			devSplit[i] = split;
@@ -852,6 +851,7 @@ TYPE1 ozblasSplitSparseNKernel (
 	const int32_t *devRowptr,
 	TYPE1 *devOutput,
 	TYPE2 *devSplit,
+	TYPE2 *devSplit2,
 	const int32_t lds, 
 	short *devSpExp,
 	TYPE1 *devMax,
@@ -893,6 +893,7 @@ TYPE1 ozblasSplitSparseDevice (
 	const int32_t *devRowptr,
 	TYPE1 *devOutput,
 	TYPE2 *devSplit, 
+	TYPE2 *devSplit2, 
 	const int32_t lds, 
 	short *devSpExp, 
 	TYPE1 *devMax,
@@ -901,7 +902,7 @@ TYPE1 ozblasSplitSparseDevice (
 	const int32_t reproflag
 ) {
 	if (major == 'r') {
-		return ozblasSplitSparseNKernel (m, devInput, devRowptr, devOutput, devSplit, lds, devSpExp, devMax, splitEpsMode, splitShift, reproflag);
+		return ozblasSplitSparseNKernel (m, devInput, devRowptr, devOutput, devSplit, devSplit2, lds, devSpExp, devMax, splitEpsMode, splitShift, reproflag);
 	} else {
 		fprintf (OUTPUT, "OzBLAS error: SplitT is not implemented.\n");
 		exit (1);
@@ -917,6 +918,7 @@ int32_t ozblasSplitSparse (
 	const int32_t *devRowptr,
 	TYPE1 *devOutput,
 	TYPE2 *devSplit,
+	TYPE2 *devSplit2,
 	const int32_t lds,
 	short *devSpExp, 
 	const int32_t ldse,
@@ -926,30 +928,25 @@ int32_t ozblasSplitSparse (
 	// FindMax^(0)
 	ozblasFindMaxSparseDevice (major, m, devInput, devRowptr, devMax);
 	// Split^(0) & FindMax^(1)
-	if (ozblasSplitSparseDevice (major, m, devInput, devRowptr, devOutput, &devSplit[0], lds, devSpExp, devMax, oh->splitEpsMode, oh->splitShift, oh->reproMode) == 0.) return s;
+	if (ozblasSplitSparseDevice (major, m, devInput, devRowptr, devOutput, &devSplit[0], &devSplit2[0], lds, devSpExp, devMax, oh->splitEpsMode, oh->splitShift, oh->reproMode) == 0.) return s;
 	int32_t maxS = (oh->nSplitMax > 0) ? oh->nSplitMax : NumSplitDefaultMax;
 	// Split^(s) & FindMax^(s+1)
 	for (s = 1; s < maxS; s++) {
-		if (ozblasSplitSparseDevice (major, m, devOutput, devRowptr, devOutput, &devSplit[lds*s], lds, &devSpExp[ldse*s], devMax, oh->splitEpsMode, oh->splitShift, oh->reproMode) == 0.) break;
+		if (ozblasSplitSparseDevice (major, m, devOutput, devRowptr, devOutput, &devSplit[lds*s], &devSplit2[lds*s], lds, &devSpExp[ldse*s], devMax, oh->splitEpsMode, oh->splitShift, oh->reproMode) == 0.) break;
 	}
 	if constexpr (std::is_same<TYPE1, TYPE2>::value) {
 		if (oh->reproMode == 0) {
-			if (s == maxS && oh->nSplitMax > 0) 
-				copyVec (lds, &devSplit[lds*(s-1)], &devSplit[lds*(s)]);
-			if (oh->nSplitMax == 0) 
-				copyVec (lds, &devSplit[lds*(s)], &devSplit[lds*(s+1)]);
+			copyVec (lds, &devSplit[lds*(s-1)], &devSplit2[lds*(s-1)]);
 			return s;
 		}
-		if (s == maxS && oh->nSplitMax > 0) 
-			return s;
 	}
-	s++;
+	if (oh->nSplitMax < maxS || s < maxS) s++;
 	if (oh->splitMode == 1) fprintf (OUTPUT, "OzBLAS error: still splittable.\n");
 	return s;
 }
-template int32_t ozblasSplitSparse <__float128, double> (ozblasHandle_t *oh, const char major, const int32_t m, const __float128 *devInput, const int32_t *devRowptr, __float128 *devOutput, double *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, __float128 *devMax);
-template int32_t ozblasSplitSparse <__float128, float> (ozblasHandle_t *oh, const char major, const int32_t m, const __float128 *devInput, const int32_t *devRowptr, __float128 *devOutput, float *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, __float128 *devMax);
-template int32_t ozblasSplitSparse <double, double> (ozblasHandle_t *oh, const char major, const int32_t m, const double *devInput, const int32_t *devRowptr, double *devOutput, double *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax);
-template int32_t ozblasSplitSparse <double, float> (ozblasHandle_t *oh, const char major, const int32_t m, const double *devInput, const int32_t *devRowptr, double *devOutput, float *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax);
-template int32_t ozblasSplitSparse <float, float> (ozblasHandle_t *oh, const char major, const int32_t m, const float *devInput, const int32_t *devRowptr, float *devOutput, float *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, float *devMax);
-template int32_t ozblasSplitSparse <float, double> (ozblasHandle_t *oh, const char major, const int32_t m, const float *devInput, const int32_t *devRowptr, float *devOutput, double *devSplit, const int32_t lds, short *devSpExp, const int32_t ldse, float *devMax);
+template int32_t ozblasSplitSparse <__float128, double> (ozblasHandle_t *oh, const char major, const int32_t m, const __float128 *devInput, const int32_t *devRowptr, __float128 *devOutput, double *devSplit, double *devSplit2, const int32_t lds, short *devSpExp, const int32_t ldse, __float128 *devMax);
+template int32_t ozblasSplitSparse <__float128, float> (ozblasHandle_t *oh, const char major, const int32_t m, const __float128 *devInput, const int32_t *devRowptr, __float128 *devOutput, float *devSplit, float *devSplit2, const int32_t lds, short *devSpExp, const int32_t ldse, __float128 *devMax);
+template int32_t ozblasSplitSparse <double, double> (ozblasHandle_t *oh, const char major, const int32_t m, const double *devInput, const int32_t *devRowptr, double *devOutput, double *devSplit, double *devSplit2, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax);
+template int32_t ozblasSplitSparse <double, float> (ozblasHandle_t *oh, const char major, const int32_t m, const double *devInput, const int32_t *devRowptr, double *devOutput, float *devSplit, float *devSplit2, const int32_t lds, short *devSpExp, const int32_t ldse, double *devMax);
+template int32_t ozblasSplitSparse <float, float> (ozblasHandle_t *oh, const char major, const int32_t m, const float *devInput, const int32_t *devRowptr, float *devOutput, float *devSplit, float *devSplit2, const int32_t lds, short *devSpExp, const int32_t ldse, float *devMax);
+template int32_t ozblasSplitSparse <float, double> (ozblasHandle_t *oh, const char major, const int32_t m, const float *devInput, const int32_t *devRowptr, float *devOutput, double *devSplit, double *devSplit2, const int32_t lds, short *devSpExp, const int32_t ldse, float *devMax);

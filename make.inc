@@ -20,7 +20,7 @@ CXX = g++
 
 #--- CPU (OzBLAS) / CUDA (cuOzBLAS) ----------
 CPU  = yes
-CUDA = yes
+CUDA = no
 # CPU must be yes also for CUDA
 
 #--- BLAS (CPU) ------------------------------
@@ -70,7 +70,7 @@ AXPY = yes
 
 # level-2
 GEMV = yes
-CSRMV = yes
+CSRMV = no
 # -> CSRMV requires MKL on CPUs
 
 # level-3
