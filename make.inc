@@ -20,7 +20,7 @@ CXX = g++
 
 #--- CPU (OzBLAS) / CUDA (cuOzBLAS) ----------
 CPU  = yes
-CUDA = no
+CUDA = yes
 # CPU must be yes also for CUDA
 
 #--- BLAS (CPU) ------------------------------
@@ -44,21 +44,22 @@ CC61 = no
 CC62 = no
 CC70 = no
 CC75 = no
-CC80 = yes
+CC80 = no
 CC86 = no
+CC90 = yes
 # -> Tested only on GPUs with CC70, CC75, and CC86
 
 #--- Precision -------------------------------
 # PREC_X_Y: X is I/O-precision, Y is compute-precision
 # Q: FP128, D: FP64, S: FP32, H: FP16 
 PREC_Q_D = yes
-PREC_Q_S = no
+PREC_Q_S = yes
 PREC_D_D = yes
 PREC_D_S = yes
-PREC_D_H = no
-PREC_S_S = no
-PREC_S_H = no
-PREC_S_D = no
+PREC_D_H = yes
+PREC_S_S = yes
+PREC_S_H = yes
+PREC_S_D = yes
 # -> D_H and S_H: GPU only
 # -> Q_D and Q_S: CPU only
 
@@ -77,7 +78,7 @@ CSRMV = yes
 GEMM = yes
 
 # solver
-CG = no
+CG = yes
 # -> CG requires CSRMV, DOT, NRM2, and AXPY
 
 ##############################################

@@ -9,7 +9,7 @@
 #####################################
 
 # set path to install
-INSTALL_DIR=/home/mukunoki/local
+INSTALL_DIR=/home/0/uq05120/local
 
 mkdir extlibs
 cd extlibs

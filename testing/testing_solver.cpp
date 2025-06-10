@@ -108,7 +108,7 @@ int32_t main (int32_t argc, char **argv) {
 	// ======================================
 	// computation of true residual
 	// Note: computation is performed on splitModeFlag=1 (infSplit)
-	ha.splitModeFlag = 1;
+	ha.splitMode = 1;
 	FP_TYPE nrmb, trueres;
 	#if defined (CUOZBLAS)
 	trgRnrm2 (ha, n, dev_B, 1, &nrmb);

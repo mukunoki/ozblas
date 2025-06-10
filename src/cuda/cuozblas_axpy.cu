@@ -25,7 +25,7 @@ int32_t cuozblasRaxpy (
 	TYPE *devY,
 	const int32_t incy
 ) {
-	if (oh->reproModeFlag == 0) {
+	if (oh->reproMode == 0) {
 		blasRaxpy (oh->ch, n, alpha, (TYPE*)devX, incx, (TYPE*)devY, incy);
 		return 0;
 	}
