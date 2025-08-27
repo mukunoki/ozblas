@@ -106,13 +106,18 @@ extern "C" {
 	
 #if defined (MPLAPACK)
 #if defined (PREC_Q)
+
 #define MPFR_WANT_FLOAT128
-#define _Float128 __float128 // this is needed if MPFR is >= 4.1.0
+
+#ifdef __GNUC__
+#if __GNUC__ >= 12
+#define __float128 _Float128 
+#endif
+#endif
 #endif
 #include <mplapack/mpblas_mpfr.h>
 #include <mpfr.h> // this is after above
 #endif
-#undef _Float128
 
 // +++++++++++++++++++++
 // FP_TYPE == binary128

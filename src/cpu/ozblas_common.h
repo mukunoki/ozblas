@@ -39,6 +39,13 @@ Intel LLVM Compiler is not supported...
 #endif
 
 #if defined (MPLAPACK)
+
+#ifdef __GNUC__
+#if __GNUC__ >= 12
+#define __float128 _Float128
+#endif
+#endif
+
 #include <mplapack/mpblas__Float128.h>
 #endif
 
