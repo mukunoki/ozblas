@@ -9,7 +9,7 @@
 #####################################
 
 # set path to install
-INSTALL_DIR=/home/0/uq05120/local
+INSTALL_DIR=/home/user
 
 mkdir extlibs
 cd extlibs
